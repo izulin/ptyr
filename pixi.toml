@@ -1,0 +1,14 @@
+[project]
+authors = ["izulin <izulin@gmail.com>"]
+channels = ["conda-forge"]
+description = "Add a short description here"
+name = "projekt"
+platforms = ["osx-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+pygame = ">=2.6.1,<3"
+pixi-pycharm = ">=0.0.8,<0.0.9"
+numpy = ">=2.2.2,<3"
