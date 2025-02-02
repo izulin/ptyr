@@ -7,6 +7,15 @@ from math_utils import normalize_pos, range_kutta_4
 from consts import WHITE, GREEN, RED
 
 
+def internal_coord_to_xy(forward_pos, side_pos, ang):
+    radians = 2 * np.pi * ang / 360
+    sinr = math.sin(radians)
+    cosr = math.cos(radians)
+    return np.array(
+        [-forward_pos * sinr - side_pos * cosr, -forward_pos * cosr + side_pos * sinr]
+    )
+
+
 class MovingObject(pygame.sprite.Sprite):
     FORWARD_THRUST = 0.1 / 1000
     SIDE_THRUST = FORWARD_THRUST
@@ -19,7 +28,7 @@ class MovingObject(pygame.sprite.Sprite):
 
         self._image = image
 
-        self.pos = np.array([*normalize_pos(init_pos[:2]), init_pos[2] % 360])
+        self.pos = np.concatenate([normalize_pos(init_pos[:2]), [init_pos[2] % 360]])
         self.speed = np.array(init_speed)
 
         self.update_image_rect()
@@ -60,41 +69,33 @@ class MovingObject(pygame.sprite.Sprite):
     def update_pos(self, dt: float):
         forward_accel, angular_accel, side_accel = self.get_accels()
 
-        def F(pos_speed):
+        def f(pos_speed):
             pos = pos_speed[0:3]
             speed = pos_speed[3:6]
 
-            radians = (270 - pos[2]) / 360 * 2 * np.pi
-            cosr = math.cos(radians)
-            sinr = math.sin(radians)
-            acc = np.array(
-                [
-                    forward_accel * cosr + side_accel * sinr,
-                    forward_accel * sinr - side_accel * cosr,
-                    angular_accel
-                    - (speed[2] ** 2) * np.sign(speed[2]) * self.ANGULAR_DRAG,
-                ]
-            )
-            self._acc = acc[:2]
+            self._acc = internal_coord_to_xy(forward_accel, side_accel, pos[2])
+            angular_drag = (speed[2] ** 2) * np.sign(speed[2]) * self.ANGULAR_DRAG
+
             speed_squared = np.dot(speed[:2], speed[:2])
 
             if speed_squared > 0:
                 # |drag| = self.DRAG * |speed|**2
-                drag = math.sqrt(speed_squared) * self.DRAG * speed[:2]
+                self._drag = math.sqrt(speed_squared) * self.DRAG * speed[:2]
             else:
-                drag = np.array([0.0, 0.0])
+                self._drag = np.array([0.0, 0.0])
 
-            acc[:2] -= drag
+            acc = np.concatenate(
+                [self._acc - self._drag, [angular_accel - angular_drag]]
+            )
 
-            self._drag = drag
             return np.concatenate([speed, acc])
 
-        new_pos_speed = range_kutta_4(F, np.concatenate([self.pos, self.speed]), dt)
+        new_pos_speed = range_kutta_4(f, np.concatenate([self.pos, self.speed]), dt)
 
         self.pos = new_pos_speed[0:3]
         self.speed = new_pos_speed[3:6]
 
-        self.pos = np.array((*normalize_pos(self.pos[:2]), self.pos[2] % 360))
+        self.pos = np.concatenate([normalize_pos(self.pos[:2]), [self.pos[2] % 360]])
 
 
 class Player(MovingObject):

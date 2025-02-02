@@ -20,12 +20,9 @@ def range_kutta_1(f, y, dt):
 
 
 def normalize_pos(pos):
-    pos = pos[:]
-    pos[0] %= SCREEN_WIDTH
-    pos[0] += SCREEN_WIDTH
-    pos[1] %= SCREEN_HEIGHT
-    pos[1] += SCREEN_HEIGHT
-    return pos
+    return np.array(
+        [pos[0] % SCREEN_WIDTH + SCREEN_WIDTH, pos[1] % SCREEN_HEIGHT + SCREEN_HEIGHT]
+    )
 
 
 def test_if_proper_collision(a: MovingObject, b: MovingObject):
@@ -34,7 +31,7 @@ def test_if_proper_collision(a: MovingObject, b: MovingObject):
     return np.dot(pos_diff, speed_diff) < 0
 
 
-def collide_objects(a: MovingObject, b: MovingObject):
+def collide_objects(a: MovingObject, b: MovingObject, elasticity=1.0):
     pos_diff = a.pos[:2] - b.pos[:2]
     center_mass_speed = (a.speed[:2] * a.mass + b.speed[:2] * b.mass) / (
         a.mass + b.mass
@@ -43,6 +40,5 @@ def collide_objects(a: MovingObject, b: MovingObject):
     b_speed_norm = b.speed[:2] - center_mass_speed
     a_proj = np.dot(a_speed_norm, pos_diff) / np.dot(pos_diff, pos_diff) * pos_diff
     b_proj = np.dot(b_speed_norm, pos_diff) / np.dot(pos_diff, pos_diff) * pos_diff
-    ELASTICITY = 1.0
-    a.speed[:2] -= (1.0 + ELASTICITY) * a_proj
-    b.speed[:2] -= (1.0 + ELASTICITY) * b_proj
+    a.speed[:2] -= (1.0 + elasticity) * a_proj
+    b.speed[:2] -= (1.0 + elasticity) * b_proj
