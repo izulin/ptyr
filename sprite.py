@@ -3,7 +3,7 @@ import math
 import pygame
 import numpy as np
 from pygame.locals import *
-from math_utils import normalize_pos, range_kutta_4, sgn
+from math_utils import normalize_pos, range_kutta_4
 from consts import WHITE, GREEN, RED
 
 class MovingObject(pygame.sprite.Sprite):
@@ -77,21 +77,18 @@ class MovingObject(pygame.sprite.Sprite):
                 [
                     forward_accel*cosr+side_accel*sinr,
                     forward_accel*sinr-side_accel*cosr,
-                    angular_accel - (speed[2]**2)*sgn(speed[2]) * self.ANGULAR_DRAG
+                    angular_accel - (speed[2]**2)*np.sign(speed[2]) * self.ANGULAR_DRAG
                 ]
             )
-            self._acc = np.array((acc[0], acc[1]))
+            self._acc = acc[:2]
             speed_squared = speed[0]**2+speed[1]**2
-            drag_x = 0.0
-            drag_y = 0.0
+            drag = np.array([0.0,0.0])
             if speed_squared > 0:
-                drag_abs = speed_squared*self.DRAG
-                speed_abs = math.sqrt(speed_squared)
-                drag_x = drag_abs * speed[0] / speed_abs
-                drag_y = drag_abs * speed[1] / speed_abs
-            acc[0] -= drag_x
-            acc[1] -= drag_y
-            self._drag = np.array((drag_x, drag_y))
+                drag =  math.sqrt(speed_squared) * self.DRAG * speed[:2]
+
+            acc[:2] -= drag
+
+            self._drag = drag
             return np.concatenate([speed, acc])
 
         new_pos_speed = range_kutta_4(F, np.concatenate([self.pos, self.speed]), dt)

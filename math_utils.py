@@ -4,14 +4,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sprite import MovingObject
 
-def sgn(x: float):
-    if x>0:
-        return 1
-    elif x<0:
-        return -1
-    else:
-        return 0
-
 def range_kutta_4(f, y, dt):
     k1 = f(y)
     k2 = f(y + dt / 2 * k1)
