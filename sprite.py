@@ -76,10 +76,13 @@ class MovingObject(pygame.sprite.Sprite):
                 ]
             )
             self._acc = acc[:2]
-            speed_squared = speed[0] ** 2 + speed[1] ** 2
-            drag = np.array([0.0, 0.0])
+            speed_squared = np.dot(speed[:2], speed[:2])
+
             if speed_squared > 0:
+                # |drag| = self.DRAG * |speed|**2
                 drag = math.sqrt(speed_squared) * self.DRAG * speed[:2]
+            else:
+                drag = np.array([0.0, 0.0])
 
             acc[:2] -= drag
 
