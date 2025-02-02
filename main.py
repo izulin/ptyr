@@ -31,33 +31,31 @@ background_image = pygame.image.load("assets/background.jpg").convert_alpha()
 BACKGROUND = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 SHOW_SPEEDS = False
 
+from assets import PlayerImages, AsteroidImage
+from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 
-def load_from_file(posx: int, posy: int, sizex: int, sizey: int, filename: str):
-    ret_surface = pygame.Surface((sizex, sizey), flags=pygame.SRCALPHA)
-    image = pygame.image.load(filename).convert_alpha()
-    ret_surface.blit(image, (0, 0), (posx, posy, sizex, sizey))
-    return remove_background(ret_surface)
+all_players = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
 
+for num_of_player in range(2):
+    player = Player(
+        controls=[PLAYER_1_CONTROLS, PLAYER_2_CONTROLS][num_of_player],
+        image=[PlayerImages[2], PlayerImages[1]][num_of_player],
+        init_pos=[
+            random.randint(0, SCREEN_WIDTH),
+            random.randint(0, SCREEN_HEIGHT),
+            random.randint(0, 360),
+        ],
+        init_speed=[0, 0, 0],
+    )
+    all_players.add(player)
+    all_sprites.add(player)
 
-def remove_background(surface):
-    """In place removal."""
-    pxarray = pygame.PixelArray(surface)
-    pxarray.replace((191, 220, 191, 255), (0, 0, 0, 0), 0.001)
-    return surface
-
-
-player = Player(
-    image=load_from_file(48, 112, 24, 27, "assets/tyrian/tyrian.shp.007D3C.png"),
-    init_pos=[SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0],
-    init_speed=[0, 0, 0],
-)
-
-all_sprites = pygame.sprite.Group(player)
 all_asteroids = pygame.sprite.Group()
 
 while len(all_asteroids) < 10:
     asteroid = Asteroid(
-        image=load_from_file(0, 0, 45, 48, "assets/tyrian/newshd.shp.000000.png"),
+        image=AsteroidImage,
         init_pos=[
             random.randint(0, SCREEN_WIDTH),
             random.randint(0, SCREEN_HEIGHT),

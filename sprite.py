@@ -99,17 +99,26 @@ class Player(MovingObject):
     SIDE_THRUST = 0.05 / 1000
     ANGULAR_THRUST = 0.2 / 1000
 
+    controls: dict[str, int]
+
+    def __init__(self, *, controls, **kwargs):
+        super().__init__(**kwargs)
+        self.controls = controls
+
     def get_accels(self) -> tuple[float, float, float]:
         pressed_keys = pygame.key.get_pressed()
 
         forward_accel = self.FORWARD_THRUST * (
-            int(pressed_keys[K_w]) - int(pressed_keys[K_s])
+            int(pressed_keys[self.controls["forward"]])
+            - int(pressed_keys[self.controls["backward"]])
         )
         angular_accel = self.ANGULAR_THRUST * (
-            int(pressed_keys[K_a]) - int(pressed_keys[K_d])
+            int(pressed_keys[self.controls["left_turn"]])
+            - int(pressed_keys[self.controls["right_turn"]])
         )
         side_accel = self.SIDE_THRUST * (
-            int(pressed_keys[K_q]) - int(pressed_keys[K_e])
+            int(pressed_keys[self.controls["left_strafe"]])
+            - int(pressed_keys[self.controls["right_strafe"]])
         )
 
         return forward_accel, angular_accel, side_accel
