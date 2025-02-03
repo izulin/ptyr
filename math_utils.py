@@ -20,9 +20,7 @@ def range_kutta_1(f, y, dt):
 
 
 def normalize_pos(pos):
-    return np.array(
-        [pos[0] % SCREEN_WIDTH + SCREEN_WIDTH, pos[1] % SCREEN_HEIGHT + SCREEN_HEIGHT]
-    )
+    return np.array([pos[0] % SCREEN_WIDTH, pos[1] % SCREEN_HEIGHT])
 
 
 def test_if_proper_collision(a: MovingObject, b: MovingObject):

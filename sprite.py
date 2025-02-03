@@ -2,7 +2,6 @@ from __future__ import annotations
 import math
 import pygame
 import numpy as np
-from pygame.locals import *
 from math_utils import normalize_pos, range_kutta_4
 from consts import WHITE, GREEN, RED
 
@@ -23,8 +22,8 @@ class MovingObject(pygame.sprite.Sprite):
     DRAG = 1 / 1000
     ANGULAR_DRAG = ANGULAR_THRUST / 0.3**2
 
-    def __init__(self, *, image, init_pos, init_speed, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, image, init_pos, init_speed, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self._image = image
 
@@ -40,24 +39,45 @@ class MovingObject(pygame.sprite.Sprite):
         raise NotImplementedError
 
     def draw_debugs(self, target: pygame.Surface):
-        dt = 200
-        pygame.draw.line(
-            target, WHITE, self.pos[:2], self.pos[:2] + dt * self.speed[:2], 1
-        )
-        dt = 200000
-        pygame.draw.line(target, GREEN, self.pos[:2], self.pos[:2] + dt * self._acc, 1)
-        pygame.draw.line(
-            target,
-            RED,
-            self.pos[:2] + dt * self._acc,
-            self.pos[:2] + +dt * self._acc - dt * self._drag,
-            1,
-        )
+        for a, b in [
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+            (0, 0),
+            (0, 1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+        ]:
+            shift = np.array([target.get_width() * a, target.get_height() * b])
+            dt = 200
+            pygame.draw.line(
+                target,
+                WHITE,
+                shift + self.pos[:2],
+                shift + self.pos[:2] + dt * self.speed[:2],
+                1,
+            )
+            dt = 200000
+            pygame.draw.line(
+                target,
+                GREEN,
+                shift + self.pos[:2],
+                shift + self.pos[:2] + dt * self._acc,
+                1,
+            )
+            pygame.draw.line(
+                target,
+                RED,
+                shift + self.pos[:2] + dt * self._acc,
+                shift + self.pos[:2] + +dt * self._acc - dt * self._drag,
+                1,
+            )
 
     def update_image_rect(self):
         self.image = pygame.transform.rotate(self._image, self.pos[2] % 360)
-        self.rect = self.image.get_rect()
-        self.rect.center = normalize_pos(self.pos[:2])
+        self.rect = self.image.get_rect(center=normalize_pos(self.pos[:2]))
 
     def update(self, dt: float):
         self.update_pos(dt)
@@ -105,8 +125,8 @@ class Player(MovingObject):
 
     controls: dict[str, int]
 
-    def __init__(self, *, controls, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, controls, **kwargs):
+        super().__init__(*args, **kwargs)
         self.controls = controls
 
     def get_accels(self) -> tuple[float, float, float]:

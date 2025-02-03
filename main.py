@@ -7,6 +7,7 @@ from sprite import MovingObject, Player, Asteroid
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK
 from math_utils import test_if_proper_collision, collide_objects
 import random
+from timers import TIMERS
 
 pygame.init()
 FramePerSec = pygame.time.Clock()
@@ -19,13 +20,6 @@ DISPLAYSURF = pygame.display.set_mode(
     flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
 )
 pygame.display.set_caption("NotTyrian")
-
-NUM_SCENES = 2
-ALL_SCENES = [
-    pygame.Surface((3 * SCREEN_WIDTH, 3 * SCREEN_HEIGHT), flags=pygame.SRCALPHA)
-    for _ in range(NUM_SCENES)
-]
-[OBJECT_SCENE, UX_SCENE] = ALL_SCENES
 
 background_image = pygame.image.load("assets/background.jpg").convert_alpha()
 BACKGROUND = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -53,7 +47,7 @@ for num_of_player in range(2):
 
 all_asteroids = pygame.sprite.Group()
 
-while len(all_asteroids) < 10:
+while len(all_asteroids) < 40:
     asteroid = Asteroid(
         image=AsteroidImage,
         init_pos=[
@@ -76,6 +70,7 @@ while len(all_asteroids) < 10:
 
 
 def main():
+    cnt = 0
     while True:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -86,50 +81,83 @@ def main():
                 global SHOW_SPEEDS
                 SHOW_SPEEDS = not SHOW_SPEEDS
 
-        DISPLAYSURF.blit(BACKGROUND, (0, 0))
-        for scene in ALL_SCENES:
-            scene.fill((0, 0, 0, 0))
+        with TIMERS["blits"]:
+            DISPLAYSURF.blit(BACKGROUND, (0, 0))
 
-        all_sprites.draw(OBJECT_SCENE)
-        if SHOW_SPEEDS:
-            for sprite in all_sprites.sprites():
-                assert isinstance(sprite, MovingObject)
-                sprite.draw_debugs(UX_SCENE)
+        with TIMERS["draw"]:
+            for a, b in [
+                (-1, -1),
+                (-1, 0),
+                (-1, 1),
+                (0, -1),
+                (0, 0),
+                (0, 1),
+                (1, -1),
+                (1, 0),
+                (1, 1),
+            ]:
+                for sprite in all_sprites:
+                    sprite.rect.move_ip(SCREEN_WIDTH * a, SCREEN_HEIGHT * b)
+                all_sprites.draw(DISPLAYSURF)
+                for sprite in all_sprites:
+                    sprite.rect.move_ip(-SCREEN_WIDTH * a, -SCREEN_HEIGHT * b)
 
-        for scene in ALL_SCENES:
-            for a in range(0, 3):
-                for b in range(0, 3):
-                    DISPLAYSURF.blit(
-                        scene,
-                        (0, 0),
-                        (
-                            SCREEN_WIDTH * a,
-                            SCREEN_HEIGHT * b,
-                            SCREEN_WIDTH,
-                            SCREEN_HEIGHT,
-                        ),
-                    )
+        with TIMERS["debugs"]:
+            if SHOW_SPEEDS:
+                for sprite in all_sprites.sprites():
+                    assert isinstance(sprite, MovingObject)
+                    sprite.draw_debugs(DISPLAYSURF)
 
         fps = FramePerSec.get_fps()
         fps_render = font_small.render(f"{fps:.2f}.", True, BLACK)
 
-        DISPLAYSURF.blit(fps_render, (10, 10))
+        with TIMERS["blits"]:
+            DISPLAYSURF.blit(fps_render, (10, 10))
         pygame.display.flip()
         dt = FramePerSec.tick(FPS)
-        processed_sprites = pygame.sprite.Group()
-        for sprite in all_sprites:
-            assert isinstance(sprite, MovingObject)
-            collision = pygame.sprite.spritecollideany(
-                sprite, processed_sprites, pygame.sprite.collide_mask
-            )
-            if collision is None or not test_if_proper_collision(sprite, collision):
-                processed_sprites.add(sprite)
-                continue
-            else:
-                collide_objects(sprite, collision)
-                processed_sprites.remove(collision)
 
-        all_sprites.update(dt)
+        with TIMERS["collide"]:
+            processed_sprites = pygame.sprite.Group()
+            for sprite in all_sprites:
+                assert isinstance(sprite, MovingObject)
+                for a, b in [
+                    (-1, -1),
+                    (-1, 0),
+                    (-1, 1),
+                    (0, -1),
+                    (0, 0),
+                    (0, 1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                ]:
+                    sprite.pos += (a * SCREEN_WIDTH, b * SCREEN_HEIGHT, 0)
+                    sprite.rect.move_ip(a * SCREEN_WIDTH, b * SCREEN_HEIGHT)
+                    col = pygame.sprite.spritecollideany(
+                        sprite, processed_sprites, collide_rect_mask
+                    )
+                    if col is not None and test_if_proper_collision(sprite, col):
+                        collide_objects(sprite, col)
+                        processed_sprites.remove(col)
+                        sprite.pos -= (a * SCREEN_WIDTH, b * SCREEN_HEIGHT, 0)
+                        sprite.rect.move_ip(-a * SCREEN_WIDTH, -b * SCREEN_HEIGHT)
+                        break
+                    else:
+                        sprite.pos -= (a * SCREEN_WIDTH, b * SCREEN_HEIGHT, 0)
+                        sprite.rect.move_ip(-a * SCREEN_WIDTH, -b * SCREEN_HEIGHT)
+                else:
+                    processed_sprites.add(sprite)
+        with TIMERS["update"]:
+            all_sprites.update(dt)
+        cnt += 1
+        if cnt % 1000 == 0:
+            print(dict(TIMERS))
+            for t in TIMERS.values():
+                t.reset()
+
+
+def collide_rect_mask(a, b):
+    return pygame.sprite.collide_rect(a, b) and pygame.sprite.collide_mask(a, b)
 
 
 main()
