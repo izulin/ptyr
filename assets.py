@@ -1,5 +1,6 @@
 from __future__ import annotations
 import pygame
+from consts import SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 def load_from_file(
@@ -23,3 +24,5 @@ PlayerImages = [
     for i in range(6)
 ]
 AsteroidImage = load_from_file(0, 0, 45, 48, "assets/tyrian/newshd.shp.000000.png")
+
+BackgroundImage = pygame.transform.scale(pygame.image.load("assets/background.jpg").convert_alpha(), (SCREEN_WIDTH, SCREEN_HEIGHT))

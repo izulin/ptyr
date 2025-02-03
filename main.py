@@ -4,10 +4,12 @@ from pygame.locals import *
 
 # import pygame.gfxdraw
 from sprite import MovingObject, Player, Asteroid
-from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK
+from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
 from math_utils import test_if_proper_collision, collide_objects
 import random
 from timers import TIMERS
+from pygame.math import Vector3
+
 
 pygame.init()
 FramePerSec = pygame.time.Clock()
@@ -21,26 +23,26 @@ DISPLAYSURF = pygame.display.set_mode(
 )
 pygame.display.set_caption("NotTyrian")
 
-background_image = pygame.image.load("assets/background.jpg").convert_alpha()
-BACKGROUND = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
 SHOW_SPEEDS = False
 
-from assets import PlayerImages, AsteroidImage
+from assets import PlayerImages, AsteroidImage, BackgroundImage
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 
 all_players = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
+
 for num_of_player in range(2):
     player = Player(
         controls=[PLAYER_1_CONTROLS, PLAYER_2_CONTROLS][num_of_player],
         image=[PlayerImages[2], PlayerImages[1]][num_of_player],
-        init_pos=[
+        init_pos=(
             random.randint(0, SCREEN_WIDTH),
             random.randint(0, SCREEN_HEIGHT),
             random.randint(0, 360),
-        ],
-        init_speed=[0, 0, 0],
+        ),
+        init_speed=(0, 0, 0),
     )
     all_players.add(player)
     all_sprites.add(player)
@@ -82,25 +84,15 @@ def main():
                 SHOW_SPEEDS = not SHOW_SPEEDS
 
         with TIMERS["blits"]:
-            DISPLAYSURF.blit(BACKGROUND, (0, 0))
+            DISPLAYSURF.blit(BackgroundImage, (0, 0))
 
         with TIMERS["draw"]:
-            for a, b in [
-                (-1, -1),
-                (-1, 0),
-                (-1, 1),
-                (0, -1),
-                (0, 0),
-                (0, 1),
-                (1, -1),
-                (1, 0),
-                (1, 1),
-            ]:
+            for shift in ALL_SHIFTS:
                 for sprite in all_sprites:
-                    sprite.rect.move_ip(SCREEN_WIDTH * a, SCREEN_HEIGHT * b)
+                    sprite.rect.move_ip(shift)
                 all_sprites.draw(DISPLAYSURF)
                 for sprite in all_sprites:
-                    sprite.rect.move_ip(-SCREEN_WIDTH * a, -SCREEN_HEIGHT * b)
+                    sprite.rect.move_ip(-shift)
 
         with TIMERS["debugs"]:
             if SHOW_SPEEDS:
@@ -120,31 +112,21 @@ def main():
             processed_sprites = pygame.sprite.Group()
             for sprite in all_sprites:
                 assert isinstance(sprite, MovingObject)
-                for a, b in [
-                    (-1, -1),
-                    (-1, 0),
-                    (-1, 1),
-                    (0, -1),
-                    (0, 0),
-                    (0, 1),
-                    (1, -1),
-                    (1, 0),
-                    (1, 1),
-                ]:
-                    sprite.pos += (a * SCREEN_WIDTH, b * SCREEN_HEIGHT, 0)
-                    sprite.rect.move_ip(a * SCREEN_WIDTH, b * SCREEN_HEIGHT)
+                for shift in ALL_SHIFTS:
+                    sprite.pos += Vector3(shift.x, shift.y, 0)
+                    sprite.rect.move_ip(shift)
                     col = pygame.sprite.spritecollideany(
                         sprite, processed_sprites, collide_rect_mask
                     )
                     if col is not None and test_if_proper_collision(sprite, col):
                         collide_objects(sprite, col)
                         processed_sprites.remove(col)
-                        sprite.pos -= (a * SCREEN_WIDTH, b * SCREEN_HEIGHT, 0)
-                        sprite.rect.move_ip(-a * SCREEN_WIDTH, -b * SCREEN_HEIGHT)
+                        sprite.pos -= Vector3(shift.x, shift.y, 0)
+                        sprite.rect.move_ip(-shift)
                         break
                     else:
-                        sprite.pos -= (a * SCREEN_WIDTH, b * SCREEN_HEIGHT, 0)
-                        sprite.rect.move_ip(-a * SCREEN_WIDTH, -b * SCREEN_HEIGHT)
+                        sprite.pos -= Vector3(shift.x, shift.y, 0)
+                        sprite.rect.move_ip(-shift)
                 else:
                     processed_sprites.add(sprite)
         with TIMERS["update"]:
