@@ -6,10 +6,9 @@ from pygame.locals import *
 # import pygame.gfxdraw
 from object import MovingObject, Player, Asteroid
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
-from math_utils import test_if_proper_collision, collide_objects
+from math_utils import collide_objects
 import random
 from timers import TIMERS
-from pygame.math import Vector3
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 
 pygame.init()
@@ -27,35 +26,10 @@ font_small = pygame.font.SysFont("Lucida Console", 20)
 
 pygame.display.set_caption("NotTyrian")
 
-SHOW_SPEEDS = False
+SHOW_SPEEDS = True
 
 all_players = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
-
-
-def any_collision_with_callbacks(
-    sprite: MovingObject,
-    sprite_group: pygame.sprite.AbstractGroup,
-    on_collision,
-    on_no_collision,
-):
-    for shift in ALL_SHIFTS:
-        sprite.pos += Vector3(shift.x, shift.y, 0)
-        sprite.rect.move_ip(shift)
-        col = pygame.sprite.spritecollideany(sprite, sprite_group, collide_rect_mask)
-        if col is not None and test_if_proper_collision(sprite, col):
-            ret = on_collision(sprite, col)
-            sprite.pos -= Vector3(shift.x, shift.y, 0)
-            sprite.rect.move_ip(-shift)
-            return ret
-        else:
-            sprite.pos -= Vector3(shift.x, shift.y, 0)
-            sprite.rect.move_ip(-shift)
-    return on_no_collision(sprite, col)
-
-
-def collide_rect_mask(a, b):
-    return pygame.sprite.collide_rect(a, b) and pygame.sprite.collide_mask(a, b)
 
 
 while True:
@@ -69,9 +43,7 @@ while True:
         ),
         init_speed=(0, 0, 0),
     )
-    if any_collision_with_callbacks(
-        player1, all_sprites, lambda _s, _c: False, lambda _s, _c: True
-    ):
+    if not player1.any_collision_with_callbacks(all_sprites):
         all_players.add(player1)
         all_sprites.add(player1)
         break
@@ -87,9 +59,7 @@ while True:
         ),
         init_speed=(0, 0, 0),
     )
-    if any_collision_with_callbacks(
-        player1, all_sprites, lambda _s, _c: False, lambda _s, _c: True
-    ):
+    if not player1.any_collision_with_callbacks(all_sprites):
         all_players.add(player2)
         all_sprites.add(player2)
         break
@@ -110,9 +80,7 @@ while len(all_asteroids) < 20:
             random.uniform(-0.1, 0.1),
         ],
     )
-    if any_collision_with_callbacks(
-        asteroid, all_sprites, lambda _s, _c: False, lambda _s, _c: True
-    ):
+    if not asteroid.any_collision_with_callbacks(all_sprites):
         all_asteroids.add(asteroid)
         all_sprites.add(asteroid)
 
@@ -173,15 +141,15 @@ def main():
             processed_sprites = pygame.sprite.Group()
             for sprite in all_sprites:
                 assert isinstance(sprite, MovingObject)
-                any_collision_with_callbacks(
-                    sprite,
-                    processed_sprites,
-                    lambda _sprite, _col: (
-                        collide_objects(_sprite, _col),
-                        processed_sprites.remove(_col),
-                    ),
-                    lambda _sprite, _col: processed_sprites.add(_sprite),
-                )
+
+                def _on_collision(_sprite, _col):
+                    collide_objects(_sprite, _col)
+                    processed_sprites.remove(_col)
+
+                if not sprite.any_collision_with_callbacks(
+                    processed_sprites, _on_collision
+                ):
+                    processed_sprites.add(sprite)
         with TIMERS["update"]:
             all_sprites.update(dt)
         cnt += 1

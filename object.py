@@ -1,12 +1,10 @@
 from __future__ import annotations
 import pygame
 from math_utils import (
-    normalize_pos2,
     normalize_pos3,
-    range_kutta_1,
-    range_kutta_4,
     range_kutta_2,
     internal_coord_to_xy,
+    test_if_proper_collision,
 )
 from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH
 from pygame.math import Vector3, Vector2
@@ -39,15 +37,15 @@ class MovingObject(pygame.sprite.Sprite):
         self._drag = Vector2()
 
     @property
-    def mass(self):
+    def mass(self) -> float:
         raise NotImplementedError
 
     @property
-    def pos_xy(self):
+    def pos_xy(self) -> Vector2:
         return Vector2(self.pos.x, self.pos.y)
 
     @property
-    def speed_xy(self):
+    def speed_xy(self) -> Vector2:
         return Vector2(self.speed.x, self.speed.y)
 
     def draw_debugs(self, target: pygame.Surface) -> list[pygame.Rect]:
@@ -121,6 +119,33 @@ class MovingObject(pygame.sprite.Sprite):
 
         self.pos = normalize_pos3(new_pos)
         self.speed = new_speed
+
+    def any_collision_with_callbacks(
+        self: MovingObject,
+        sprite_group: pygame.sprite.AbstractGroup,
+        on_collision=None,
+        on_no_collision=None,
+    ) -> bool:
+        for shift in ALL_SHIFTS:
+            self.pos += Vector3(shift.x, shift.y, 0)
+            self.rect.move_ip(shift)
+            col = pygame.sprite.spritecollideany(self, sprite_group, collide_rect_mask)
+            if col is not None and test_if_proper_collision(self, col):
+                if on_collision is not None:
+                    on_collision(self, col)
+                self.pos -= Vector3(shift.x, shift.y, 0)
+                self.rect.move_ip(-shift)
+                return True
+            else:
+                self.pos -= Vector3(shift.x, shift.y, 0)
+                self.rect.move_ip(-shift)
+        if on_no_collision is not None:
+            on_no_collision(self, col)
+        return False
+
+
+def collide_rect_mask(a, b) -> bool:
+    return pygame.sprite.collide_rect(a, b) and pygame.sprite.collide_mask(a, b)
 
 
 class Player(MovingObject):
