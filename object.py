@@ -1,8 +1,16 @@
 from __future__ import annotations
 import pygame
-from math_utils import normalize_pos2, normalize_pos3, range_kutta_1, range_kutta_4, range_kutta_2, internal_coord_to_xy
+from math_utils import (
+    normalize_pos2,
+    normalize_pos3,
+    range_kutta_1,
+    range_kutta_4,
+    range_kutta_2,
+    internal_coord_to_xy,
+)
 from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH
 from pygame.math import Vector3, Vector2
+
 
 class MovingObject(pygame.sprite.Sprite):
     FORWARD_THRUST = 0.1 / 1000
@@ -42,34 +50,44 @@ class MovingObject(pygame.sprite.Sprite):
     def speed_xy(self):
         return Vector2(self.speed.x, self.speed.y)
 
-    def draw_debugs(self, target: pygame.Surface):
-        assert target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
+    def draw_debugs(self, target: pygame.Surface) -> list[pygame.Rect]:
+        assert (
+            target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
+        )
         pos_xy = self.pos_xy
         speed_xy = self.speed_xy
+        all_changes = []
         for shift in ALL_SHIFTS:
             dt = 200
-            pygame.draw.line(
-                target,
-                WHITE,
-                shift + pos_xy,
-                shift + pos_xy + dt * speed_xy,
-                1,
+            all_changes.append(
+                pygame.draw.line(
+                    target,
+                    WHITE,
+                    shift + pos_xy,
+                    shift + pos_xy + dt * speed_xy,
+                    1,
+                )
             )
             dt = 200000
-            pygame.draw.line(
-                target,
-                GREEN,
-                shift + pos_xy,
-                shift + pos_xy + dt * self._acc,
-                1,
+            all_changes.append(
+                pygame.draw.line(
+                    target,
+                    GREEN,
+                    shift + pos_xy,
+                    shift + pos_xy + dt * self._acc,
+                    1,
+                )
             )
-            pygame.draw.line(
-                target,
-                RED,
-                shift + pos_xy + dt * self._acc,
-                shift + pos_xy + dt * self._acc - dt * self._drag,
-                1,
+            all_changes.append(
+                pygame.draw.line(
+                    target,
+                    RED,
+                    shift + pos_xy + dt * self._acc,
+                    shift + pos_xy + dt * self._acc - dt * self._drag,
+                    1,
+                )
             )
+        return all_changes
 
     def update_image_rect(self):
         self.image = self.images[int(self.pos.z)]
@@ -103,6 +121,7 @@ class MovingObject(pygame.sprite.Sprite):
 
         self.pos = normalize_pos3(new_pos)
         self.speed = new_speed
+
 
 class Player(MovingObject):
     FORWARD_THRUST = 0.1 / 1000

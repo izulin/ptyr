@@ -1,6 +1,6 @@
 [project]
 authors = ["izulin <izulin@gmail.com>"]
-channels = ["conda-forge"]
+channels = ["conda-forge", "pip"]
 description = "Add a short description here"
 name = "ptyr"
 platforms = ["osx-64"]

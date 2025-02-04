@@ -23,6 +23,13 @@ PlayerImages = [
     load_from_file(48, 58 + i * 27, 24, 27, "assets/tyrian/tyrian.shp.007D3C.png")
     for i in range(6)
 ]
-AsteroidImage = load_from_file(0, 0, 45, 48, "assets/tyrian/newshd.shp.000000.png")
+AsteroidLargeImage = load_from_file(0, 0, 45, 48, "assets/tyrian/newshd.shp.000000.png")
 
-BackgroundImage = pygame.transform.scale(pygame.image.load("assets/background.jpg").convert_alpha(), (SCREEN_WIDTH, SCREEN_HEIGHT))
+BackgroundImage = pygame.transform.scale(
+    pygame.image.load("assets/background.jpg").convert_alpha(),
+    (SCREEN_WIDTH, SCREEN_HEIGHT),
+)
+
+BlueParticleSmallImage = load_from_file(
+    15, 3, 5, 5, "assets/tyrian/tyrian.shp.01D8A7.png"
+)
