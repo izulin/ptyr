@@ -1,5 +1,8 @@
 from __future__ import annotations
 import pygame
+
+from assets import AsteroidLargeImage
+from groups import ALL_SPRITES, ALL_PLAYERS, ALL_ASTEROIDS
 from math_utils import (
     normalize_pos3,
     range_kutta_2,
@@ -22,8 +25,9 @@ class MovingObject(pygame.sprite.Sprite):
     rect: pygame.Rect
     pos: Vector3
     speed: Vector3
+    mass: float
 
-    def __init__(self, *args, image, init_pos, init_speed, **kwargs):
+    def __init__(self, *args, image, init_pos, init_speed, mass, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.images = [pygame.transform.rotate(image, i) for i in range(360)]
@@ -35,10 +39,8 @@ class MovingObject(pygame.sprite.Sprite):
         self.update_image_rect()
         self._acc = Vector2()
         self._drag = Vector2()
-
-    @property
-    def mass(self) -> float:
-        raise NotImplementedError
+        self.mass = mass
+        self.add(ALL_SPRITES)
 
     @property
     def pos_xy(self) -> Vector2:
@@ -120,33 +122,6 @@ class MovingObject(pygame.sprite.Sprite):
         self.pos = normalize_pos3(new_pos)
         self.speed = new_speed
 
-    def any_collision_with_callbacks(
-        self: MovingObject,
-        sprite_group: pygame.sprite.AbstractGroup,
-        on_collision=None,
-        on_no_collision=None,
-    ) -> bool:
-        for shift in ALL_SHIFTS:
-            self.pos += Vector3(shift.x, shift.y, 0)
-            self.rect.move_ip(shift)
-            col = pygame.sprite.spritecollideany(self, sprite_group, collide_rect_mask)
-            if col is not None and test_if_proper_collision(self, col):
-                if on_collision is not None:
-                    on_collision(self, col)
-                self.pos -= Vector3(shift.x, shift.y, 0)
-                self.rect.move_ip(-shift)
-                return True
-            else:
-                self.pos -= Vector3(shift.x, shift.y, 0)
-                self.rect.move_ip(-shift)
-        if on_no_collision is not None:
-            on_no_collision(self, col)
-        return False
-
-
-def collide_rect_mask(a, b) -> bool:
-    return pygame.sprite.collide_rect(a, b) and pygame.sprite.collide_mask(a, b)
-
 
 class Player(MovingObject):
     FORWARD_THRUST = 0.1 / 1000
@@ -156,8 +131,9 @@ class Player(MovingObject):
     controls: dict[str, int]
 
     def __init__(self, *args, controls, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, mass=30, **kwargs)
         self.controls = controls
+        self.add(ALL_PLAYERS)
 
     def get_accels(self) -> tuple[float, float, float]:
         pressed_keys = pygame.key.get_pressed()
@@ -177,18 +153,16 @@ class Player(MovingObject):
 
         return forward_accel, angular_accel, side_accel
 
-    @property
-    def mass(self):
-        return 30.0
 
-
-class Asteroid(MovingObject):
+class PassiveObject(MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 
     def get_accels(self):
         return 0.0, 0.0, 0.0
 
-    @property
-    def mass(self):
-        return 100.0
+
+class Asteroid(PassiveObject):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, image=AsteroidLargeImage, mass=100)
+        self.add(ALL_ASTEROIDS)

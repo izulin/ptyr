@@ -3,8 +3,8 @@ import pygame
 import sys
 from pygame.locals import *
 
-# import pygame.gfxdraw
-from object import MovingObject, Player, Asteroid
+from collisions import CollisionDetector
+from groups import ALL_ASTEROIDS, ALL_SPRITES
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
 from math_utils import collide_objects
 import random
@@ -17,8 +17,10 @@ DISPLAYSURF = pygame.display.set_mode(
     flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
 )
 
-from assets import PlayerImages, AsteroidLargeImage, BackgroundImage
+from object import MovingObject, Player, Asteroid
+from assets import PlayerImages, BackgroundImage
 
+DISPLAYSURF.blit(BackgroundImage, (0, 0))
 FramePerSec = pygame.time.Clock()
 
 font = pygame.font.SysFont("Lucida Console", 60)
@@ -27,9 +29,6 @@ font_small = pygame.font.SysFont("Lucida Console", 20)
 pygame.display.set_caption("NotTyrian")
 
 SHOW_SPEEDS = True
-
-all_players = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
 
 
 while True:
@@ -43,10 +42,11 @@ while True:
         ),
         init_speed=(0, 0, 0),
     )
-    if not player1.any_collision_with_callbacks(all_sprites):
-        all_players.add(player1)
-        all_sprites.add(player1)
+    if CollisionDetector(*ALL_SPRITES).collide_with_callback(player1, stationary=True):
+        player1.kill()
+    else:
         break
+
 
 while True:
     player2 = Player(
@@ -59,16 +59,13 @@ while True:
         ),
         init_speed=(0, 0, 0),
     )
-    if not player1.any_collision_with_callbacks(all_sprites):
-        all_players.add(player2)
-        all_sprites.add(player2)
+    if CollisionDetector(*ALL_SPRITES).collide_with_callback(player2, stationary=True):
+        player2.kill()
+    else:
         break
 
-all_asteroids = pygame.sprite.Group()
-
-while len(all_asteroids) < 20:
+while len(ALL_ASTEROIDS) < 100:
     asteroid = Asteroid(
-        image=AsteroidLargeImage,
         init_pos=[
             random.randint(0, SCREEN_WIDTH),
             random.randint(0, SCREEN_HEIGHT),
@@ -80,20 +77,18 @@ while len(all_asteroids) < 20:
             random.uniform(-0.1, 0.1),
         ],
     )
-    if not asteroid.any_collision_with_callbacks(all_sprites):
-        all_asteroids.add(asteroid)
-        all_sprites.add(asteroid)
-
-DISPLAYSURF.blit(BackgroundImage, (0, 0))
-all_shift_sprites = {
-    (shift.x, shift.y): pygame.sprite.RenderUpdates(*all_sprites)
-    for shift in ALL_SHIFTS
-}
+    if CollisionDetector(*ALL_SPRITES).collide_with_callback(asteroid, stationary=True):
+        asteroid.kill()
 
 
 def main():
     cnt = 0
     all_changes = []
+    all_shift_sprites: dict(tuple(int, int), pygame.sprite.RenderUpdates) = {
+        (shift.x, shift.y): pygame.sprite.RenderUpdates(*ALL_SPRITES)
+        for shift in ALL_SHIFTS
+    }
+
     while True:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -103,6 +98,9 @@ def main():
             elif event.type == KEYDOWN and event.key == K_BACKSPACE:
                 global SHOW_SPEEDS
                 SHOW_SPEEDS = not SHOW_SPEEDS
+
+        for shift_sprites in all_shift_sprites.values():
+            shift_sprites.add(ALL_SPRITES)
 
         with TIMERS["clears"]:
             for g in all_shift_sprites.values():
@@ -115,15 +113,15 @@ def main():
 
         with TIMERS["draw"]:
             for shift in ALL_SHIFTS:
-                for sprite in all_sprites:
+                for sprite in ALL_SPRITES:
                     sprite.rect.move_ip(shift)
                 all_shift_sprites[(shift.x, shift.y)].draw(DISPLAYSURF)
-                for sprite in all_sprites:
+                for sprite in ALL_SPRITES:
                     sprite.rect.move_ip(-shift)
 
         with TIMERS["debugs"]:
             if SHOW_SPEEDS:
-                for sprite in all_sprites.sprites():
+                for sprite in ALL_SPRITES.sprites():
                     assert isinstance(sprite, MovingObject)
                     all_changes.extend(sprite.draw_debugs(DISPLAYSURF))
 
@@ -138,20 +136,15 @@ def main():
         dt = FramePerSec.tick(FPS)
 
         with TIMERS["collide"]:
-            processed_sprites = pygame.sprite.Group()
-            for sprite in all_sprites:
-                assert isinstance(sprite, MovingObject)
+            cd = CollisionDetector(*ALL_SPRITES)
+            for sprite in ALL_SPRITES:
+                cd.collide_with_callback(
+                    sprite, on_collision=collide_objects, stationary=False
+                )
 
-                def _on_collision(_sprite, _col):
-                    collide_objects(_sprite, _col)
-                    processed_sprites.remove(_col)
-
-                if not sprite.any_collision_with_callbacks(
-                    processed_sprites, _on_collision
-                ):
-                    processed_sprites.add(sprite)
         with TIMERS["update"]:
-            all_sprites.update(dt)
+            for sprite in ALL_SPRITES:
+                sprite.update(dt)
         cnt += 1
         if cnt % 1000 == 0:
             print(dict(TIMERS))
