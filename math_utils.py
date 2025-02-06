@@ -50,11 +50,13 @@ def collide_objects(a: MovingObject, b: MovingObject, elasticity=1.0):
     b_speed_norm = b.speed_xy - center_mass_speed
     a_proj = (a_speed_norm * pos_diff) / (pos_diff * pos_diff) * pos_diff
     b_proj = (b_speed_norm * pos_diff) / (pos_diff * pos_diff) * pos_diff
-    a_new_speed_xy = a.speed_xy - (1.0 + elasticity) * a_proj
-    b_new_speed_xy = b.speed_xy - (1.0 + elasticity) * b_proj
-    a.speed = Vector3(a_new_speed_xy.x, a_new_speed_xy.y, a.speed.z)
-    b.speed = Vector3(b_new_speed_xy.x, b_new_speed_xy.y, b.speed.z)
+    a.speed = embed(a.speed_xy - (1.0 + elasticity) * a_proj, a.speed.z)
+    b.speed = embed(b.speed_xy - (1.0 + elasticity) * b_proj, b.speed.z)
 
 
-def internal_coord_to_xy(forward_pos, side_pos, ang):
+def internal_coord_to_xy(forward_pos, side_pos, ang) -> Vector2:
     return Vector2(-side_pos, -forward_pos).rotate(-ang)
+
+
+def embed(v: Vector2, t: float) -> Vector3:
+    return Vector3(v.x, v.y, t)

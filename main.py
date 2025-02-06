@@ -2,14 +2,7 @@ from __future__ import annotations
 import pygame
 import sys
 from pygame.locals import *
-
-from collisions import CollisionDetector
-from groups import ALL_ASTEROIDS, ALL_SPRITES
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
-from math_utils import collide_objects
-import random
-from timers import TIMERS
-from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode(
@@ -17,6 +10,12 @@ DISPLAYSURF = pygame.display.set_mode(
     flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
 )
 
+from collisions import CollisionDetector
+from groups import ALL_ASTEROIDS, ALL_SPRITES
+from math_utils import collide_objects
+import random
+from timers import TIMERS
+from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from object import MovingObject, Player, Asteroid
 from assets import PlayerImages, BackgroundImage
 
@@ -64,7 +63,8 @@ while True:
     else:
         break
 
-while len(ALL_ASTEROIDS) < 100:
+cd = CollisionDetector(*ALL_SPRITES)
+while len(ALL_ASTEROIDS) < 10:
     asteroid = Asteroid(
         init_pos=[
             random.randint(0, SCREEN_WIDTH),
@@ -77,8 +77,11 @@ while len(ALL_ASTEROIDS) < 100:
             random.uniform(-0.1, 0.1),
         ],
     )
-    if CollisionDetector(*ALL_SPRITES).collide_with_callback(asteroid, stationary=True):
+    if cd.collide_with_callback(asteroid, stationary=True):
         asteroid.kill()
+    else:
+        cd.add(asteroid)
+del cd
 
 
 def main():

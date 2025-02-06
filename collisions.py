@@ -13,10 +13,13 @@ class CollisionDetector:
         self.subs = 100
         self._division: dict[tuple[int, int], pygame.sprite.Sprite] = defaultdict(list)
         for sprite in sprites:
-            rect: pygame.Rect = sprite.rect
-            for x in set([rect.left, rect.right]):
-                for y in set([rect.top, rect.bottom]):
-                    self._division[(x // self.subs, y // self.subs)].append(sprite)
+            self.add(sprite)
+
+    def add(self, sprite: pygame.sprite.Sprite):
+        rect: pygame.Rect = sprite.rect
+        for x in set([rect.left, rect.right]):
+            for y in set([rect.top, rect.bottom]):
+                self._division[(x // self.subs, y // self.subs)].append(sprite)
 
     def _collide_with_callback(
         self, sprite: pygame.sprite.Sprite, *, on_collision=None, stationary

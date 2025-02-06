@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pygame
 from pygame.locals import *
 
 PLAYER_1_CONTROLS = dict(
@@ -10,6 +9,7 @@ PLAYER_1_CONTROLS = dict(
     right_turn=K_d,
     left_strafe=K_q,
     right_strafe=K_e,
+    shoot=K_SPACE,
 )
 
 PLAYER_2_CONTROLS = dict(
@@ -19,4 +19,5 @@ PLAYER_2_CONTROLS = dict(
     right_turn=K_l,
     left_strafe=K_u,
     right_strafe=K_o,
+    shoot=K_RETURN,
 )

@@ -30,6 +30,4 @@ BackgroundImage = pygame.transform.scale(
     (SCREEN_WIDTH, SCREEN_HEIGHT),
 )
 
-BlueParticleSmallImage = load_from_file(
-    15, 3, 5, 5, "assets/tyrian/tyrian.shp.01D8A7.png"
-)
+SmallPlasmaImage = load_from_file(15, 3, 5, 5, "assets/tyrian/tyrian.shp.01D8A7.png")
