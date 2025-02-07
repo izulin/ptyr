@@ -48,12 +48,12 @@ class CollisionDetector:
     ) -> bool:
         ret = False
         for shift in ALL_SHIFTS:
-            sprite.pos += Vector3(shift.x, shift.y, 0)
+            sprite.pos += Vector3(*shift, 0)
             sprite.rect.move_ip(shift)
             ret = self._collide_with_callback(
                 sprite, on_collision=on_collision, stationary=stationary
             )
-            sprite.pos -= Vector3(shift.x, shift.y, 0)
+            sprite.pos -= Vector3(*shift, 0)
             sprite.rect.move_ip(-shift)
             if ret and on_collision is None:
                 return True

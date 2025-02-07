@@ -10,13 +10,14 @@ DISPLAYSURF = pygame.display.set_mode(
     flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
 )
 
+from players import Player
 from collisions import CollisionDetector
 from groups import ALL_ASTEROIDS, ALL_SPRITES
 from math_utils import collide_objects
 import random
 from timers import TIMERS
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
-from object import MovingObject, Player, Asteroid
+from objects import MovingObject, Asteroid
 from assets import PlayerImages, BackgroundImage
 
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
@@ -64,7 +65,7 @@ while True:
         break
 
 cd = CollisionDetector(*ALL_SPRITES)
-while len(ALL_ASTEROIDS) < 10:
+while len(ALL_ASTEROIDS) < 20:
     asteroid = Asteroid(
         init_pos=[
             random.randint(0, SCREEN_WIDTH),
