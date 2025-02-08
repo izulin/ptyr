@@ -4,21 +4,21 @@ import sys
 from pygame.locals import *
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
 
+
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode(
     (SCREEN_WIDTH, SCREEN_HEIGHT),
     flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
 )
 
-from players import Player
-from collisions import CollisionDetector
+from players import spawn_player
+from enemies import spawn_asteroid
+from collisions import ALL_SPRITES_CD
 from groups import ALL_ASTEROIDS, ALL_SPRITES
 from math_utils import collide_objects
-import random
 from timers import TIMERS
-from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
-from objects import MovingObject, Asteroid
-from assets import PlayerImages, BackgroundImage
+from objects import MovingObject
+from assets import BackgroundImage
 
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
 FramePerSec = pygame.time.Clock()
@@ -30,59 +30,12 @@ pygame.display.set_caption("NotTyrian")
 
 SHOW_SPEEDS = True
 
+with TIMERS["init"]:
+    spawn_player(1)
+    spawn_player(2)
 
-while True:
-    player1 = Player(
-        controls=PLAYER_1_CONTROLS,
-        image=PlayerImages[2],
-        init_pos=(
-            random.randint(0, SCREEN_WIDTH),
-            random.randint(0, SCREEN_HEIGHT),
-            random.randint(0, 360),
-        ),
-        init_speed=(0, 0, 0),
-    )
-    if CollisionDetector(*ALL_SPRITES).collide_with_callback(player1, stationary=True):
-        player1.kill()
-    else:
-        break
-
-
-while True:
-    player2 = Player(
-        controls=PLAYER_2_CONTROLS,
-        image=PlayerImages[1],
-        init_pos=(
-            random.randint(0, SCREEN_WIDTH),
-            random.randint(0, SCREEN_HEIGHT),
-            random.randint(0, 360),
-        ),
-        init_speed=(0, 0, 0),
-    )
-    if CollisionDetector(*ALL_SPRITES).collide_with_callback(player2, stationary=True):
-        player2.kill()
-    else:
-        break
-
-cd = CollisionDetector(*ALL_SPRITES)
-while len(ALL_ASTEROIDS) < 20:
-    asteroid = Asteroid(
-        init_pos=[
-            random.randint(0, SCREEN_WIDTH),
-            random.randint(0, SCREEN_HEIGHT),
-            random.randint(0, 360),
-        ],
-        init_speed=[
-            random.uniform(-0.1, 0.1),
-            random.uniform(-0.1, 0.1),
-            random.uniform(-0.1, 0.1),
-        ],
-    )
-    if cd.collide_with_callback(asteroid, stationary=True):
-        asteroid.kill()
-    else:
-        cd.add(asteroid)
-del cd
+    while len(ALL_ASTEROIDS) < 50:
+        spawn_asteroid()
 
 
 def main():
@@ -140,9 +93,9 @@ def main():
         dt = FramePerSec.tick(FPS)
 
         with TIMERS["collide"]:
-            cd = CollisionDetector(*ALL_SPRITES)
+            # cd = CollisionDetector(*ALL_SPRITES)
             for sprite in ALL_SPRITES:
-                cd.collide_with_callback(
+                ALL_SPRITES_CD.collide_with_callback(
                     sprite, on_collision=collide_objects, stationary=False
                 )
 
@@ -151,7 +104,9 @@ def main():
                 sprite.update(dt)
         cnt += 1
         if cnt % 1000 == 0:
-            print(dict(TIMERS))
+            print(
+                f"total {sum(timer.val for timer in TIMERS.values()):.3f}", dict(TIMERS)
+            )
             for t in TIMERS.values():
                 t.reset()
 

@@ -1,8 +1,7 @@
 from __future__ import annotations
 import pygame
 
-from assets import AsteroidLargeImage, SmallPlasmaImage
-from groups import ALL_SPRITES, ALL_ASTEROIDS, ALL_BULLETS
+from groups import ALL_SPRITES
 from math_utils import (
     normalize_pos3,
     range_kutta_2,
@@ -10,6 +9,7 @@ from math_utils import (
 )
 from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH
 from pygame.math import Vector3, Vector2
+from collisions import ALL_SPRITES_CD
 
 
 class MovingObject(pygame.sprite.Sprite):
@@ -39,6 +39,11 @@ class MovingObject(pygame.sprite.Sprite):
         self.mass = self.MASS
         self.add(ALL_SPRITES)
         self.ttl = ttl
+        ALL_SPRITES_CD.add(self)
+
+    def kill(self):
+        ALL_SPRITES_CD.remove(self)
+        super().kill()
 
     @property
     def alive(self) -> bool:
@@ -98,7 +103,9 @@ class MovingObject(pygame.sprite.Sprite):
 
     def update(self, dt: float):
         self.update_pos(dt)
+        old_rect = self.rect
         self.update_image_rect()
+        ALL_SPRITES_CD.move(self, self.rect, old_rect)
         if self.ttl is not None:
             self.ttl -= dt
         if not self.alive:
@@ -134,11 +141,3 @@ class PassiveObject(MovingObject):
 
     def get_accels(self):
         return Vector2(0.0, 0.0), 0.0
-
-
-class Asteroid(PassiveObject):
-    MASS = 100.0
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, image=AsteroidLargeImage)
-        self.add(ALL_ASTEROIDS)

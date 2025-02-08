@@ -5,7 +5,12 @@ from pygame import Vector3, Vector2
 from assets import SmallPlasmaImage
 from groups import ALL_BULLETS
 from math_utils import internal_coord_to_xy
-from objects import MovingObject, PassiveObject
+from typing import TYPE_CHECKING
+
+from objects import PassiveObject
+
+if TYPE_CHECKING:
+    from players import Player
 
 
 class SmallPlasma(PassiveObject):
@@ -16,13 +21,12 @@ class SmallPlasma(PassiveObject):
         self.add(ALL_BULLETS)
 
 
-class Weapon:
-    owner: MovingObject
+class BasicWeapon:
+    owner: Player
     cooldown: float
     ammo: int | None
     init_speed: float
     cooldown_left: float
-    ammo_cls = SmallPlasma
 
     def __init__(self, *, owner, cooldown, ammo):
         self.owner = owner
@@ -51,13 +55,13 @@ class Weapon:
             ),
             0.0,
         )
-        self.ammo_cls(init_pos=init_pos, init_speed=init_speed)
+        self.AMMO_CLS(init_pos=init_pos, init_speed=init_speed)
 
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
 
         r = self.owner.images[0].get_height() / 2
-        m = self.ammo_cls.MASS
+        m = self.AMMO_CLS.MASS
         rotational_recoil = (
             Vector3(*launch_pos_internal, 0.0)
             .cross(Vector3(*launch_speed_internal, 0.0))
@@ -80,11 +84,24 @@ class Weapon:
             return
         if self.ammo is not None and self.ammo <= 0:
             return
+
+        self.fire_logic()
+
+        self.cooldown_left = self.cooldown
+        if self.ammo is not None and self.ammo <= 0:
+            self.owner.weapon = self.owner.default_weapon()
+
+    def fire_logic(self):
+        raise NotImplementedError
+
+
+class SinglePlasma(BasicWeapon):
+    AMMO_CLS = SmallPlasma
+
+    def fire_logic(self):
         pos = Vector2(0.0, 20.0)
         launch_angle = 0.0
         launch_speed = 0.3
 
         self._fire_at_pos(pos, launch_angle, launch_speed)
         self.owner.speed -= self._recoil(pos, launch_angle, launch_speed)
-
-        self.cooldown_left = self.cooldown
