@@ -9,7 +9,7 @@ def load_from_file(
     ret_surface = pygame.Surface((sizex, sizey), flags=pygame.SRCALPHA)
     image = pygame.image.load(filename).convert_alpha()
     ret_surface.blit(image, (0, 0), (posx, posy, sizex, sizey))
-    return remove_background(ret_surface)re
+    return remove_background(ret_surface)
 
 
 def remove_background(surface: pygame.Surface) -> pygame.Surface:
