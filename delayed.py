@@ -1,13 +1,13 @@
 from __future__ import annotations
-import pygame
+import pygame as pg
 import logging
 
 logger = logging.getLogger(__name__)
 
-ALL_DELAYED = pygame.sprite.Group()
+ALL_DELAYED = pg.sprite.Group()
 
 
-class DelayedEvent(pygame.sprite.Sprite):
+class DelayedEvent(pg.sprite.Sprite):
     def __init__(self, action, delay, repeat=False, name=""):
         super().__init__()
         self.action = action

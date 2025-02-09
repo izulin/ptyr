@@ -1,14 +1,14 @@
 from __future__ import annotations
-import pygame
+import pygame as pg
 import sys
 from pygame.locals import *
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent, ALL_DELAYED
 
-pygame.init()
-DISPLAYSURF = pygame.display.set_mode(
+pg.init()
+DISPLAYSURF = pg.display.set_mode(
     (SCREEN_WIDTH, SCREEN_HEIGHT),
-    flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
+    flags=pg.NOFRAME | pg.SRCALPHA | pg.SCALED,
 )
 
 from players import spawn_player, get_player
@@ -30,12 +30,12 @@ logger = logging.getLogger(__name__)
 logger.info("Started")
 
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
-FramePerSec = pygame.time.Clock()
+FramePerSec = pg.time.Clock()
 
-font = pygame.font.SysFont("Lucida Console", 60)
-font_small = pygame.font.SysFont("Lucida Console", 20)
+font = pg.font.SysFont("Lucida Console", 60)
+font_small = pg.font.SysFont("Lucida Console", 20)
 
-pygame.display.set_caption("NotTyrian")
+pg.display.set_caption("NotTyrian")
 
 SHOW_SPEEDS = False
 SHOW_HP = True
@@ -58,13 +58,13 @@ DelayedEvent(
 def main():
     cnt = 0
     all_changes = []
-    all_shift_sprites: dict(tuple(int, int), pygame.sprite.RenderUpdates) = {
-        (shift.x, shift.y): pygame.sprite.RenderUpdates(*ALL_SPRITES)
+    all_shift_sprites: dict(tuple(int, int), pg.sprite.RenderUpdates) = {
+        (shift.x, shift.y): pg.sprite.RenderUpdates(*ALL_SPRITES)
         for shift in ALL_SHIFTS
     }
 
     while True:
-        for event in pygame.event.get():
+        for event in pg.event.get():
             if event.type == QUIT:
                 return
             elif event.type == KEYDOWN:
@@ -115,7 +115,7 @@ def main():
         with TIMERS["blits"]:
             all_changes.append(DISPLAYSURF.blit(fps_render, (10, 10)))
 
-        pygame.display.flip()
+        pg.display.flip()
 
         dt = FramePerSec.tick(FPS)
         with TIMERS["delayed events"]:
@@ -149,5 +149,5 @@ def main():
 
 main()
 logger.info("Finished")
-pygame.quit()
+pg.quit()
 sys.exit()

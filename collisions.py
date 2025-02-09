@@ -1,6 +1,6 @@
 from __future__ import annotations
-import pygame
-from pygame import Vector3
+import pygame as pg
+from pygame.math import Vector3
 
 from consts import ALL_SHIFTS
 from collections import defaultdict
@@ -9,16 +9,14 @@ from math_utils import test_if_proper_collision
 
 
 class CollisionDetector:
-    def __init__(self, *sprites: pygame.sprite.Sprite):
+    def __init__(self, *sprites: pg.sprite.Sprite):
         self.subs = 100
-        self._division: dict[tuple[int, int], set[pygame.sprite.Sprite]] = defaultdict(
-            set
-        )
+        self._division: dict[tuple[int, int], set[pg.sprite.Sprite]] = defaultdict(set)
         for sprite in sprites:
             self.add(sprite)
 
-    def add(self, sprite: pygame.sprite.Sprite):
-        rect: pygame.Rect = sprite.rect
+    def add(self, sprite: pg.sprite.Sprite):
+        rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
         x_end = rect.right // self.subs
         y_start = rect.top // self.subs
@@ -27,8 +25,8 @@ class CollisionDetector:
             for y in range(y_start, y_end + 1):
                 self._division[(x, y)].add(sprite)
 
-    def remove(self, sprite: pygame.sprite.Sprite):
-        rect: pygame.Rect = sprite.rect
+    def remove(self, sprite: pg.sprite.Sprite):
+        rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
         x_end = rect.right // self.subs
         y_start = rect.top // self.subs
@@ -37,9 +35,7 @@ class CollisionDetector:
             for y in range(y_start, y_end + 1):
                 self._division[(x, y)].remove(sprite)
 
-    def move(
-        self, sprite: pygame.sprite.Sprite, rect_a: pygame.Rect, rect_b: pygame.Rect
-    ):
+    def move(self, sprite: pg.sprite.Sprite, rect_a: pg.Rect, rect_b: pg.Rect):
         x_start_a = rect_a.left // self.subs
         x_end_a = rect_a.right // self.subs
         y_start_a = rect_a.top // self.subs
@@ -67,9 +63,9 @@ class CollisionDetector:
                 self._division[(x, y)].remove(sprite)
 
     def _collide_with_callback(
-        self, sprite: pygame.sprite.Sprite, *, on_collision=None, stationary
+        self, sprite: pg.sprite.Sprite, *, on_collision=None, stationary
     ) -> bool:
-        rect: pygame.Rect = sprite.rect
+        rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
         x_end = rect.right // self.subs
         y_start = rect.top // self.subs
@@ -84,9 +80,9 @@ class CollisionDetector:
                         or (y < y_start and other.rect.top < y * self.subs)
                     ):
                         continue
-                    if pygame.sprite.collide_rect(
+                    if pg.sprite.collide_rect(sprite, other) and pg.sprite.collide_mask(
                         sprite, other
-                    ) and pygame.sprite.collide_mask(sprite, other):
+                    ):
                         if stationary or test_if_proper_collision(sprite, other):
                             ret = True
                             if on_collision is None:
@@ -95,7 +91,7 @@ class CollisionDetector:
         return ret
 
     def collide_with_callback(
-        self, sprite: pygame.sprite.Sprite, *, on_collision=None, stationary
+        self, sprite: pg.sprite.Sprite, *, on_collision=None, stationary
     ) -> bool:
         ret = False
         for shift in ALL_SHIFTS:

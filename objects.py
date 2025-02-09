@@ -1,5 +1,5 @@
 from __future__ import annotations
-import pygame
+import pygame as pg
 
 from groups import ALL_SPRITES
 from math_utils import (
@@ -10,42 +10,47 @@ from math_utils import (
 from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH
 from pygame.math import Vector3, Vector2
 from collisions import ALL_SPRITES_CD
+from surface import CachedSurface
+import random
 
 
-class MovingObject(pygame.sprite.Sprite):
+class MovingObject(pg.sprite.Sprite):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
     TTL = None
     HP = None
     IMAGE = None
+    GROUPS = (ALL_SPRITES,)
 
-    image: pygame.Surface
-    images: list[pygame.Surface]
-    rect: pygame.Rect
+    _image: CachedSurface
+    rect: pg.Rect
     pos: Vector3
     speed: Vector3
     mass: float
     ttl: float | None
+    alive_time: float
     hp: float | None
     alive: bool
 
     def __init__(self, *args, image=None, init_pos, init_speed, **kwargs):
-        super().__init__(*args, **kwargs)
-        print("creating", self)
+        super().__init__(*self.GROUPS, *args, **kwargs)
 
         if image is None:
             image = self.IMAGE
-        self.images = [pygame.transform.rotate(image, i) for i in range(360)]
-        self.masks = [pygame.mask.from_surface(im) for im in self.images]
+
+        if isinstance(image, (list, tuple)):
+            self._image = random.choice(image)
+        else:
+            self._image = image
 
         self.pos = normalize_pos3(Vector3(init_pos))
         self.speed = Vector3(init_speed)
+        self.alive_time = 0.0
 
         self.update_image_rect()
         self._acc = Vector2()
         self._drag = Vector2()
         self.mass = self.MASS
-        self.add(ALL_SPRITES)
         self.ttl = self.TTL
         self.hp = self.HP
         ALL_SPRITES_CD.add(self)
@@ -53,7 +58,6 @@ class MovingObject(pygame.sprite.Sprite):
 
     def kill(self):
         ALL_SPRITES_CD.remove(self)
-        print("kill", self)
         super().kill()
 
     def apply_damage(self, dmg: float):
@@ -63,21 +67,26 @@ class MovingObject(pygame.sprite.Sprite):
     def on_collision(self, other: MovingObject):
         pass
 
-    def draw_ui(self, target: pygame.Surface) -> list[pygame.Rect]:
+    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         assert (
             target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
         )
         all_changes = []
-        rect: pygame.Rect = self.images[0].get_rect(center=self.rect.center)
-        rect2 = pygame.Rect(0, 0, 50, 5)
-        rect2.midbottom = rect.midtop
-        all_changes.append(pygame.draw.rect(target, GREEN, rect2, width=1))
-        rect2.width = rect2.width * (self.hp / self.HP)
-        all_changes.append(pygame.draw.rect(target, GREEN, rect2))
+        for shift in ALL_SHIFTS:
+            rect: pg.Rect = (
+                self.get_image().get_image().get_rect(center=self.rect.center + shift)
+            )
+            rect2 = pg.Rect(0, 0, 40, 5)
+            rect2.midbottom = rect.midtop
+            all_changes.append(pg.draw.rect(target, GREEN, rect2, width=1))
+            rect2.width = rect2.width * (self.hp / self.HP)
+            all_changes.append(pg.draw.rect(target, GREEN, rect2))
         return all_changes
 
     def get_alive(self) -> bool:
-        return (self.ttl is None or self.ttl > 0.0) and (self.hp is None or self.hp > 0)
+        return (self.ttl is None or self.ttl > self.alive_time) and (
+            self.hp is None or self.hp > 0
+        )
 
     @property
     def pos_xy(self) -> Vector2:
@@ -87,7 +96,7 @@ class MovingObject(pygame.sprite.Sprite):
     def speed_xy(self) -> Vector2:
         return Vector2(self.speed.x, self.speed.y)
 
-    def draw_debugs(self, target: pygame.Surface) -> list[pygame.Rect]:
+    def draw_debugs(self, target: pg.Surface) -> list[pg.Rect]:
         assert (
             target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
         )
@@ -97,7 +106,7 @@ class MovingObject(pygame.sprite.Sprite):
         for shift in ALL_SHIFTS:
             dt = 200
             all_changes.append(
-                pygame.draw.line(
+                pg.draw.line(
                     target,
                     WHITE,
                     shift + pos_xy,
@@ -107,7 +116,7 @@ class MovingObject(pygame.sprite.Sprite):
             )
             dt = 200000
             all_changes.append(
-                pygame.draw.line(
+                pg.draw.line(
                     target,
                     GREEN,
                     shift + pos_xy,
@@ -116,7 +125,7 @@ class MovingObject(pygame.sprite.Sprite):
                 )
             )
             all_changes.append(
-                pygame.draw.line(
+                pg.draw.line(
                     target,
                     RED,
                     shift + pos_xy + dt * self._acc,
@@ -126,10 +135,13 @@ class MovingObject(pygame.sprite.Sprite):
             )
         return all_changes
 
+    def get_image(self) -> CachedSurface:
+        return self._image
+
     def update_image_rect(self):
-        self.image = self.images[int(self.pos.z)]
-        self.rect = self.image.get_rect(center=self.pos_xy)
-        self.mask = self.masks[int(self.pos.z)]
+        self.image = self.get_image().get_image(self.pos.z)
+        self.rect = self.get_image().get_rect(self.pos.z, center=self.pos_xy)
+        self.mask = self.get_image().get_mask(self.pos.z)
 
     def update(self, dt: float):
         if not self.alive:
@@ -138,8 +150,7 @@ class MovingObject(pygame.sprite.Sprite):
         old_rect = self.rect
         self.update_image_rect()
         ALL_SPRITES_CD.move(self, self.rect, old_rect)
-        if self.ttl is not None:
-            self.ttl -= dt
+        self.alive_time += dt
         self.alive = self.get_alive()
         if not self.alive:
             self.on_death()

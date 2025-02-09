@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import pygame
+import pygame as pg
 from pygame import Vector3, Vector2
 
 from assets import SmallPlasmaImage
@@ -18,7 +18,7 @@ class Bullet(PassiveObject):
         other.apply_damage(self.DMG)
         self.hp = 0
 
-    def draw_ui(self, target: pygame.Surface) -> list[pygame.Rect]:
+    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         return []
 
 
@@ -73,7 +73,7 @@ class BasicWeapon:
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
 
-        r = self.owner.images[0].get_height() / 2
+        r = self.owner.get_image().get_image().get_height() / 2
         m = self.AMMO_CLS.MASS
         rotational_recoil = (
             Vector3(*launch_pos_internal, 0.0)
