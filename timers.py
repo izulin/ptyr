@@ -15,7 +15,7 @@ class Timer:
         self.val += perf_counter()
 
     def __repr__(self):
-        return f"Timer({self.val:.3f})"
+        return f"{self.val:.3f}"
 
     def reset(self):
         self.val = 0

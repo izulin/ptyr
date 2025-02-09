@@ -5,14 +5,14 @@ import random
 import pygame
 from pygame import Vector2
 
-from assets import PlayerImages
+from assets import PlayerImages, ExplosionImage
 from collisions import ALL_SPRITES_CD
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
 from groups import ALL_PLAYERS
-from objects import MovingObject
-from weapons import BasicWeapon, SinglePlasma
+from objects import MovingObject, PassiveObject
+from weapons import BasicWeapon, SinglePlasma, DoublePlasma
 
 
 class Player(MovingObject):
@@ -35,7 +35,7 @@ class Player(MovingObject):
         self.player_id = player_id
 
     def default_weapon(self):
-        return SinglePlasma(owner=self)
+        return DoublePlasma(owner=self)
 
     def get_accels(self) -> tuple[Vector2, float]:
         pressed_keys = pygame.key.get_pressed()
@@ -62,12 +62,18 @@ class Player(MovingObject):
             self.weapon.fire()
         super().update(dt)
 
-    def kill(self):
-        DelayedEvent(lambda: spawn_player(self.player_id), 2000, repeat=False)
-        super().kill()
+    def on_death(self):
+        DelayedEvent(
+            lambda: spawn_player(self.player_id),
+            2000,
+            repeat=False,
+            name=f"spawn_player {self.player_id}",
+        )
+        PlayerExplosion(init_pos=self.pos, init_speed=self.speed)
 
 
 def spawn_player(player_id):
+    assert get_player(player_id) is None
     assert player_id in [1, 2]
     for _ in range(1000):
         controls = {1: PLAYER_1_CONTROLS, 2: PLAYER_2_CONTROLS}[player_id]
@@ -99,3 +105,12 @@ def get_player(player_id) -> Player | None:
         if player.player_id == player_id:
             return player
     return None
+
+
+class PlayerExplosion(PassiveObject):
+    TTL = 2000
+    IMAGE = ExplosionImage
+    MASS = Player.MASS
+
+    def draw_ui(self, target: pygame.Surface) -> list[pygame.Rect]:
+        return []

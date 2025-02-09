@@ -20,6 +20,15 @@ from timers import TIMERS
 from objects import MovingObject
 from assets import BackgroundImage
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(module)s.py %(funcName)s %(message)s",
+)
+logger = logging.getLogger(__name__)
+logger.info("Started")
+
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
 FramePerSec = pygame.time.Clock()
 
@@ -39,7 +48,10 @@ with TIMERS["init"]:
         spawn_asteroid()
 
 DelayedEvent(
-    lambda: spawn_asteroid() if len(ALL_ASTEROIDS) < 50 else None, 5000, repeat=True
+    lambda: spawn_asteroid() if len(ALL_ASTEROIDS) < 50 else None,
+    5000,
+    repeat=True,
+    name="spawn_asteroid",
 )
 
 
@@ -127,13 +139,15 @@ def main():
                 sprite.update(dt)
         cnt += 1
         if cnt % 1000 == 0:
-            print(
-                f"total {sum(timer.val for timer in TIMERS.values()):.3f}", dict(TIMERS)
+            logger.info(
+                f"total:{sum(timer.val for timer in TIMERS.values()):.3f} "
+                + " ".join(f"{k}:{v}" for k, v in TIMERS.items())
             )
             for t in TIMERS.values():
                 t.reset()
 
 
 main()
+logger.info("Finished")
 pygame.quit()
 sys.exit()

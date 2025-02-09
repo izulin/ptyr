@@ -17,6 +17,7 @@ class MovingObject(pygame.sprite.Sprite):
     ANGULAR_DRAG = 2 / 1000
     TTL = None
     HP = None
+    IMAGE = None
 
     image: pygame.Surface
     images: list[pygame.Surface]
@@ -25,11 +26,15 @@ class MovingObject(pygame.sprite.Sprite):
     speed: Vector3
     mass: float
     ttl: float | None
-    hp: float
+    hp: float | None
+    alive: bool
 
-    def __init__(self, *args, image, init_pos, init_speed, **kwargs):
+    def __init__(self, *args, image=None, init_pos, init_speed, **kwargs):
         super().__init__(*args, **kwargs)
+        print("creating", self)
 
+        if image is None:
+            image = self.IMAGE
         self.images = [pygame.transform.rotate(image, i) for i in range(360)]
         self.masks = [pygame.mask.from_surface(im) for im in self.images]
 
@@ -43,15 +48,17 @@ class MovingObject(pygame.sprite.Sprite):
         self.add(ALL_SPRITES)
         self.ttl = self.TTL
         self.hp = self.HP
-        assert self.HP is not None
         ALL_SPRITES_CD.add(self)
+        self.alive = self.get_alive()
 
     def kill(self):
         ALL_SPRITES_CD.remove(self)
+        print("kill", self)
         super().kill()
 
     def apply_damage(self, dmg: float):
-        self.hp -= dmg
+        if self.hp is not None:
+            self.hp -= dmg
 
     def on_collision(self, other: MovingObject):
         pass
@@ -69,9 +76,8 @@ class MovingObject(pygame.sprite.Sprite):
         all_changes.append(pygame.draw.rect(target, GREEN, rect2))
         return all_changes
 
-    @property
-    def alive(self) -> bool:
-        return (self.ttl is None or self.ttl > 0.0) and (self.hp > 0)
+    def get_alive(self) -> bool:
+        return (self.ttl is None or self.ttl > 0.0) and (self.hp is None or self.hp > 0)
 
     @property
     def pos_xy(self) -> Vector2:
@@ -126,14 +132,21 @@ class MovingObject(pygame.sprite.Sprite):
         self.mask = self.masks[int(self.pos.z)]
 
     def update(self, dt: float):
+        if not self.alive:
+            return
         self.update_pos(dt)
         old_rect = self.rect
         self.update_image_rect()
         ALL_SPRITES_CD.move(self, self.rect, old_rect)
         if self.ttl is not None:
             self.ttl -= dt
+        self.alive = self.get_alive()
         if not self.alive:
+            self.on_death()
             self.kill()
+
+    def on_death(self):
+        pass
 
     def get_accels(self):
         raise NotImplementedError

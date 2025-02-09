@@ -4,7 +4,6 @@ import pygame
 from pygame import Vector3, Vector2
 
 from assets import SmallPlasmaImage
-from groups import ALL_BULLETS
 from math_utils import internal_coord_to_xy
 from typing import TYPE_CHECKING
 
@@ -15,10 +14,6 @@ if TYPE_CHECKING:
 
 
 class Bullet(PassiveObject):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.add(ALL_BULLETS)
-
     def on_collision(self, other: MovingObject):
         other.apply_damage(self.DMG)
         self.hp = 0
@@ -32,9 +27,7 @@ class SmallPlasma(Bullet):
     TTL = 3_000
     HP = 1.0
     DMG = 5.0
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, image=SmallPlasmaImage)
+    IMAGE = SmallPlasmaImage
 
 
 class BasicWeapon:
@@ -121,9 +114,18 @@ class SinglePlasma(BasicWeapon):
     AMMO = None
 
     def fire_logic(self):
-        pos = Vector2(0.0, 20.0)
-        launch_angle = 0.0
-        launch_speed = 0.3
+        self._fire_at_pos(Vector2(0.0, 20.0), 0.0, 0.3)
+        self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3)
 
-        self._fire_at_pos(pos, launch_angle, launch_speed)
-        self.owner.speed -= self._recoil(pos, launch_angle, launch_speed)
+
+class DoublePlasma(BasicWeapon):
+    AMMO_CLS = SmallPlasma
+    COOLDOWN = 100
+    AMMO = None
+
+    def fire_logic(self):
+        self._fire_at_pos(Vector2(5.0, 20.0), 0.0, 0.3)
+        self._fire_at_pos(Vector2(-5.0, 20.0), 0.0, 0.3)
+        self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3) + self._recoil(
+            Vector2(0.0, 20.0), 0.0, 0.3
+        )
