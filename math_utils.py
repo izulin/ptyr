@@ -43,11 +43,11 @@ def test_if_proper_collision(a: MovingObject, b: MovingObject):
     return pos_diff * speed_diff < 0
 
 
-def project(vector: Vector2, base: Vector2):
+def project(vector: Vector2, base: Vector2) -> Vector2:
     return (vector * base) / (base * base) * base
 
 
-def collide_objects(a: MovingObject, b: MovingObject, elasticity=1.0):
+def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.9) -> float:
     pos_diff = a.pos_xy - b.pos_xy
     center_mass_speed = (a.speed_xy * a.mass + b.speed_xy * b.mass) / (a.mass + b.mass)
     a_speed_norm = a.speed_xy - center_mass_speed
@@ -56,6 +56,7 @@ def collide_objects(a: MovingObject, b: MovingObject, elasticity=1.0):
     b_proj = project(b_speed_norm, pos_diff)
     a.speed = Vector3(*(a.speed_xy - (1.0 + elasticity) * a_proj), a.speed.z)
     b.speed = Vector3(*(b.speed_xy - (1.0 + elasticity) * b_proj), b.speed.z)
+    return a_proj.length() * a.mass
 
 
 def internal_coord_to_xy(pos: Vector2, ang: float) -> Vector2:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pygame
 from pygame import Vector3, Vector2
 
 from assets import SmallPlasmaImage
@@ -7,33 +8,52 @@ from groups import ALL_BULLETS
 from math_utils import internal_coord_to_xy
 from typing import TYPE_CHECKING
 
-from objects import PassiveObject
+from objects import PassiveObject, MovingObject
 
 if TYPE_CHECKING:
     from players import Player
 
 
-class SmallPlasma(PassiveObject):
-    MASS = 1.0 / 100
+class Bullet(PassiveObject):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add(ALL_BULLETS)
+
+    def on_collision(self, other: MovingObject):
+        other.apply_damage(self.DMG)
+        self.hp = 0
+
+    def draw_ui(self, target: pygame.Surface) -> list[pygame.Rect]:
+        return []
+
+
+class SmallPlasma(Bullet):
+    MASS = 1.0 / 10
+    TTL = 3_000
+    HP = 1.0
+    DMG = 5.0
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, image=SmallPlasmaImage, ttl=10_000)
-        self.add(ALL_BULLETS)
+        super().__init__(*args, **kwargs, image=SmallPlasmaImage)
 
 
 class BasicWeapon:
+    COOLDOWN = None
+    AMMO = None
+
     owner: Player
     cooldown: float
     ammo: int | None
     init_speed: float
     cooldown_left: float
 
-    def __init__(self, *, owner, cooldown, ammo):
+    def __init__(self, *, owner):
         self.owner = owner
-        self.cooldown = cooldown
-        self.ammo = ammo
 
         self.cooldown_left = 0.0
+        assert self.COOLDOWN is not None
+        self.cooldown = self.COOLDOWN
+        self.ammo = self.AMMO
 
     def update(self, dt):
         self.cooldown_left -= dt
@@ -97,6 +117,8 @@ class BasicWeapon:
 
 class SinglePlasma(BasicWeapon):
     AMMO_CLS = SmallPlasma
+    COOLDOWN = 50
+    AMMO = None
 
     def fire_logic(self):
         pos = Vector2(0.0, 20.0)

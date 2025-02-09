@@ -10,6 +10,7 @@ import random
 
 class Asteroid(PassiveObject):
     MASS = 100.0
+    HP = 100.0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, image=AsteroidLargeImage)

@@ -15,6 +15,8 @@ from collisions import ALL_SPRITES_CD
 class MovingObject(pygame.sprite.Sprite):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
+    TTL = None
+    HP = None
 
     image: pygame.Surface
     images: list[pygame.Surface]
@@ -23,8 +25,9 @@ class MovingObject(pygame.sprite.Sprite):
     speed: Vector3
     mass: float
     ttl: float | None
+    hp: float
 
-    def __init__(self, *args, image, init_pos, init_speed, ttl=None, **kwargs):
+    def __init__(self, *args, image, init_pos, init_speed, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.images = [pygame.transform.rotate(image, i) for i in range(360)]
@@ -38,16 +41,37 @@ class MovingObject(pygame.sprite.Sprite):
         self._drag = Vector2()
         self.mass = self.MASS
         self.add(ALL_SPRITES)
-        self.ttl = ttl
+        self.ttl = self.TTL
+        self.hp = self.HP
+        assert self.HP is not None
         ALL_SPRITES_CD.add(self)
 
     def kill(self):
         ALL_SPRITES_CD.remove(self)
         super().kill()
 
+    def apply_damage(self, dmg: float):
+        self.hp -= dmg
+
+    def on_collision(self, other: MovingObject):
+        pass
+
+    def draw_ui(self, target: pygame.Surface) -> list[pygame.Rect]:
+        assert (
+            target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
+        )
+        all_changes = []
+        rect: pygame.Rect = self.images[0].get_rect(center=self.rect.center)
+        rect2 = pygame.Rect(0, 0, 50, 5)
+        rect2.midbottom = rect.midtop
+        all_changes.append(pygame.draw.rect(target, GREEN, rect2, width=1))
+        rect2.width = rect2.width * (self.hp / self.HP)
+        all_changes.append(pygame.draw.rect(target, GREEN, rect2))
+        return all_changes
+
     @property
     def alive(self) -> bool:
-        return self.ttl is None or self.ttl > 0.0
+        return (self.ttl is None or self.ttl > 0.0) and (self.hp > 0)
 
     @property
     def pos_xy(self) -> Vector2:

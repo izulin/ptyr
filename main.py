@@ -3,7 +3,7 @@ import pygame
 import sys
 from pygame.locals import *
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
-
+from delayed import DelayedEvent, ALL_DELAYED
 
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode(
@@ -11,7 +11,7 @@ DISPLAYSURF = pygame.display.set_mode(
     flags=pygame.NOFRAME | pygame.SRCALPHA | pygame.SCALED,
 )
 
-from players import spawn_player
+from players import spawn_player, get_player
 from enemies import spawn_asteroid
 from collisions import ALL_SPRITES_CD
 from groups import ALL_ASTEROIDS, ALL_SPRITES
@@ -28,14 +28,19 @@ font_small = pygame.font.SysFont("Lucida Console", 20)
 
 pygame.display.set_caption("NotTyrian")
 
-SHOW_SPEEDS = True
+SHOW_SPEEDS = False
+SHOW_HP = True
 
 with TIMERS["init"]:
     spawn_player(1)
     spawn_player(2)
 
-    while len(ALL_ASTEROIDS) < 50:
+    while len(ALL_ASTEROIDS) < 10:
         spawn_asteroid()
+
+DelayedEvent(
+    lambda: spawn_asteroid() if len(ALL_ASTEROIDS) < 50 else None, 5000, repeat=True
+)
 
 
 def main():
@@ -50,11 +55,15 @@ def main():
         for event in pygame.event.get():
             if event.type == QUIT:
                 return
-            elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                return
-            elif event.type == KEYDOWN and event.key == K_BACKSPACE:
-                global SHOW_SPEEDS
-                SHOW_SPEEDS = not SHOW_SPEEDS
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    return
+                elif event.key == K_BACKSPACE:
+                    global SHOW_SPEEDS
+                    SHOW_SPEEDS = not SHOW_SPEEDS
+                elif event.key == K_EQUALS:
+                    global SHOW_HP
+                    SHOW_HP = not SHOW_HP
 
         for shift_sprites in all_shift_sprites.values():
             shift_sprites.add(ALL_SPRITES)
@@ -78,9 +87,15 @@ def main():
 
         with TIMERS["debugs"]:
             if SHOW_SPEEDS:
+                sprite: MovingObject
                 for sprite in ALL_SPRITES.sprites():
-                    assert isinstance(sprite, MovingObject)
                     all_changes.extend(sprite.draw_debugs(DISPLAYSURF))
+
+        with TIMERS["UX"]:
+            if SHOW_HP:
+                sprite: MovingObject
+                for sprite in ALL_SPRITES.sprites():
+                    all_changes.extend(sprite.draw_ui(DISPLAYSURF))
 
         fps = FramePerSec.get_fps()
         fps_render = font_small.render(f"{fps:.2f}.", True, BLACK)
@@ -91,12 +106,20 @@ def main():
         pygame.display.flip()
 
         dt = FramePerSec.tick(FPS)
+        with TIMERS["delayed events"]:
+            ALL_DELAYED.update(dt)
+
+        def on_collision(obj_a: MovingObject, obj_b: MovingObject):
+            force = collide_objects(obj_a, obj_b)
+            obj_a.on_collision(obj_b)
+            obj_b.on_collision(obj_a)
+            obj_a.apply_damage(force)
+            obj_b.apply_damage(force)
 
         with TIMERS["collide"]:
-            # cd = CollisionDetector(*ALL_SPRITES)
             for sprite in ALL_SPRITES:
                 ALL_SPRITES_CD.collide_with_callback(
-                    sprite, on_collision=collide_objects, stationary=False
+                    sprite, on_collision=on_collision, stationary=False
                 )
 
         with TIMERS["update"]:
