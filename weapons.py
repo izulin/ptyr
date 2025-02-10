@@ -3,31 +3,15 @@ from __future__ import annotations
 import pygame as pg
 from pygame import Vector3, Vector2
 
-from assets import SmallPlasmaImage
+from assets import SmallBulletImage, MineAnimation
 from math_utils import internal_coord_to_xy
 from typing import TYPE_CHECKING
 
 from objects import PassiveObject, MovingObject
+from surface import CachedSurface
 
 if TYPE_CHECKING:
     from players import Player
-
-
-class Bullet(PassiveObject):
-    def on_collision(self, other: MovingObject):
-        other.apply_damage(self.DMG)
-        self.hp = 0
-
-    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
-        return []
-
-
-class SmallPlasma(Bullet):
-    MASS = 1.0 / 10
-    TTL = 3_000
-    HP = 1.0
-    DMG = 5.0
-    IMAGE = SmallPlasmaImage
 
 
 class BasicWeapon:
@@ -108,8 +92,25 @@ class BasicWeapon:
         raise NotImplementedError
 
 
-class SinglePlasma(BasicWeapon):
-    AMMO_CLS = SmallPlasma
+class Bullet(PassiveObject):
+    def on_collision(self, other: MovingObject):
+        other.apply_damage(self.DMG)
+        self.hp = 0
+
+    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
+        return []
+
+
+class SmallParticle(Bullet):
+    MASS = 1.0 / 10
+    TTL = 3_000
+    HP = 1.0
+    DMG = 1.0
+    IMAGE = SmallBulletImage
+
+
+class SingleShot(BasicWeapon):
+    AMMO_CLS = SmallParticle
     COOLDOWN = 50
     AMMO = None
 
@@ -118,8 +119,8 @@ class SinglePlasma(BasicWeapon):
         self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3)
 
 
-class DoublePlasma(BasicWeapon):
-    AMMO_CLS = SmallPlasma
+class DoubleShot(BasicWeapon):
+    AMMO_CLS = SmallParticle
     COOLDOWN = 100
     AMMO = None
 
@@ -129,3 +130,35 @@ class DoublePlasma(BasicWeapon):
         self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3) + self._recoil(
             Vector2(0.0, 20.0), 0.0, 0.3
         )
+
+
+class Mine(PassiveObject):
+    DMG = 1000.0
+    DRAG = 100 / 1000
+    ANGULAR_DRAG = 200 / 1000
+    IMAGE = MineAnimation
+    HP = 100.0
+    MASS = 100.0
+
+    def on_collision(self, other: MovingObject):
+        if other.HP is not None and other.HP >= 30:
+            other.apply_damage(self.DMG)
+            self.hp = 0
+
+    def get_image(self) -> CachedSurface:
+        return self.IMAGE.get_frame(
+            (self.alive_time / (3000 / len(self.IMAGE))) % len(self.IMAGE)
+        )
+
+    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
+        return []
+
+
+class MineLauncher(BasicWeapon):
+    AMMO_CLS = Mine
+    COOLDOWN = 1000
+    AMMO = 10
+
+    def fire_logic(self):
+        self._fire_at_pos(Vector2(0.0, -10.0), 180, 0.01)
+        self.owner.speed -= self._recoil(Vector2(0.0, -10.0), 180, 0.01)

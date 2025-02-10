@@ -5,7 +5,7 @@ import random
 import pygame as pg
 from pygame.math import Vector2
 
-from assets import PlayerImages, ExplosionAnimation
+from assets import PlayerImages, MediumExplosion, LargeExplosion1, LargeExplosion2
 from collisions import ALL_SPRITES_CD
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
@@ -13,7 +13,7 @@ from delayed import DelayedEvent
 from groups import ALL_PLAYERS
 from objects import MovingObject, PassiveObject
 from surface import CachedSurface
-from weapons import BasicWeapon, SinglePlasma, DoublePlasma
+from weapons import BasicWeapon, SingleShot, DoubleShot, MineLauncher
 
 
 class Player(MovingObject):
@@ -36,7 +36,7 @@ class Player(MovingObject):
         self.player_id = player_id
 
     def default_weapon(self):
-        return DoublePlasma(owner=self)
+        return DoubleShot(owner=self)
 
     def get_accels(self) -> tuple[Vector2, float]:
         pressed_keys = pg.key.get_pressed()
@@ -110,13 +110,11 @@ def get_player(player_id) -> Player | None:
 
 class PlayerExplosion(PassiveObject):
     TTL = 2000
-    IMAGE = ExplosionAnimation
+    IMAGE = LargeExplosion2
     MASS = Player.MASS
 
     def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         return []
 
     def get_image(self) -> CachedSurface:
-        return self.IMAGE.get_frame(
-            self.alive_time / (self.TTL / len(ExplosionAnimation))
-        )
+        return self.IMAGE.get_frame(self.alive_time / (self.TTL / len(self.IMAGE)))

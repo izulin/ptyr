@@ -13,6 +13,38 @@ def load_from_file(
     return remove_background(ret_surface)
 
 
+def load_double_from_file(
+    posx: int, posy: int, sizex: int, sizey: int, filename: str
+) -> pg.Surface:
+    ret_surface = pg.Surface((2 * sizex, sizey), flags=pg.SRCALPHA)
+    image = pg.image.load(filename).convert_alpha()
+    ret_surface.blit(image, (0, 0), (posx, posy, sizex, sizey))
+    ret_surface.blit(image, (sizex, 0), (posx, posy + sizey, sizex, sizey))
+    return remove_background(ret_surface)
+
+
+def load_double_reversed_from_file(
+    posx: int, posy: int, sizex: int, sizey: int, filename: str
+) -> pg.Surface:
+    ret_surface = pg.Surface((2 * sizex, sizey), flags=pg.SRCALPHA)
+    image = pg.image.load(filename).convert_alpha()
+    ret_surface.blit(image, (sizex, 0), (posx, posy, sizex, sizey))
+    ret_surface.blit(image, (0, 0), (posx, posy + sizey, sizex, sizey))
+    return remove_background(ret_surface)
+
+
+def load_quad_from_file(
+    posx: int, posy: int, sizex: int, sizey: int, filename: str
+) -> pg.Surface:
+    ret_surface = pg.Surface((2 * sizex, 2 * sizey), flags=pg.SRCALPHA)
+    image = pg.image.load(filename).convert_alpha()
+    ret_surface.blit(image, (0, 0), (posx, posy, sizex, sizey))
+    ret_surface.blit(image, (sizex, 0), (posx, posy + sizey, sizex, sizey))
+    ret_surface.blit(image, (0, sizey), (posx, posy + 2 * sizey, sizex, sizey))
+    ret_surface.blit(image, (sizex, sizey), (posx, posy + 3 * sizey, sizex, sizey))
+    return remove_background(ret_surface)
+
+
 def remove_background(surface: pg.Surface) -> pg.Surface:
     """In place removal."""
     pxarray = pg.PixelArray(surface)
@@ -67,24 +99,32 @@ BackgroundImage = pg.transform.scale(
     (SCREEN_WIDTH, SCREEN_HEIGHT),
 )
 
+SmallBulletImage = CachedSurface(
+    load_from_file(183, 74, 5, 5, "assets/tyrian/newsh(.shp.000000.png")
+)
+
 SmallPlasmaImage = CachedSurface(
     load_from_file(15, 3, 5, 5, "assets/tyrian/tyrian.shp.01D8A7.png")
 )
 
-
-def load_quad_from_file(
-    posx: int, posy: int, sizex: int, sizey: int, filename: str
-) -> pg.Surface:
-    ret_surface = pg.Surface((2 * sizex, 2 * sizey), flags=pg.SRCALPHA)
-    image = pg.image.load(filename).convert_alpha()
-    ret_surface.blit(image, (0, 0), (posx, posy, sizex, sizey))
-    ret_surface.blit(image, (sizex, 0), (posx, posy + sizey, sizex, sizey))
-    ret_surface.blit(image, (0, sizey), (posx, posy + 2 * sizey, sizex, sizey))
-    ret_surface.blit(image, (sizex, sizey), (posx, posy + 3 * sizey, sizex, sizey))
-    return remove_background(ret_surface)
-
-
-ExplosionAnimation = CachedAnimation(
+MediumExplosion = CachedAnimation(
     load_quad_from_file(0 + 12 * i, 126, 12, 14, "assets/tyrian/tyrian.shp.01D8A7.png")
     for i in range(11)
+)
+
+LargeExplosion1 = CachedAnimation(
+    load_double_from_file(0 + 12 * i, 0, 12, 28, "assets/tyrian/newsh6.shp.000000.png")
+    for i in range(17)
+)
+
+LargeExplosion2 = CachedAnimation(
+    load_double_reversed_from_file(
+        0 + 12 * i, 114, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
+    )
+    for i in range(13)
+)
+
+MineAnimation = CachedAnimation(
+    load_from_file(192, 113 + 28 * i, 22, 22, "assets/tyrian/newsha.shp.000000.png")
+    for i in range(3)
 )
