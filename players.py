@@ -118,7 +118,7 @@ def get_player(player_id) -> Player | None:
 
 class PlayerExplosion(HasTimer, StaticObject):
     TTL = 2000
-    IMAGE = LargeExplosion2
+    IMAGE = (LargeExplosion1, LargeExplosion2)
     MASS = Player.MASS
     GROUPS = (
         ALL_DRAWABLE_OBJECTS,
@@ -130,4 +130,4 @@ class PlayerExplosion(HasTimer, StaticObject):
         return []
 
     def get_surface(self) -> CachedSurface:
-        return self.IMAGE.get_frame(self.alive_time / (self.TTL / len(self.IMAGE)))
+        return self._image.get_frame(self.alive_time / (self.TTL / len(self.IMAGE)))
