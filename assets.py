@@ -129,6 +129,6 @@ MineAnimation = CachedAnimation(
     for i in range(3)
 )
 
-HealPowerUpImage = CachedSurface(
+HealPowerupImage = CachedSurface(
     load_from_file(171, 115, 19, 22, "assets/tyrian/newsh1.shp.000000.png")
 )

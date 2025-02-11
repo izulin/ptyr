@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import pygame as pg
 
 from groups import ALL_SPRITES
@@ -9,17 +10,18 @@ from math_utils import (
 )
 from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH, BLUE
 from pygame.math import Vector3, Vector2
-from collisions import ALL_SPRITES_CD
-from surface import CachedSurface
+from collisions import COLLIDING_SPRITES_CD
 import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from surface import CachedSurface
 
 
 class MovingObject(pg.sprite.Sprite):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
-    TTL = None
-    HP = None
-    SHIELD = None
+    MASS = None
     IMAGE = None
     GROUPS = (ALL_SPRITES,)
     COLLIDES = True
@@ -29,9 +31,7 @@ class MovingObject(pg.sprite.Sprite):
     pos: Vector3
     speed: Vector3
     mass: float
-    ttl: float | None
     alive_time: float
-    hp: float | None
     shield: float | None
     alive: bool
 
@@ -50,39 +50,21 @@ class MovingObject(pg.sprite.Sprite):
         self.speed = Vector3(init_speed)
         self.alive_time = 0.0
 
+        self.alive = True
         self.update_image_rect()
         self._acc = Vector2()
         self._drag = Vector2()
         self.mass = self.MASS
-        self.ttl = self.TTL
-        self.hp = self.HP
-        self.shield = self.SHIELD
-        ALL_SPRITES_CD.add(self)
-        self.alive = self.get_alive()
+        if self.COLLIDES:
+            COLLIDING_SPRITES_CD.add(self)
 
-    def make_dead(self):
+    def mark_dead(self):
         self.alive = False
-        self.on_death()
 
     def kill(self):
-        ALL_SPRITES_CD.remove(self)
+        if self.COLLIDES:
+            COLLIDING_SPRITES_CD.remove(self)
         super().kill()
-
-    def apply_damage(self, dmg: float):
-        if self.shield is not None:
-            d = min(self.shield, dmg)
-            self.shield -= d
-            dmg -= d
-        if self.hp is not None:
-            self.hp -= dmg
-
-    def heal_hp(self, heal: float):
-        if self.hp is not None:
-            self.hp = min(self.hp + heal, self.HP)
-
-    def heal_shield(self, heal: float):
-        if self.shield is not None:
-            self.shield = min(self.shield + heal, self.SHIELD)
 
     def on_collision(self, other: MovingObject):
         pass
@@ -98,20 +80,15 @@ class MovingObject(pg.sprite.Sprite):
             hp_bar.midbottom = rect.midtop
             shield_bar = pg.Rect(0, 0, 40, 5)
             shield_bar.midbottom = hp_bar.midtop
-            if self.hp is not None:
+            if isinstance(self, HasHitpoints):
                 all_changes.append(pg.draw.rect(target, GREEN, hp_bar, width=1))
                 hp_bar.width = hp_bar.width * (self.hp / self.HP)
                 all_changes.append(pg.draw.rect(target, GREEN, hp_bar))
-            if self.shield is not None:
+            if isinstance(self, HasShield):
                 all_changes.append(pg.draw.rect(target, BLUE, shield_bar, width=1))
                 shield_bar.width = shield_bar.width * (self.shield / self.SHIELD)
                 all_changes.append(pg.draw.rect(target, BLUE, shield_bar))
         return all_changes
-
-    def get_alive(self) -> bool:
-        return (self.ttl is None or self.ttl > self.alive_time) and (
-            self.hp is None or self.hp > 0
-        )
 
     @property
     def pos_xy(self) -> Vector2:
@@ -169,18 +146,12 @@ class MovingObject(pg.sprite.Sprite):
         self.mask = self.get_surface().get_mask(self.pos.z)
 
     def update(self, dt: float):
-        if not self.alive:
-            self.kill()
-            return
         old_rect = self.rect
         self.update_pos(dt)
         self.update_image_rect()
-        ALL_SPRITES_CD.move(self, self.rect, old_rect)
         self.alive_time += dt
-        self.heal_shield(dt / 1000)
-        if not self.get_alive():
-            self.make_dead()
-            self.kill()
+        if self.COLLIDES:
+            COLLIDING_SPRITES_CD.move(self, self.rect, old_rect)
 
     def on_death(self):
         pass
@@ -209,7 +180,60 @@ class MovingObject(pg.sprite.Sprite):
         self.speed = new_speed
 
 
-class PassiveObject(MovingObject):
+class HasShield:
+    shield: float
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shield = self.SHIELD
+
+    def apply_damage(self, dmg: float):
+        if self.shield is not None:
+            d = min(self.shield, dmg)
+            self.shield -= d
+            dmg -= d
+        super().apply_damage(dmg)
+
+    def heal_shield(self, heal: float):
+        if self.shield is not None:
+            self.shield = min(self.shield + heal, self.SHIELD)
+
+    def update(self, dt: float):
+        super().update(dt)
+        self.heal_shield(dt / 1000 * 2)
+
+
+class HasHitpoints:
+    hp: float
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hp = self.HP
+
+    def apply_damage(self, dmg: float):
+        self.hp -= dmg
+        if self.hp <= 0:
+            self.mark_dead()
+
+    def heal_hp(self, heal: float):
+        self.hp = min(self.hp + heal, self.HP)
+
+
+class HasTimer:
+    ttl: float
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ttl = self.TTL
+
+    def update(self, dt: float):
+        self.ttl -= dt
+        if self.ttl <= 0:
+            self.mark_dead()
+        super().update(dt)
+
+
+class StaticObject(MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 

@@ -7,7 +7,7 @@ from assets import SmallBulletImage, MineAnimation
 from math_utils import internal_coord_to_xy
 from typing import TYPE_CHECKING
 
-from objects import PassiveObject, MovingObject
+from objects import StaticObject, MovingObject, HasHitpoints, HasTimer
 from surface import CachedSurface
 
 if TYPE_CHECKING:
@@ -92,16 +92,16 @@ class Weapon:
         raise NotImplementedError
 
 
-class Bullet(PassiveObject):
+class Bullet(StaticObject):
     def on_collision(self, other: MovingObject):
         other.apply_damage(self.DMG)
-        self.make_dead()
+        self.mark_dead()
 
     def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         return []
 
 
-class SmallParticle(Bullet):
+class SmallBullet(HasHitpoints, HasTimer, Bullet):
     MASS = 1.0 / 10
     TTL = 3_000
     HP = 1.0
@@ -110,7 +110,7 @@ class SmallParticle(Bullet):
 
 
 class SingleShot(Weapon):
-    AMMO_CLS = SmallParticle
+    AMMO_CLS = SmallBullet
     COOLDOWN = 50
     AMMO = None
 
@@ -120,7 +120,7 @@ class SingleShot(Weapon):
 
 
 class DoubleShot(Weapon):
-    AMMO_CLS = SmallParticle
+    AMMO_CLS = SmallBullet
     COOLDOWN = 100
     AMMO = None
 
@@ -132,7 +132,7 @@ class DoubleShot(Weapon):
         )
 
 
-class Mine(PassiveObject):
+class Mine(HasHitpoints, StaticObject):
     DMG = 1000.0
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000
@@ -141,9 +141,9 @@ class Mine(PassiveObject):
     MASS = 100.0
 
     def on_collision(self, other: MovingObject):
-        if other.HP is not None and other.HP >= 30:
+        if isinstance(other, HasHitpoints) and other.HP >= 30:
             other.apply_damage(self.DMG)
-            self.make_dead()
+            self.mark_dead()
 
     def get_surface(self) -> CachedSurface:
         return self.IMAGE.get_frame(

@@ -6,17 +6,17 @@ import pygame as pg
 from pygame.math import Vector2
 
 from assets import PlayerImages, MediumExplosion, LargeExplosion1, LargeExplosion2
-from collisions import ALL_SPRITES_CD
+from collisions import COLLIDING_SPRITES_CD
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
 from groups import ALL_PLAYERS
-from objects import MovingObject, PassiveObject
+from objects import MovingObject, StaticObject, HasShield, HasHitpoints, HasTimer
 from surface import CachedSurface
 from weapons import Weapon, SingleShot, DoubleShot, MineLauncher
 
 
-class Player(MovingObject):
+class Player(HasShield, HasHitpoints, MovingObject):
     FORWARD_THRUST = 0.1 / 1000
     SIDE_THRUST = 0.05 / 1000
     ANGULAR_THRUST = 0.2 / 1000
@@ -93,7 +93,7 @@ def spawn_player(player_id):
             player_id=player_id,
         )
 
-        if ALL_SPRITES_CD.collide_with_callback(player, stationary=True):
+        if COLLIDING_SPRITES_CD.collide_with_callback(player, stationary=True):
             player.kill()
         else:
             return
@@ -109,9 +109,9 @@ def get_player(player_id) -> Player | None:
     return None
 
 
-class PlayerExplosion(PassiveObject):
+class PlayerExplosion(HasTimer, StaticObject):
     TTL = 2000
-    IMAGE = LargeExplosion1
+    IMAGE = LargeExplosion2
     MASS = Player.MASS
     COLLIDES = False
 

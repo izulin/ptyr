@@ -4,6 +4,7 @@ import sys
 from pygame.locals import *
 from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent, ALL_DELAYED
+from typing import TYPE_CHECKING
 
 pg.init()
 DISPLAYSURF = pg.display.set_mode(
@@ -11,14 +12,19 @@ DISPLAYSURF = pg.display.set_mode(
     flags=pg.NOFRAME | pg.SRCALPHA | pg.SCALED,
 )
 
-from players import spawn_player, get_player
+from players import spawn_player
 from enemies import spawn_asteroid
-from collisions import ALL_SPRITES_CD
-from groups import ALL_ASTEROIDS, ALL_SPRITES
+from collisions import COLLIDING_SPRITES_CD, CollisionDetector
+from groups import ALL_ASTEROIDS, ALL_SPRITES, ALL_POWERUPS, ALL_PLAYERS
 from math_utils import collide_objects
 from timers import TIMERS
-from objects import MovingObject
+
 from assets import BackgroundImage
+
+if TYPE_CHECKING:
+    from powerups import PowerUp
+    from objects import MovingObject
+    from players import Player
 
 import logging
 
@@ -53,6 +59,21 @@ DelayedEvent(
     repeat=True,
     name="spawn_asteroid",
 )
+
+
+def on_collision(obj_a: MovingObject, obj_b: MovingObject):
+    if obj_b.COLLIDES:
+        obj_a.on_collision(obj_b)
+    if obj_a.COLLIDES:
+        obj_b.on_collision(obj_a)
+    if obj_a.COLLIDES and obj_b.COLLIDES:
+        force = collide_objects(obj_a, obj_b)
+        obj_a.apply_damage(10 * force)
+        obj_b.apply_damage(10 * force)
+
+
+def player_powerup_collision(player: Player, powerup: PowerUp):
+    powerup.on_collision(player)
 
 
 def main():
@@ -121,26 +142,25 @@ def main():
         with TIMERS["delayed events"]:
             ALL_DELAYED.update(dt)
 
-        def on_collision(obj_a: MovingObject, obj_b: MovingObject):
-            if obj_a.COLLIDES and obj_b.COLLIDES:
-                force = collide_objects(obj_a, obj_b)
-            if obj_b.COLLIDES:
-                obj_a.on_collision(obj_b)
-            if obj_a.COLLIDES:
-                obj_b.on_collision(obj_a)
-            if obj_a.COLLIDES and obj_b.COLLIDES:
-                obj_a.apply_damage(force)
-                obj_b.apply_damage(force)
-
         with TIMERS["collide"]:
             for sprite in ALL_SPRITES:
-                ALL_SPRITES_CD.collide_with_callback(
+                COLLIDING_SPRITES_CD.collide_with_callback(
                     sprite, on_collision=on_collision, stationary=False
+                )
+            all_powerups_cd = CollisionDetector(*ALL_POWERUPS)
+            for player in ALL_PLAYERS:
+                all_powerups_cd.collide_with_callback(
+                    player, on_collision=player_powerup_collision, stationary=True
                 )
 
         with TIMERS["update"]:
             for sprite in ALL_SPRITES:
                 sprite.update(dt)
+        for sprite in ALL_SPRITES:
+            if not sprite.alive:
+                logger.info(f"killing {sprite}")
+                sprite.on_death()
+                sprite.kill()
         cnt += 1
         if cnt % 1000 == 0:
             logger.info(

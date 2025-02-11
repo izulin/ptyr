@@ -6,6 +6,9 @@ from consts import ALL_SHIFTS
 from collections import defaultdict
 
 from math_utils import test_if_proper_collision
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CollisionDetector:
@@ -107,4 +110,4 @@ class CollisionDetector:
         return ret
 
 
-ALL_SPRITES_CD = CollisionDetector()
+COLLIDING_SPRITES_CD = CollisionDetector()
