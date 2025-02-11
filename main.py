@@ -14,8 +14,14 @@ DISPLAYSURF = pg.display.set_mode(
 
 from players import spawn_player
 from enemies import spawn_asteroid
-from collisions import COLLIDING_SPRITES_CD, CollisionDetector
-from groups import ALL_ASTEROIDS, ALL_SPRITES, ALL_POWERUPS, ALL_PLAYERS
+from groups import (
+    ALL_ASTEROIDS,
+    ALL_COLLIDING_OBJECTS,
+    ALL_PLAYERS,
+    ALL_WEAPONS,
+    ALL_DRAWABLE_OBJECTS,
+    ALL_POWERUPS,
+)
 from math_utils import collide_objects
 from timers import TIMERS
 
@@ -62,14 +68,11 @@ DelayedEvent(
 
 
 def on_collision(obj_a: MovingObject, obj_b: MovingObject):
-    if obj_b.COLLIDES:
-        obj_a.on_collision(obj_b)
-    if obj_a.COLLIDES:
-        obj_b.on_collision(obj_a)
-    if obj_a.COLLIDES and obj_b.COLLIDES:
-        force = collide_objects(obj_a, obj_b)
-        obj_a.apply_damage(10 * force)
-        obj_b.apply_damage(10 * force)
+    obj_a.on_collision(obj_b)
+    obj_b.on_collision(obj_a)
+    force = collide_objects(obj_a, obj_b)
+    obj_a.apply_damage(10 * force)
+    obj_b.apply_damage(10 * force)
 
 
 def player_powerup_collision(player: Player, powerup: PowerUp):
@@ -80,7 +83,7 @@ def main():
     cnt = 0
     all_changes = []
     all_shift_sprites: dict(tuple(int, int), pg.sprite.RenderUpdates) = {
-        (shift.x, shift.y): pg.sprite.RenderUpdates(*ALL_SPRITES)
+        (shift.x, shift.y): pg.sprite.RenderUpdates(*ALL_DRAWABLE_OBJECTS)
         for shift in ALL_SHIFTS
     }
 
@@ -99,7 +102,7 @@ def main():
                     SHOW_HP = not SHOW_HP
 
         for shift_sprites in all_shift_sprites.values():
-            shift_sprites.add(ALL_SPRITES)
+            shift_sprites.add(ALL_DRAWABLE_OBJECTS)
 
         with TIMERS["clears"]:
             for g in all_shift_sprites.values():
@@ -112,22 +115,22 @@ def main():
 
         with TIMERS["draw"]:
             for shift in ALL_SHIFTS:
-                for sprite in ALL_SPRITES:
+                for sprite in ALL_DRAWABLE_OBJECTS:
                     sprite.rect.move_ip(shift)
                 all_shift_sprites[(shift.x, shift.y)].draw(DISPLAYSURF)
-                for sprite in ALL_SPRITES:
+                for sprite in ALL_DRAWABLE_OBJECTS:
                     sprite.rect.move_ip(-shift)
 
         with TIMERS["debugs"]:
             if SHOW_SPEEDS:
                 sprite: MovingObject
-                for sprite in ALL_SPRITES.sprites():
+                for sprite in ALL_DRAWABLE_OBJECTS.sprites():
                     all_changes.extend(sprite.draw_debugs(DISPLAYSURF))
 
         with TIMERS["UX"]:
             if SHOW_HP:
                 sprite: MovingObject
-                for sprite in ALL_SPRITES.sprites():
+                for sprite in ALL_DRAWABLE_OBJECTS.sprites():
                     all_changes.extend(sprite.draw_ui(DISPLAYSURF))
 
         fps = FramePerSec.get_fps()
@@ -143,24 +146,23 @@ def main():
             ALL_DELAYED.update(dt)
 
         with TIMERS["collide"]:
-            for sprite in ALL_SPRITES:
-                COLLIDING_SPRITES_CD.collide_with_callback(
+            for sprite in ALL_COLLIDING_OBJECTS:
+                ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
                     sprite, on_collision=on_collision, stationary=False
                 )
-            all_powerups_cd = CollisionDetector(*ALL_POWERUPS)
             for player in ALL_PLAYERS:
-                all_powerups_cd.collide_with_callback(
+                ALL_POWERUPS.cd.collide_with_callback(
                     player, on_collision=player_powerup_collision, stationary=True
                 )
 
         with TIMERS["update"]:
-            for sprite in ALL_SPRITES:
-                sprite.update(dt)
-        for sprite in ALL_SPRITES:
-            if not sprite.alive:
-                logger.info(f"killing {sprite}")
-                sprite.on_death()
-                sprite.kill()
+            ALL_DRAWABLE_OBJECTS.update(dt)
+            ALL_WEAPONS.update(dt)
+            for sprite in ALL_DRAWABLE_OBJECTS:
+                if not sprite.alive:
+                    logger.info(f"killing {sprite}")
+                    sprite.on_death()
+                    sprite.kill()
         cnt += 1
         if cnt % 1000 == 0:
             logger.info(

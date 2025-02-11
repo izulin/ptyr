@@ -4,6 +4,7 @@ import pygame as pg
 from pygame import Vector3, Vector2
 
 from assets import SmallBulletImage, MineAnimation
+from groups import ALL_WEAPONS, ALL_DRAWABLE_OBJECTS, ALL_COLLIDING_OBJECTS
 from math_utils import internal_coord_to_xy
 from typing import TYPE_CHECKING
 
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from players import Player
 
 
-class Weapon:
+class Weapon(pg.sprite.Sprite):
     COOLDOWN = None
     AMMO = None
 
@@ -24,7 +25,8 @@ class Weapon:
     init_speed: float
     cooldown_left: float
 
-    def __init__(self, *, owner):
+    def __init__(self, *args, owner, **kwargs):
+        super().__init__(ALL_WEAPONS, *args, **kwargs)
         self.owner = owner
 
         self.cooldown_left = 0.0
@@ -93,6 +95,8 @@ class Weapon:
 
 
 class Bullet(StaticObject):
+    GROUPS = (ALL_DRAWABLE_OBJECTS, ALL_COLLIDING_OBJECTS)
+
     def on_collision(self, other: MovingObject):
         other.apply_damage(self.DMG)
         self.mark_dead()

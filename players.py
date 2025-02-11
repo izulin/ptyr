@@ -6,11 +6,15 @@ import pygame as pg
 from pygame.math import Vector2
 
 from assets import PlayerImages, MediumExplosion, LargeExplosion1, LargeExplosion2
-from collisions import COLLIDING_SPRITES_CD
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
-from groups import ALL_PLAYERS
+from groups import (
+    ALL_PLAYERS,
+    ALL_EXPLOSIONS,
+    ALL_COLLIDING_OBJECTS,
+    ALL_DRAWABLE_OBJECTS,
+)
 from objects import MovingObject, StaticObject, HasShield, HasHitpoints, HasTimer
 from surface import CachedSurface
 from weapons import Weapon, SingleShot, DoubleShot, MineLauncher
@@ -20,7 +24,11 @@ class Player(HasShield, HasHitpoints, MovingObject):
     FORWARD_THRUST = 0.1 / 1000
     SIDE_THRUST = 0.05 / 1000
     ANGULAR_THRUST = 0.2 / 1000
-    GROUPS = MovingObject.GROUPS + (ALL_PLAYERS,)
+    GROUPS = (
+        ALL_COLLIDING_OBJECTS,
+        ALL_DRAWABLE_OBJECTS,
+        ALL_PLAYERS,
+    )
 
     MASS = 30.0
     HP = 30.0
@@ -59,7 +67,6 @@ class Player(HasShield, HasHitpoints, MovingObject):
 
     def update(self, dt: float):
         pressed_keys = pg.key.get_pressed()
-        self.weapon.update(dt)
         if pressed_keys[self.controls["shoot"]]:
             self.weapon.fire()
         super().update(dt)
@@ -93,7 +100,7 @@ def spawn_player(player_id):
             player_id=player_id,
         )
 
-        if COLLIDING_SPRITES_CD.collide_with_callback(player, stationary=True):
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(player, stationary=True):
             player.kill()
         else:
             return
@@ -113,7 +120,11 @@ class PlayerExplosion(HasTimer, StaticObject):
     TTL = 2000
     IMAGE = LargeExplosion2
     MASS = Player.MASS
-    COLLIDES = False
+    GROUPS = (
+        ALL_DRAWABLE_OBJECTS,
+        ALL_EXPLOSIONS,
+    )
+    COLLISION_DETECTORS = ()
 
     def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         return []

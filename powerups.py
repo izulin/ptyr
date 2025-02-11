@@ -1,15 +1,21 @@
 from __future__ import annotations
 from assets import HealPowerupImage
 from delayed import DelayedEvent
-from objects import StaticObject, MovingObject
+from groups import ALL_POWERUPS, ALL_DRAWABLE_OBJECTS
+from objects import StaticObject, MovingObject, HasTimer
 import random
 
 
-class PowerUp(StaticObject):
+class PowerUp(HasTimer, StaticObject):
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000
-    COLLIDES = False
+    GROUPS = (
+        ALL_DRAWABLE_OBJECTS,
+        ALL_POWERUPS,
+    )
     TTL = 10_000
+
+    used: bool
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,8 +41,5 @@ class HealPowerUp(PowerUp):
         other.heal_hp(50.0)
 
 
-ALL_POWERUPS = [HealPowerUp]
-
-
-def get_powerup() -> type[PowerUp]:
-    return random.choice(ALL_POWERUPS)
+def get_random_powerup() -> type[PowerUp]:
+    return random.choice([HealPowerUp])

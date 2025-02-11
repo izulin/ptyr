@@ -1,14 +1,26 @@
 from __future__ import annotations
 import pygame as pg
-from typing import TYPE_CHECKING
+from collisions import CollisionDetector
 
-if TYPE_CHECKING:
-    from enemies import LargeAsteroid
-    from objects import MovingObject
-    from players import Player
-    from powerups import PowerUp
 
-ALL_ASTEROIDS: pg.sprite.Group[LargeAsteroid] = pg.sprite.Group()
-ALL_PLAYERS: pg.sprite.Group[Player] = pg.sprite.Group()
-ALL_SPRITES: pg.sprite.Group[MovingObject] = pg.sprite.Group()
-ALL_POWERUPS: pg.sprite.Group[PowerUp] = pg.sprite.Group()
+class GroupWithCD(pg.sprite.Group):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cd = CollisionDetector()
+
+    def add_internal(self, sprite, layer=None):
+        super().add_internal(sprite, layer)
+        self.cd.add(sprite)
+
+    def remove_internal(self, sprite):
+        super().remove_internal(sprite)
+        self.cd.remove(sprite)
+
+
+ALL_ASTEROIDS: pg.sprite.Group = pg.sprite.Group()
+ALL_PLAYERS: pg.sprite.Group = pg.sprite.Group()
+ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
+ALL_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
+ALL_WEAPONS: pg.sprite.Group = pg.sprite.Group()
+ALL_POWERUPS: GroupWithCD = GroupWithCD()
+ALL_EXPLOSIONS: pg.sprite.Group = pg.sprite.Group()

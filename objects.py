@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pygame as pg
 
-from groups import ALL_SPRITES
+from groups import GroupWithCD
 from math_utils import (
     normalize_pos3,
     range_kutta_2,
@@ -10,12 +10,14 @@ from math_utils import (
 )
 from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH, BLUE
 from pygame.math import Vector3, Vector2
-from collisions import COLLIDING_SPRITES_CD
 import random
 from typing import TYPE_CHECKING
+import logging
 
 if TYPE_CHECKING:
     from surface import CachedSurface
+
+logger = logging.getLogger(__name__)
 
 
 class MovingObject(pg.sprite.Sprite):
@@ -23,8 +25,6 @@ class MovingObject(pg.sprite.Sprite):
     ANGULAR_DRAG = 2 / 1000
     MASS = None
     IMAGE = None
-    GROUPS = (ALL_SPRITES,)
-    COLLIDES = True
 
     _image: CachedSurface
     rect: pg.Rect
@@ -36,8 +36,6 @@ class MovingObject(pg.sprite.Sprite):
     alive: bool
 
     def __init__(self, *args, image=None, init_pos, init_speed, **kwargs):
-        super().__init__(*self.GROUPS, *args, **kwargs)
-
         if image is None:
             image = self.IMAGE
 
@@ -55,16 +53,10 @@ class MovingObject(pg.sprite.Sprite):
         self._acc = Vector2()
         self._drag = Vector2()
         self.mass = self.MASS
-        if self.COLLIDES:
-            COLLIDING_SPRITES_CD.add(self)
+        super().__init__(*self.GROUPS, *args, **kwargs)
 
     def mark_dead(self):
         self.alive = False
-
-    def kill(self):
-        if self.COLLIDES:
-            COLLIDING_SPRITES_CD.remove(self)
-        super().kill()
 
     def on_collision(self, other: MovingObject):
         pass
@@ -150,8 +142,9 @@ class MovingObject(pg.sprite.Sprite):
         self.update_pos(dt)
         self.update_image_rect()
         self.alive_time += dt
-        if self.COLLIDES:
-            COLLIDING_SPRITES_CD.move(self, self.rect, old_rect)
+        for group in self.GROUPS:
+            if isinstance(group, GroupWithCD):
+                group.cd.move(self, self.rect, old_rect)
 
     def on_death(self):
         pass

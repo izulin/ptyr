@@ -3,19 +3,25 @@ from __future__ import annotations
 from pygame import Vector2, Vector3
 
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
-from collisions import COLLIDING_SPRITES_CD
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
-from groups import ALL_ASTEROIDS
+from groups import ALL_ASTEROIDS, ALL_COLLIDING_OBJECTS, ALL_DRAWABLE_OBJECTS
 from objects import StaticObject, HasHitpoints
 import random
 
-from powerups import get_powerup
+from powerups import get_random_powerup
 
 
-class LargeAsteroid(HasHitpoints, StaticObject):
+class Asteroid(HasHitpoints, StaticObject):
+    GROUPS = (
+        ALL_COLLIDING_OBJECTS,
+        ALL_DRAWABLE_OBJECTS,
+        ALL_ASTEROIDS,
+    )
+
+
+class LargeAsteroid(Asteroid):
     MASS = 100.0
     HP = 100.0
-    GROUPS = StaticObject.GROUPS + (ALL_ASTEROIDS,)
     IMAGE = AsteroidLargeImages
 
     def on_death(self):
@@ -28,13 +34,12 @@ class LargeAsteroid(HasHitpoints, StaticObject):
                 init_speed=self.speed
                 + Vector3(*shift_speed.rotate(120 * i), random.uniform(-0.1, 0.1)),
             )
-        get_powerup()(init_pos=self.pos, init_speed=self.speed)
+        get_random_powerup()(init_pos=self.pos, init_speed=self.speed)
 
 
-class MediumAsteroid(HasHitpoints, StaticObject):
+class MediumAsteroid(Asteroid):
     MASS = 30.0
     HP = 30.0
-    GROUPS = StaticObject.GROUPS + (ALL_ASTEROIDS,)
     IMAGE = AsteroidMediumImages
 
     def on_death(self):
@@ -49,10 +54,9 @@ class MediumAsteroid(HasHitpoints, StaticObject):
             )
 
 
-class SmallAsteroid(HasHitpoints, StaticObject):
+class SmallAsteroid(Asteroid):
     MASS = 10.0
     HP = 10.0
-    GROUPS = StaticObject.GROUPS + (ALL_ASTEROIDS,)
     IMAGE = AsteroidSmallImages
 
 
@@ -70,7 +74,7 @@ def spawn_asteroid():
                 random.uniform(-0.1, 0.1),
             ],
         )
-        if COLLIDING_SPRITES_CD.collide_with_callback(asteroid, stationary=True):
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(asteroid, stationary=True):
             asteroid.kill()
         else:
             return

@@ -108,6 +108,3 @@ class CollisionDetector:
             if ret and on_collision is None:
                 return True
         return ret
-
-
-COLLIDING_SPRITES_CD = CollisionDetector()
