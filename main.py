@@ -122,11 +122,15 @@ def main():
             ALL_DELAYED.update(dt)
 
         def on_collision(obj_a: MovingObject, obj_b: MovingObject):
-            force = collide_objects(obj_a, obj_b)
-            obj_a.on_collision(obj_b)
-            obj_b.on_collision(obj_a)
-            obj_a.apply_damage(force)
-            obj_b.apply_damage(force)
+            if obj_a.COLLIDES and obj_b.COLLIDES:
+                force = collide_objects(obj_a, obj_b)
+            if obj_b.COLLIDES:
+                obj_a.on_collision(obj_b)
+            if obj_a.COLLIDES:
+                obj_b.on_collision(obj_a)
+            if obj_a.COLLIDES and obj_b.COLLIDES:
+                obj_a.apply_damage(force)
+                obj_b.apply_damage(force)
 
         with TIMERS["collide"]:
             for sprite in ALL_SPRITES:

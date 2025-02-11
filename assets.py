@@ -113,13 +113,13 @@ MediumExplosion = CachedAnimation(
 )
 
 LargeExplosion1 = CachedAnimation(
-    load_double_from_file(0 + 12 * i, 0, 12, 28, "assets/tyrian/newsh6.shp.000000.png")
+    load_double_from_file(0 + 12 * i, -2, 12, 28, "assets/tyrian/newsh6.shp.000000.png")
     for i in range(17)
 )
 
 LargeExplosion2 = CachedAnimation(
     load_double_reversed_from_file(
-        0 + 12 * i, 114, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
+        0 + 12 * i, 112, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
     )
     for i in range(13)
 )
@@ -127,4 +127,8 @@ LargeExplosion2 = CachedAnimation(
 MineAnimation = CachedAnimation(
     load_from_file(192, 113 + 28 * i, 22, 22, "assets/tyrian/newsha.shp.000000.png")
     for i in range(3)
+)
+
+HealPowerUpImage = CachedSurface(
+    load_from_file(171, 115, 19, 22, "assets/tyrian/newsh1.shp.000000.png")
 )

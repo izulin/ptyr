@@ -13,7 +13,7 @@ from delayed import DelayedEvent
 from groups import ALL_PLAYERS
 from objects import MovingObject, PassiveObject
 from surface import CachedSurface
-from weapons import BasicWeapon, SingleShot, DoubleShot, MineLauncher
+from weapons import Weapon, SingleShot, DoubleShot, MineLauncher
 
 
 class Player(MovingObject):
@@ -24,9 +24,10 @@ class Player(MovingObject):
 
     MASS = 30.0
     HP = 30.0
+    SHIELD = 30.0
 
     controls: dict[str, int]
-    weapon: BasicWeapon
+    weapon: Weapon
     player_id: int
 
     def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
@@ -110,11 +111,12 @@ def get_player(player_id) -> Player | None:
 
 class PlayerExplosion(PassiveObject):
     TTL = 2000
-    IMAGE = LargeExplosion2
+    IMAGE = LargeExplosion1
     MASS = Player.MASS
+    COLLIDES = False
 
     def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         return []
 
-    def get_image(self) -> CachedSurface:
+    def get_surface(self) -> CachedSurface:
         return self.IMAGE.get_frame(self.alive_time / (self.TTL / len(self.IMAGE)))

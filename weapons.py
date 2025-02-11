@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from players import Player
 
 
-class BasicWeapon:
+class Weapon:
     COOLDOWN = None
     AMMO = None
 
@@ -57,7 +57,7 @@ class BasicWeapon:
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
 
-        r = self.owner.get_image().get_image().get_height() / 2
+        r = self.owner.get_surface().get_image().get_height() / 2
         m = self.AMMO_CLS.MASS
         rotational_recoil = (
             Vector3(*launch_pos_internal, 0.0)
@@ -95,7 +95,7 @@ class BasicWeapon:
 class Bullet(PassiveObject):
     def on_collision(self, other: MovingObject):
         other.apply_damage(self.DMG)
-        self.hp = 0
+        self.make_dead()
 
     def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
         return []
@@ -105,11 +105,11 @@ class SmallParticle(Bullet):
     MASS = 1.0 / 10
     TTL = 3_000
     HP = 1.0
-    DMG = 1.0
+    DMG = 10.0
     IMAGE = SmallBulletImage
 
 
-class SingleShot(BasicWeapon):
+class SingleShot(Weapon):
     AMMO_CLS = SmallParticle
     COOLDOWN = 50
     AMMO = None
@@ -119,7 +119,7 @@ class SingleShot(BasicWeapon):
         self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3)
 
 
-class DoubleShot(BasicWeapon):
+class DoubleShot(Weapon):
     AMMO_CLS = SmallParticle
     COOLDOWN = 100
     AMMO = None
@@ -143,9 +143,9 @@ class Mine(PassiveObject):
     def on_collision(self, other: MovingObject):
         if other.HP is not None and other.HP >= 30:
             other.apply_damage(self.DMG)
-            self.hp = 0
+            self.make_dead()
 
-    def get_image(self) -> CachedSurface:
+    def get_surface(self) -> CachedSurface:
         return self.IMAGE.get_frame(
             (self.alive_time / (3000 / len(self.IMAGE))) % len(self.IMAGE)
         )
@@ -154,7 +154,7 @@ class Mine(PassiveObject):
         return []
 
 
-class MineLauncher(BasicWeapon):
+class MineLauncher(Weapon):
     AMMO_CLS = Mine
     COOLDOWN = 1000
     AMMO = 10

@@ -7,7 +7,7 @@ from math_utils import (
     range_kutta_2,
     internal_coord_to_xy,
 )
-from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH
+from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH, BLUE
 from pygame.math import Vector3, Vector2
 from collisions import ALL_SPRITES_CD
 from surface import CachedSurface
@@ -19,8 +19,10 @@ class MovingObject(pg.sprite.Sprite):
     ANGULAR_DRAG = 2 / 1000
     TTL = None
     HP = None
+    SHIELD = None
     IMAGE = None
     GROUPS = (ALL_SPRITES,)
+    COLLIDES = True
 
     _image: CachedSurface
     rect: pg.Rect
@@ -30,6 +32,7 @@ class MovingObject(pg.sprite.Sprite):
     ttl: float | None
     alive_time: float
     hp: float | None
+    shield: float | None
     alive: bool
 
     def __init__(self, *args, image=None, init_pos, init_speed, **kwargs):
@@ -53,16 +56,33 @@ class MovingObject(pg.sprite.Sprite):
         self.mass = self.MASS
         self.ttl = self.TTL
         self.hp = self.HP
+        self.shield = self.SHIELD
         ALL_SPRITES_CD.add(self)
         self.alive = self.get_alive()
+
+    def make_dead(self):
+        self.alive = False
+        self.on_death()
 
     def kill(self):
         ALL_SPRITES_CD.remove(self)
         super().kill()
 
     def apply_damage(self, dmg: float):
+        if self.shield is not None:
+            d = min(self.shield, dmg)
+            self.shield -= d
+            dmg -= d
         if self.hp is not None:
             self.hp -= dmg
+
+    def heal_hp(self, heal: float):
+        if self.hp is not None:
+            self.hp = min(self.hp + heal, self.HP)
+
+    def heal_shield(self, heal: float):
+        if self.shield is not None:
+            self.shield = min(self.shield + heal, self.SHIELD)
 
     def on_collision(self, other: MovingObject):
         pass
@@ -73,14 +93,19 @@ class MovingObject(pg.sprite.Sprite):
         )
         all_changes = []
         for shift in ALL_SHIFTS:
-            rect: pg.Rect = (
-                self.get_image().get_image().get_rect(center=self.rect.center + shift)
-            )
-            rect2 = pg.Rect(0, 0, 40, 5)
-            rect2.midbottom = rect.midtop
-            all_changes.append(pg.draw.rect(target, GREEN, rect2, width=1))
-            rect2.width = rect2.width * (self.hp / self.HP)
-            all_changes.append(pg.draw.rect(target, GREEN, rect2))
+            rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
+            hp_bar = pg.Rect(0, 0, 40, 5)
+            hp_bar.midbottom = rect.midtop
+            shield_bar = pg.Rect(0, 0, 40, 5)
+            shield_bar.midbottom = hp_bar.midtop
+            if self.hp is not None:
+                all_changes.append(pg.draw.rect(target, GREEN, hp_bar, width=1))
+                hp_bar.width = hp_bar.width * (self.hp / self.HP)
+                all_changes.append(pg.draw.rect(target, GREEN, hp_bar))
+            if self.shield is not None:
+                all_changes.append(pg.draw.rect(target, BLUE, shield_bar, width=1))
+                shield_bar.width = shield_bar.width * (self.shield / self.SHIELD)
+                all_changes.append(pg.draw.rect(target, BLUE, shield_bar))
         return all_changes
 
     def get_alive(self) -> bool:
@@ -135,25 +160,26 @@ class MovingObject(pg.sprite.Sprite):
             )
         return all_changes
 
-    def get_image(self) -> CachedSurface:
+    def get_surface(self) -> CachedSurface:
         return self._image
 
     def update_image_rect(self):
-        self.image = self.get_image().get_image(self.pos.z)
-        self.rect = self.get_image().get_rect(self.pos.z, center=self.pos_xy)
-        self.mask = self.get_image().get_mask(self.pos.z)
+        self.image = self.get_surface().get_image(self.pos.z)
+        self.rect = self.get_surface().get_rect(self.pos.z, center=self.pos_xy)
+        self.mask = self.get_surface().get_mask(self.pos.z)
 
     def update(self, dt: float):
         if not self.alive:
+            self.kill()
             return
-        self.update_pos(dt)
         old_rect = self.rect
+        self.update_pos(dt)
         self.update_image_rect()
         ALL_SPRITES_CD.move(self, self.rect, old_rect)
         self.alive_time += dt
-        self.alive = self.get_alive()
-        if not self.alive:
-            self.on_death()
+        self.heal_shield(dt / 1000)
+        if not self.get_alive():
+            self.make_dead()
             self.kill()
 
     def on_death(self):

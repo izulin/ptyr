@@ -9,6 +9,8 @@ from groups import ALL_ASTEROIDS
 from objects import PassiveObject
 import random
 
+from powerups import get_powerup
+
 
 class LargeAsteroid(PassiveObject):
     MASS = 100.0
@@ -26,6 +28,7 @@ class LargeAsteroid(PassiveObject):
                 init_speed=self.speed
                 + Vector3(*shift_speed.rotate(120 * i), random.uniform(-0.1, 0.1)),
             )
+        get_powerup()(init_pos=self.pos, init_speed=self.speed)
 
 
 class MediumAsteroid(PassiveObject):
