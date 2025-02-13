@@ -17,10 +17,11 @@ class GroupWithCD(pg.sprite.Group):
         self.cd.remove(sprite)
 
 
-ALL_ASTEROIDS: pg.sprite.Group = pg.sprite.Group()
+ALL_ENEMIES: pg.sprite.Group = pg.sprite.Group()
 ALL_PLAYERS: pg.sprite.Group = pg.sprite.Group()
 ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
 ALL_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
 ALL_WEAPONS: pg.sprite.Group = pg.sprite.Group()
 ALL_POWERUPS: GroupWithCD = GroupWithCD()
 ALL_EXPLOSIONS: pg.sprite.Group = pg.sprite.Group()
+ALL_UI_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()

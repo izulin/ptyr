@@ -4,22 +4,29 @@ from pygame import Vector2, Vector3
 
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
-from groups import ALL_ASTEROIDS, ALL_COLLIDING_OBJECTS, ALL_DRAWABLE_OBJECTS
-from objects import StaticObject, HasHitpoints
+from groups import ALL_ENEMIES, ALL_COLLIDING_OBJECTS
+from objects import (
+    NoControl,
+    HasHitpoints,
+    Collides,
+    StaticDrawable,
+    MovingObject,
+    DrawsUI,
+)
 import random
 
 from powerups import get_random_powerup
 
 
-class Asteroid(HasHitpoints, StaticObject):
-    GROUPS = (
-        ALL_COLLIDING_OBJECTS,
-        ALL_DRAWABLE_OBJECTS,
-        ALL_ASTEROIDS,
-    )
+class Asteroid(Collides, HasHitpoints, NoControl, DrawsUI, MovingObject):
+    DRAG = 0.0
+    ANGULAR_DRAG = 0.0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(ALL_ENEMIES, *args, **kwargs)
 
 
-class LargeAsteroid(Asteroid):
+class LargeAsteroid(StaticDrawable, Asteroid):
     MASS = 100.0
     HP = 100.0
     IMAGE = AsteroidLargeImages
@@ -35,9 +42,10 @@ class LargeAsteroid(Asteroid):
                 + Vector3(*shift_speed.rotate(120 * i), random.uniform(-0.1, 0.1)),
             )
         get_random_powerup()(init_pos=self.pos, init_speed=self.speed)
+        super().on_death()
 
 
-class MediumAsteroid(Asteroid):
+class MediumAsteroid(StaticDrawable, Asteroid):
     MASS = 30.0
     HP = 30.0
     IMAGE = AsteroidMediumImages
@@ -52,9 +60,10 @@ class MediumAsteroid(Asteroid):
                 init_speed=self.speed
                 + Vector3(*shift_speed.rotate(120 * i), random.uniform(-0.1, 0.1)),
             )
+        super().on_death()
 
 
-class SmallAsteroid(Asteroid):
+class SmallAsteroid(StaticDrawable, Asteroid):
     MASS = 10.0
     HP = 10.0
     IMAGE = AsteroidSmallImages

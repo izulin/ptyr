@@ -5,7 +5,7 @@ import random
 import pygame as pg
 from pygame.math import Vector2
 
-from assets import PlayerImages, MediumExplosion, LargeExplosion1, LargeExplosion2
+from assets import PlayerImages, LargeExplosion1, LargeExplosion2
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
@@ -13,22 +13,28 @@ from groups import (
     ALL_PLAYERS,
     ALL_EXPLOSIONS,
     ALL_COLLIDING_OBJECTS,
-    ALL_DRAWABLE_OBJECTS,
 )
-from objects import MovingObject, StaticObject, HasShield, HasHitpoints, HasTimer
-from surface import CachedSurface
+from objects import (
+    MovingObject,
+    NoControl,
+    HasShield,
+    HasHitpoints,
+    HasTimer,
+    Collides,
+    StaticDrawable,
+    AnimatedDrawable,
+    DrawsUI,
+)
 from weapons import Weapon, SingleShot, DoubleShot, MineLauncher
 
 
-class Player(HasShield, HasHitpoints, MovingObject):
+class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingObject):
+    DRAG = 100 / 1000
+    ANGULAR_DRAG = 200 / 1000
+
     FORWARD_THRUST = 0.1 / 1000
     SIDE_THRUST = 0.05 / 1000
     ANGULAR_THRUST = 0.2 / 1000
-    GROUPS = (
-        ALL_COLLIDING_OBJECTS,
-        ALL_DRAWABLE_OBJECTS,
-        ALL_PLAYERS,
-    )
 
     MASS = 30.0
     HP = 30.0
@@ -39,7 +45,7 @@ class Player(HasShield, HasHitpoints, MovingObject):
     player_id: int
 
     def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(ALL_PLAYERS, *args, **kwargs)
         self.controls = controls
         self.weapon = self.default_weapon()
         self.player_id = player_id
@@ -79,6 +85,7 @@ class Player(HasShield, HasHitpoints, MovingObject):
             name=f"spawn_player {self.player_id}",
         )
         PlayerExplosion(init_pos=self.pos, init_speed=self.speed)
+        super().on_death()
 
 
 def spawn_player(player_id):
@@ -116,18 +123,12 @@ def get_player(player_id) -> Player | None:
     return None
 
 
-class PlayerExplosion(HasTimer, StaticObject):
+class PlayerExplosion(AnimatedDrawable, HasTimer, NoControl, MovingObject):
+    DRAG = 0.0
+    ANGULAR_DRAG = 0.0
+
     TTL = 2000
     IMAGE = (LargeExplosion1, LargeExplosion2)
-    MASS = Player.MASS
-    GROUPS = (
-        ALL_DRAWABLE_OBJECTS,
-        ALL_EXPLOSIONS,
-    )
-    COLLISION_DETECTORS = ()
 
-    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
-        return []
-
-    def get_surface(self) -> CachedSurface:
-        return self._image.get_frame(self.alive_time / (self.TTL / len(self.IMAGE)))
+    def __init__(self, *args, **kwargs):
+        super().__init__(ALL_EXPLOSIONS, *args, **kwargs)

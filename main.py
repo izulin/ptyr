@@ -15,12 +15,13 @@ DISPLAYSURF = pg.display.set_mode(
 from players import spawn_player
 from enemies import spawn_asteroid
 from groups import (
-    ALL_ASTEROIDS,
+    ALL_ENEMIES,
     ALL_COLLIDING_OBJECTS,
     ALL_PLAYERS,
     ALL_WEAPONS,
     ALL_DRAWABLE_OBJECTS,
     ALL_POWERUPS,
+    ALL_UI_DRAWABLE_OBJECTS,
 )
 from math_utils import collide_objects
 from timers import TIMERS
@@ -56,11 +57,11 @@ with TIMERS["init"]:
     spawn_player(1)
     spawn_player(2)
 
-    while len(ALL_ASTEROIDS) < 10:
+    while len(ALL_ENEMIES) < 10:
         spawn_asteroid()
 
 DelayedEvent(
-    lambda: spawn_asteroid() if len(ALL_ASTEROIDS) < 50 else None,
+    lambda: spawn_asteroid() if len(ALL_ENEMIES) < 50 else None,
     5000,
     repeat=True,
     name="spawn_asteroid",
@@ -76,7 +77,7 @@ def on_collision(obj_a: MovingObject, obj_b: MovingObject):
 
 
 def player_powerup_collision(player: Player, powerup: PowerUp):
-    powerup.on_collision(player)
+    powerup.on_player_action(player)
 
 
 def main():
@@ -130,7 +131,7 @@ def main():
         with TIMERS["UX"]:
             if SHOW_HP:
                 sprite: MovingObject
-                for sprite in ALL_DRAWABLE_OBJECTS.sprites():
+                for sprite in ALL_UI_DRAWABLE_OBJECTS.sprites():
                     all_changes.extend(sprite.draw_ui(DISPLAYSURF))
 
         fps = FramePerSec.get_fps()

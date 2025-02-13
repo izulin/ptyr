@@ -4,11 +4,19 @@ import pygame as pg
 from pygame import Vector3, Vector2
 
 from assets import SmallBulletImage, MineAnimation
-from groups import ALL_WEAPONS, ALL_DRAWABLE_OBJECTS, ALL_COLLIDING_OBJECTS
+from groups import ALL_WEAPONS, ALL_COLLIDING_OBJECTS
 from math_utils import internal_coord_to_xy
 from typing import TYPE_CHECKING
 
-from objects import StaticObject, MovingObject, HasHitpoints, HasTimer
+from objects import (
+    NoControl,
+    MovingObject,
+    HasHitpoints,
+    HasTimer,
+    Collides,
+    StaticDrawable,
+    AnimatedDrawable,
+)
 from surface import CachedSurface
 
 if TYPE_CHECKING:
@@ -94,18 +102,17 @@ class Weapon(pg.sprite.Sprite):
         raise NotImplementedError
 
 
-class Bullet(StaticObject):
-    GROUPS = (ALL_DRAWABLE_OBJECTS, ALL_COLLIDING_OBJECTS)
+class Bullet(Collides, NoControl, MovingObject):
+    DRAG = 0.0
+    ANGULAR_DRAG = 0.0
 
     def on_collision(self, other: MovingObject):
         other.apply_damage(self.DMG)
         self.mark_dead()
-
-    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
-        return []
+        super().on_collision(other)
 
 
-class SmallBullet(HasHitpoints, HasTimer, Bullet):
+class SmallBullet(StaticDrawable, HasHitpoints, HasTimer, Bullet):
     MASS = 1.0 / 10
     TTL = 3_000
     HP = 1.0
@@ -136,7 +143,7 @@ class DoubleShot(Weapon):
         )
 
 
-class Mine(HasHitpoints, StaticObject):
+class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
     DMG = 1000.0
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000
@@ -153,9 +160,6 @@ class Mine(HasHitpoints, StaticObject):
         return self.IMAGE.get_frame(
             (self.alive_time / (3000 / len(self.IMAGE))) % len(self.IMAGE)
         )
-
-    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
-        return []
 
 
 class MineLauncher(Weapon):

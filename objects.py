@@ -2,20 +2,34 @@ from __future__ import annotations
 
 import pygame as pg
 
-from groups import GroupWithCD
+from groups import (
+    GroupWithCD,
+    ALL_DRAWABLE_OBJECTS,
+    ALL_COLLIDING_OBJECTS,
+    ALL_UI_DRAWABLE_OBJECTS,
+)
 from math_utils import (
     normalize_pos3,
     range_kutta_2,
     internal_coord_to_xy,
 )
-from consts import WHITE, GREEN, RED, ALL_SHIFTS, SCREEN_HEIGHT, SCREEN_WIDTH, BLUE
+from consts import (
+    WHITE,
+    GREEN,
+    RED,
+    ALL_SHIFTS,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    BLUE,
+    BLACK,
+)
 from pygame.math import Vector3, Vector2
 import random
 from typing import TYPE_CHECKING
 import logging
 
 if TYPE_CHECKING:
-    from surface import CachedSurface
+    from surface import CachedSurface, CachedAnimation
 
 logger = logging.getLogger(__name__)
 
@@ -23,27 +37,14 @@ logger = logging.getLogger(__name__)
 class MovingObject(pg.sprite.Sprite):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
-    MASS = None
-    IMAGE = None
 
-    _image: CachedSurface
     rect: pg.Rect
     pos: Vector3
     speed: Vector3
-    mass: float
     alive_time: float
-    shield: float | None
     alive: bool
 
-    def __init__(self, *args, image=None, init_pos, init_speed, **kwargs):
-        if image is None:
-            image = self.IMAGE
-
-        if isinstance(image, (list, tuple)):
-            self._image = random.choice(image)
-        else:
-            self._image = image
-
+    def __init__(self, *args, init_pos, init_speed, **kwargs):
         self.pos = normalize_pos3(Vector3(init_pos))
         self.speed = Vector3(init_speed)
         self.alive_time = 0.0
@@ -52,35 +53,11 @@ class MovingObject(pg.sprite.Sprite):
         self.update_image_rect()
         self._acc = Vector2()
         self._drag = Vector2()
-        self.mass = self.MASS
-        super().__init__(*self.GROUPS, *args, **kwargs)
+        assert not kwargs
+        super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
 
     def mark_dead(self):
         self.alive = False
-
-    def on_collision(self, other: MovingObject):
-        pass
-
-    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
-        assert (
-            target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
-        )
-        all_changes = []
-        for shift in ALL_SHIFTS:
-            rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
-            hp_bar = pg.Rect(0, 0, 40, 5)
-            hp_bar.midbottom = rect.midtop
-            shield_bar = pg.Rect(0, 0, 40, 5)
-            shield_bar.midbottom = hp_bar.midtop
-            if isinstance(self, HasHitpoints):
-                all_changes.append(pg.draw.rect(target, GREEN, hp_bar, width=1))
-                hp_bar.width = hp_bar.width * (self.hp / self.HP)
-                all_changes.append(pg.draw.rect(target, GREEN, hp_bar))
-            if isinstance(self, HasShield):
-                all_changes.append(pg.draw.rect(target, BLUE, shield_bar, width=1))
-                shield_bar.width = shield_bar.width * (self.shield / self.SHIELD)
-                all_changes.append(pg.draw.rect(target, BLUE, shield_bar))
-        return all_changes
 
     @property
     def pos_xy(self) -> Vector2:
@@ -129,22 +106,9 @@ class MovingObject(pg.sprite.Sprite):
             )
         return all_changes
 
-    def get_surface(self) -> CachedSurface:
-        return self._image
-
-    def update_image_rect(self):
-        self.image = self.get_surface().get_image(self.pos.z)
-        self.rect = self.get_surface().get_rect(self.pos.z, center=self.pos_xy)
-        self.mask = self.get_surface().get_mask(self.pos.z)
-
     def update(self, dt: float):
-        old_rect = self.rect
         self.update_pos(dt)
-        self.update_image_rect()
         self.alive_time += dt
-        for group in self.GROUPS:
-            if isinstance(group, GroupWithCD):
-                group.cd.move(self, self.rect, old_rect)
 
     def on_death(self):
         pass
@@ -171,6 +135,93 @@ class MovingObject(pg.sprite.Sprite):
 
         self.pos = normalize_pos3(new_pos)
         self.speed = new_speed
+
+
+class DrawsUI:
+    def __init__(self, *args, **kwargs):
+        super().__init__(ALL_UI_DRAWABLE_OBJECTS, *args, **kwargs)
+
+    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
+        assert (
+            target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
+        )
+        all_changes = []
+        for shift in ALL_SHIFTS:
+            rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
+            hp_bar = pg.Rect(0, 0, 40, 3)
+            hp_bar.midbottom = rect.midtop
+            shield_bar = pg.Rect(0, 0, 40, 3)
+            shield_bar.midbottom = hp_bar.midtop
+            if isinstance(self, HasHitpoints):
+                all_changes.append(pg.draw.rect(target, BLACK, hp_bar))
+                all_changes.append(pg.draw.rect(target, GREEN, hp_bar, width=1))
+                hp_bar.width = hp_bar.width * (self.hp / self.HP)
+                all_changes.append(pg.draw.rect(target, GREEN, hp_bar))
+            if isinstance(self, HasShield):
+                all_changes.append(pg.draw.rect(target, BLACK, shield_bar))
+                all_changes.append(pg.draw.rect(target, BLUE, shield_bar, width=1))
+                shield_bar.width = shield_bar.width * (self.shield / self.SHIELD)
+                all_changes.append(pg.draw.rect(target, BLUE, shield_bar))
+        return all_changes
+
+
+class DrawableObject:
+    image: pg.Surface
+    rect: pg.Rect
+    mask: pg.Mask
+
+    def __init__(self, *args, image=None, **kwargs):
+        if image is None:
+            image = self.IMAGE
+
+        if isinstance(image, (list, tuple)):
+            self._image = random.choice(image)
+        else:
+            self._image = image
+        super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
+
+    def get_surface(self) -> CachedSurface:
+        raise NotImplementedError
+
+    def update_image_rect(self):
+        self.image = self.get_surface().get_image(self.pos.z)
+        self.rect = self.get_surface().get_rect(self.pos.z, center=self.pos_xy)
+        self.mask = self.get_surface().get_mask(self.pos.z)
+
+    def update(self, dt: float):
+        old_rect = self.rect
+        super().update(dt)
+        self.update_image_rect()
+        for group in self.groups():
+            if isinstance(group, GroupWithCD):
+                group.cd.move(self, self.rect, old_rect)
+
+
+class StaticDrawable(DrawableObject):
+    _image: CachedSurface
+
+    def get_surface(self) -> CachedSurface:
+        return self._image
+
+
+class AnimatedDrawable(DrawableObject):
+    _image: CachedAnimation
+
+    def get_surface(self) -> CachedSurface:
+        return self._image.get_frame(
+            min(self.alive_time // (self.TTL / len(self._image)), len(self._image) - 1)
+        )
+
+
+class Collides:
+    MASS: float
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)
+        self.mass = self.MASS
+
+    def on_collision(self, other: MovingObject):
+        pass
 
 
 class HasShield:
@@ -226,9 +277,6 @@ class HasTimer:
         super().update(dt)
 
 
-class StaticObject(MovingObject):
-    DRAG = 0.0
-    ANGULAR_DRAG = 0.0
-
+class NoControl:
     def get_accels(self):
         return Vector2(0.0, 0.0), 0.0
