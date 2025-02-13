@@ -21,13 +21,21 @@ class CachedSurface:
 
 
 class CachedAnimation:
-    _images: list[CachedSurface]
+    images: list[CachedSurface]
+    animation_time: int
+    loops: bool
 
-    def __init__(self, images: list[pg.Surface]):
-        self._images = [CachedSurface(im) for im in images]
+    def __init__(self, images: list[pg.Surface], animation_time: int, loops: bool):
+        self.images = [CachedSurface(im) for im in images]
+        self.animation_time = animation_time
+        self.loops = loops
 
-    def get_frame(self, i: int) -> CachedSurface:
-        return self._images[int(i)]
+    def get_frame(self, time: float) -> CachedSurface:
+        frame = int(time / (self.animation_time / len(self)))
+        if self.loops:
+            return self.images[frame % len(self)]
+        else:
+            return self.images[min(frame, len(self) - 1)]
 
     def __len__(self):
-        return len(self._images)
+        return len(self.images)

@@ -108,25 +108,45 @@ SmallPlasmaImage = CachedSurface(
 )
 
 MediumExplosion = CachedAnimation(
-    load_quad_from_file(0 + 12 * i, 126, 12, 14, "assets/tyrian/tyrian.shp.01D8A7.png")
-    for i in range(11)
+    [
+        load_quad_from_file(
+            0 + 12 * i, 126, 12, 14, "assets/tyrian/tyrian.shp.01D8A7.png"
+        )
+        for i in range(11)
+    ],
+    animation_time=2_000,
+    loops=False,
 )
 
 LargeExplosion1 = CachedAnimation(
-    load_double_from_file(0 + 12 * i, -2, 12, 28, "assets/tyrian/newsh6.shp.000000.png")
-    for i in range(17)
+    [
+        load_double_from_file(
+            0 + 12 * i, -2, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
+        )
+        for i in range(17)
+    ],
+    animation_time=2_000,
+    loops=False,
 )
 
 LargeExplosion2 = CachedAnimation(
-    load_double_reversed_from_file(
-        0 + 12 * i, 112, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
-    )
-    for i in range(13)
+    [
+        load_double_reversed_from_file(
+            0 + 12 * i, 112, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
+        )
+        for i in range(13)
+    ],
+    animation_time=2_000,
+    loops=False,
 )
 
 MineAnimation = CachedAnimation(
-    load_from_file(192, 113 + 28 * i, 22, 22, "assets/tyrian/newsha.shp.000000.png")
-    for i in range(3)
+    [
+        load_from_file(192, 113 + 28 * i, 22, 22, "assets/tyrian/newsha.shp.000000.png")
+        for i in range(3)
+    ],
+    animation_time=3_000,
+    loops=True,
 )
 
 HealPowerupImage = CachedSurface(

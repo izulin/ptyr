@@ -156,11 +156,6 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
             other.apply_damage(self.DMG)
             self.mark_dead()
 
-    def get_surface(self) -> CachedSurface:
-        return self.IMAGE.get_frame(
-            (self.alive_time / (3000 / len(self.IMAGE))) % len(self.IMAGE)
-        )
-
 
 class MineLauncher(Weapon):
     AMMO_CLS = Mine

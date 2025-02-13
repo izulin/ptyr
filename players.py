@@ -132,3 +132,4 @@ class PlayerExplosion(AnimatedDrawable, HasTimer, NoControl, MovingObject):
 
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_EXPLOSIONS, *args, **kwargs)
+        assert self.ttl == self._image.animation_time

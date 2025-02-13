@@ -208,9 +208,7 @@ class AnimatedDrawable(DrawableObject):
     _image: CachedAnimation
 
     def get_surface(self) -> CachedSurface:
-        return self._image.get_frame(
-            min(self.alive_time // (self.TTL / len(self._image)), len(self._image) - 1)
-        )
+        return self._image.get_frame(self.alive_time)
 
 
 class Collides:
