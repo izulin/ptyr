@@ -35,14 +35,11 @@ logger = logging.getLogger(__name__)
 
 
 class MovingObject(pg.sprite.Sprite):
-    DRAG = 1 / 1000
-    ANGULAR_DRAG = 2 / 1000
-
-    rect: pg.Rect
     pos: Vector3
     speed: Vector3
     alive_time: float
     alive: bool
+    all_statuses: pg.sprite.Group
 
     def __init__(self, *args, init_pos, init_speed, **kwargs):
         self.pos = normalize_pos3(Vector3(init_pos))
@@ -53,6 +50,7 @@ class MovingObject(pg.sprite.Sprite):
         self.update_image_rect()
         self._acc = Vector2()
         self._drag = Vector2()
+        self.all_statuses = pg.sprite.Group()
         assert not kwargs
         super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
 
@@ -148,20 +146,32 @@ class DrawsUI:
         all_changes = []
         for shift in ALL_SHIFTS:
             rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
-            hp_bar = pg.Rect(0, 0, 40, 3)
-            hp_bar.midbottom = rect.midtop
-            shield_bar = pg.Rect(0, 0, 40, 3)
-            shield_bar.midbottom = hp_bar.midtop
+
+            def draw_bar(color, fill, rect):
+                bar = pg.Rect(0,0,40,3)
+                bar.midbottom = rect.midtop
+                rect = bar.copy()
+                all_changes.append(pg.draw.rect(target, BLACK, bar))
+                all_changes.append(pg.draw.rect(target, color, bar, width=1))
+                bar.width = bar.width * fill
+                all_changes.append(pg.draw.rect(target, color, bar))
+                return rect
+
             if isinstance(self, HasHitpoints):
-                all_changes.append(pg.draw.rect(target, BLACK, hp_bar))
-                all_changes.append(pg.draw.rect(target, GREEN, hp_bar, width=1))
-                hp_bar.width = hp_bar.width * (self.hp / self.HP)
-                all_changes.append(pg.draw.rect(target, GREEN, hp_bar))
+                rect = draw_bar(GREEN, self.hp / self.HP, rect)
             if isinstance(self, HasShield):
-                all_changes.append(pg.draw.rect(target, BLACK, shield_bar))
-                all_changes.append(pg.draw.rect(target, BLUE, shield_bar, width=1))
-                shield_bar.width = shield_bar.width * (self.shield / self.SHIELD)
-                all_changes.append(pg.draw.rect(target, BLUE, shield_bar))
+                rect = draw_bar(BLUE, self.shield / self.SHIELD, rect)
+
+            first = True
+            for status in self.all_statuses:
+                icon: pg.Surface = status.icon
+                if first:
+                    rect = icon.get_rect(bottomleft=rect.topleft)
+                else:
+                    rect = icon.get_rect(bottomleft=rect.bottomright)
+                all_changes.append(target.blit(icon, rect))
+                first = False
+
         return all_changes
 
 

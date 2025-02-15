@@ -152,3 +152,11 @@ MineAnimation = CachedAnimation(
 HealPowerupImage = CachedSurface(
     load_from_file(171, 115, 19, 22, "assets/tyrian/newsh1.shp.000000.png")
 )
+
+SingleShotWeaponImage = CachedSurface(
+    load_from_file(2,2,19,24,"assets/tyrian/newsh1.shp.000000.png")
+)
+
+DoubleShotWeaponImage = CachedSurface(
+    load_from_file(49,2,21,24,"assets/tyrian/newsh1.shp.000000.png")
+)

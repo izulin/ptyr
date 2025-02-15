@@ -18,10 +18,9 @@ from groups import (
     ALL_ENEMIES,
     ALL_COLLIDING_OBJECTS,
     ALL_PLAYERS,
-    ALL_WEAPONS,
     ALL_DRAWABLE_OBJECTS,
     ALL_POWERUPS,
-    ALL_UI_DRAWABLE_OBJECTS,
+    ALL_UI_DRAWABLE_OBJECTS, ALL_STATUSES,
 )
 from math_utils import collide_objects
 from timers import TIMERS
@@ -74,7 +73,6 @@ def on_collision(obj_a: MovingObject, obj_b: MovingObject):
     force = collide_objects(obj_a, obj_b)
     obj_a.apply_damage(10 * force)
     obj_b.apply_damage(10 * force)
-
 
 def player_powerup_collision(player: Player, powerup: PowerUp):
     powerup.on_player_action(player)
@@ -143,8 +141,16 @@ def main():
         pg.display.flip()
 
         dt = FramePerSec.tick(FPS)
-        with TIMERS["delayed events"]:
+
+        with TIMERS["update"]:
             ALL_DELAYED.update(dt)
+            ALL_STATUSES.update(dt)
+            ALL_DRAWABLE_OBJECTS.update(dt)
+            for sprite in ALL_DRAWABLE_OBJECTS:
+                if not sprite.alive:
+                    logger.info(f"killing {sprite}")
+                    sprite.on_death()
+                    sprite.kill()
 
         with TIMERS["collide"]:
             for sprite in ALL_COLLIDING_OBJECTS:
@@ -156,14 +162,6 @@ def main():
                     player, on_collision=player_powerup_collision, stationary=True
                 )
 
-        with TIMERS["update"]:
-            ALL_DRAWABLE_OBJECTS.update(dt)
-            ALL_WEAPONS.update(dt)
-            for sprite in ALL_DRAWABLE_OBJECTS:
-                if not sprite.alive:
-                    logger.info(f"killing {sprite}")
-                    sprite.on_death()
-                    sprite.kill()
         cnt += 1
         if cnt % 1000 == 0:
             logger.info(

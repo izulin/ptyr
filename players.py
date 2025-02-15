@@ -25,12 +25,12 @@ from objects import (
     AnimatedDrawable,
     DrawsUI,
 )
-from weapons import Weapon, SingleShot, DoubleShot, MineLauncher
+from weapons import Weapon, SingleShotWeapon, MineLauncher
 
 
 class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingObject):
-    DRAG = 100 / 1000
-    ANGULAR_DRAG = 200 / 1000
+    DRAG = 1 / 1000
+    ANGULAR_DRAG = 2 / 1000
 
     FORWARD_THRUST = 0.1 / 1000
     SIDE_THRUST = 0.05 / 1000
@@ -47,11 +47,12 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
     def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
         self.controls = controls
-        self.weapon = self.default_weapon()
+        self.weapon = None
+        self.default_weapon()
         self.player_id = player_id
 
     def default_weapon(self):
-        return DoubleShot(owner=self)
+        SingleShotWeapon(owner=self)
 
     def get_accels(self) -> tuple[Vector2, float]:
         pressed_keys = pg.key.get_pressed()

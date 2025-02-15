@@ -1,12 +1,9 @@
 from __future__ import annotations
-
 import pygame as pg
 from pygame import Vector3, Vector2
 
-from assets import SmallBulletImage, MineAnimation
-from groups import ALL_WEAPONS, ALL_COLLIDING_OBJECTS
+from assets import SmallBulletImage, MineAnimation, SingleShotWeaponImage, DoubleShotWeaponImage
 from math_utils import internal_coord_to_xy
-from typing import TYPE_CHECKING
 
 from objects import (
     NoControl,
@@ -17,33 +14,25 @@ from objects import (
     StaticDrawable,
     AnimatedDrawable,
 )
-from surface import CachedSurface
-
-if TYPE_CHECKING:
-    from players import Player
+from status import Status
 
 
-class Weapon(pg.sprite.Sprite):
+class Weapon(Status):
     COOLDOWN = None
     AMMO = None
 
-    owner: Player
     cooldown: float
     ammo: int | None
     init_speed: float
     cooldown_left: float
 
-    def __init__(self, *args, owner, **kwargs):
-        super().__init__(ALL_WEAPONS, *args, **kwargs)
-        self.owner = owner
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.cooldown_left = 0.0
         assert self.COOLDOWN is not None
         self.cooldown = self.COOLDOWN
         self.ammo = self.AMMO
-
-    def update(self, dt):
-        self.cooldown_left -= dt
 
     def _fire_at_pos(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
@@ -69,6 +58,7 @@ class Weapon(pg.sprite.Sprite):
 
         r = self.owner.get_surface().get_image().get_height() / 2
         m = self.AMMO_CLS.MASS
+
         rotational_recoil = (
             Vector3(*launch_pos_internal, 0.0)
             .cross(Vector3(*launch_speed_internal, 0.0))
@@ -86,6 +76,10 @@ class Weapon(pg.sprite.Sprite):
 
         return Vector3(*recoil_xy, rotational_recoil)
 
+    def update(self, dt):
+        self.cooldown_left -= dt
+        super().update(dt)
+
     def fire(self):
         if self.cooldown_left > 0:
             return
@@ -96,10 +90,17 @@ class Weapon(pg.sprite.Sprite):
 
         self.cooldown_left = self.cooldown
         if self.ammo is not None and self.ammo <= 0:
-            self.owner.weapon = self.owner.default_weapon()
+            self.kill()
 
     def fire_logic(self):
         raise NotImplementedError
+
+class Primary:
+    def __init__(self, *args, owner, **kwargs):
+        if owner.weapon is not None and owner.weapon != self:
+            owner.weapon.kill()
+        owner.weapon = self
+        super().__init__(*args, owner=owner, **kwargs)
 
 
 class Bullet(Collides, NoControl, MovingObject):
@@ -111,29 +112,33 @@ class Bullet(Collides, NoControl, MovingObject):
         self.mark_dead()
         super().on_collision(other)
 
+    def apply_damage(self, dmg):
+        self.mark_dead()
 
-class SmallBullet(StaticDrawable, HasHitpoints, HasTimer, Bullet):
+
+class SmallBullet(StaticDrawable, HasTimer, Bullet):
     MASS = 1.0 / 10
     TTL = 3_000
-    HP = 1.0
     DMG = 10.0
     IMAGE = SmallBulletImage
 
 
-class SingleShot(Weapon):
+class SingleShotWeapon(Primary, Weapon):
     AMMO_CLS = SmallBullet
-    COOLDOWN = 50
+    COOLDOWN = 100
     AMMO = None
+    icon = pg.transform.scale(SingleShotWeaponImage.get_image(), (10,10))
 
     def fire_logic(self):
         self._fire_at_pos(Vector2(0.0, 20.0), 0.0, 0.3)
         self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3)
 
 
-class DoubleShot(Weapon):
+class DoubleShotWeapon(Primary, Weapon):
     AMMO_CLS = SmallBullet
     COOLDOWN = 100
     AMMO = None
+    icon = pg.transform.scale(DoubleShotWeaponImage.get_image(), (10, 10))
 
     def fire_logic(self):
         self._fire_at_pos(Vector2(5.0, 20.0), 0.0, 0.3)
