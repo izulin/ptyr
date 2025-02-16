@@ -147,15 +147,15 @@ class DrawsUI:
         for shift in ALL_SHIFTS:
             rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
 
-            def draw_bar(color, fill, rect):
-                bar = pg.Rect(0,0,40,3)
-                bar.midbottom = rect.midtop
-                rect = bar.copy()
+            def draw_bar(color, fill, _rect):
+                bar = pg.Rect(0, 0, 40, 3)
+                bar.midbottom = _rect.midtop
+                _rect = bar.copy()
                 all_changes.append(pg.draw.rect(target, BLACK, bar))
                 all_changes.append(pg.draw.rect(target, color, bar, width=1))
                 bar.width = bar.width * fill
                 all_changes.append(pg.draw.rect(target, color, bar))
-                return rect
+                return _rect
 
             if isinstance(self, HasHitpoints):
                 rect = draw_bar(GREEN, self.hp / self.HP, rect)
@@ -223,6 +223,7 @@ class AnimatedDrawable(DrawableObject):
 
 class Collides:
     MASS: float
+    mass: float
 
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)

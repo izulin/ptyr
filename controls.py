@@ -9,7 +9,8 @@ PLAYER_1_CONTROLS = dict(
     right_turn=K_d,
     left_strafe=K_q,
     right_strafe=K_e,
-    shoot=K_SPACE,
+    shoot=K_x,
+    secondary=K_z,
 )
 
 PLAYER_2_CONTROLS = dict(
@@ -19,5 +20,6 @@ PLAYER_2_CONTROLS = dict(
     right_turn=K_l,
     left_strafe=K_u,
     right_strafe=K_o,
-    shoot=K_RETURN,
+    shoot=K_COMMA,
+    secondary=K_m,
 )

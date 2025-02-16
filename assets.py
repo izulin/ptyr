@@ -125,7 +125,7 @@ LargeExplosion1 = CachedAnimation(
         )
         for i in range(17)
     ],
-    animation_time=2_000,
+    animation_time=1_000,
     loops=False,
 )
 
@@ -136,7 +136,7 @@ LargeExplosion2 = CachedAnimation(
         )
         for i in range(13)
     ],
-    animation_time=2_000,
+    animation_time=1_000,
     loops=False,
 )
 
@@ -154,9 +154,13 @@ HealPowerupImage = CachedSurface(
 )
 
 SingleShotWeaponImage = CachedSurface(
-    load_from_file(2,2,19,24,"assets/tyrian/newsh1.shp.000000.png")
+    load_from_file(170, 143, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
 )
 
 DoubleShotWeaponImage = CachedSurface(
-    load_from_file(49,2,21,24,"assets/tyrian/newsh1.shp.000000.png")
+    load_from_file(194, 143, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
+)
+
+MineLauncherWeaponImage = CachedSurface(
+    load_from_file(2, 199, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
 )

@@ -5,24 +5,21 @@ import random
 import pygame as pg
 from pygame.math import Vector2
 
-from assets import PlayerImages, LargeExplosion1, LargeExplosion2
+from assets import PlayerImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
+from explosions import PlayerExplosion
 from groups import (
     ALL_PLAYERS,
-    ALL_EXPLOSIONS,
     ALL_COLLIDING_OBJECTS,
 )
 from objects import (
     MovingObject,
-    NoControl,
     HasShield,
     HasHitpoints,
-    HasTimer,
     Collides,
     StaticDrawable,
-    AnimatedDrawable,
     DrawsUI,
 )
 from weapons import Weapon, SingleShotWeapon, MineLauncher
@@ -41,18 +38,30 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
     SHIELD = 30.0
 
     controls: dict[str, int]
-    weapon: Weapon
+    weapon: Weapon | None
+    secondary_weapon: Weapon | None
     player_id: int
 
     def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
         self.controls = controls
         self.weapon = None
-        self.default_weapon()
+        self.secondary_weapon = None
+        self.use_defaults()
         self.player_id = player_id
+
+    def use_defaults(self):
+        if self.weapon is None:
+            self.default_weapon()
+        if self.secondary_weapon is None:
+            self.default_secondary_weapon()
 
     def default_weapon(self):
         SingleShotWeapon(owner=self)
+
+    def default_secondary_weapon(self):
+        MineLauncher(owner=self)
+        pass
 
     def get_accels(self) -> tuple[Vector2, float]:
         pressed_keys = pg.key.get_pressed()
@@ -73,9 +82,14 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         return Vector2(side_accel, forward_accel), angular_accel
 
     def update(self, dt: float):
+        self.use_defaults()
         pressed_keys = pg.key.get_pressed()
         if pressed_keys[self.controls["shoot"]]:
-            self.weapon.fire()
+            if self.weapon is not None:
+                self.weapon.fire()
+        if pressed_keys[self.controls["secondary"]]:
+            if self.secondary_weapon is not None:
+                self.secondary_weapon.fire()
         super().update(dt)
 
     def on_death(self):
@@ -122,15 +136,3 @@ def get_player(player_id) -> Player | None:
         if player.player_id == player_id:
             return player
     return None
-
-
-class PlayerExplosion(AnimatedDrawable, HasTimer, NoControl, MovingObject):
-    DRAG = 0.0
-    ANGULAR_DRAG = 0.0
-
-    TTL = 2000
-    IMAGE = (LargeExplosion1, LargeExplosion2)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(ALL_EXPLOSIONS, *args, **kwargs)
-        assert self.ttl == self._image.animation_time

@@ -20,7 +20,8 @@ from groups import (
     ALL_PLAYERS,
     ALL_DRAWABLE_OBJECTS,
     ALL_POWERUPS,
-    ALL_UI_DRAWABLE_OBJECTS, ALL_STATUSES,
+    ALL_UI_DRAWABLE_OBJECTS,
+    ALL_STATUSES,
 )
 from math_utils import collide_objects
 from timers import TIMERS
@@ -73,6 +74,7 @@ def on_collision(obj_a: MovingObject, obj_b: MovingObject):
     force = collide_objects(obj_a, obj_b)
     obj_a.apply_damage(10 * force)
     obj_b.apply_damage(10 * force)
+
 
 def player_powerup_collision(player: Player, powerup: PowerUp):
     powerup.on_player_action(player)

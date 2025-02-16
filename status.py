@@ -26,12 +26,13 @@ class Status(pg.sprite.Sprite):
             if self.ttl <= 0:
                 self.kill()
 
+
 class HealingStatus(Status):
     TTL = 5_000
     HEAL_AMOUNT = 50
     owner: HasHitpoints
-    icon = pg.transform.scale(HealPowerupImage.get_image(),(10,10))
+    icon = HealPowerupImage.scale((10, 10))
 
     def update(self, dt: float):
-        self.owner.heal_hp(self.HEAL_AMOUNT * dt/self.ttl)
+        self.owner.heal_hp(self.HEAL_AMOUNT * dt / self.ttl)
         super().update(dt)

@@ -1,8 +1,15 @@
 from __future__ import annotations
-import pygame as pg
 from pygame import Vector3, Vector2
 
-from assets import SmallBulletImage, MineAnimation, SingleShotWeaponImage, DoubleShotWeaponImage
+from ammo import SmallBullet, Mine
+from assets import (
+    SmallBulletImage,
+    MineAnimation,
+    SingleShotWeaponImage,
+    DoubleShotWeaponImage,
+    MineLauncherWeaponImage,
+)
+from explosions import MineExplosion
 from math_utils import internal_coord_to_xy
 
 from objects import (
@@ -95,6 +102,7 @@ class Weapon(Status):
     def fire_logic(self):
         raise NotImplementedError
 
+
 class Primary:
     def __init__(self, *args, owner, **kwargs):
         if owner.weapon is not None and owner.weapon != self:
@@ -103,31 +111,19 @@ class Primary:
         super().__init__(*args, owner=owner, **kwargs)
 
 
-class Bullet(Collides, NoControl, MovingObject):
-    DRAG = 0.0
-    ANGULAR_DRAG = 0.0
-
-    def on_collision(self, other: MovingObject):
-        other.apply_damage(self.DMG)
-        self.mark_dead()
-        super().on_collision(other)
-
-    def apply_damage(self, dmg):
-        self.mark_dead()
-
-
-class SmallBullet(StaticDrawable, HasTimer, Bullet):
-    MASS = 1.0 / 10
-    TTL = 3_000
-    DMG = 10.0
-    IMAGE = SmallBulletImage
+class Secondary:
+    def __init__(self, *args, owner, **kwargs):
+        if owner.secondary_weapon is not None and owner.secondary_weapon != self:
+            owner.secondary_weapon.kill()
+        owner.secondary_weapon = self
+        super().__init__(*args, owner=owner, **kwargs)
 
 
 class SingleShotWeapon(Primary, Weapon):
     AMMO_CLS = SmallBullet
     COOLDOWN = 100
     AMMO = None
-    icon = pg.transform.scale(SingleShotWeaponImage.get_image(), (10,10))
+    icon = SingleShotWeaponImage.scale((10, 10))
 
     def fire_logic(self):
         self._fire_at_pos(Vector2(0.0, 20.0), 0.0, 0.3)
@@ -138,7 +134,7 @@ class DoubleShotWeapon(Primary, Weapon):
     AMMO_CLS = SmallBullet
     COOLDOWN = 100
     AMMO = None
-    icon = pg.transform.scale(DoubleShotWeaponImage.get_image(), (10, 10))
+    icon = DoubleShotWeaponImage.scale((10, 10))
 
     def fire_logic(self):
         self._fire_at_pos(Vector2(5.0, 20.0), 0.0, 0.3)
@@ -148,24 +144,11 @@ class DoubleShotWeapon(Primary, Weapon):
         )
 
 
-class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
-    DMG = 1000.0
-    DRAG = 100 / 1000
-    ANGULAR_DRAG = 200 / 1000
-    IMAGE = MineAnimation
-    HP = 100.0
-    MASS = 100.0
-
-    def on_collision(self, other: MovingObject):
-        if isinstance(other, HasHitpoints) and other.HP >= 30:
-            other.apply_damage(self.DMG)
-            self.mark_dead()
-
-
-class MineLauncher(Weapon):
+class MineLauncher(Secondary, Weapon):
     AMMO_CLS = Mine
     COOLDOWN = 1000
     AMMO = 10
+    icon = MineLauncherWeaponImage.scale((10, 10))
 
     def fire_logic(self):
         self._fire_at_pos(Vector2(0.0, -10.0), 180, 0.01)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from pygame.math import Vector2, Vector3
 
 if TYPE_CHECKING:
-    from objects import MovingObject
+    from objects import MovingObject, Collides
 
 
 def range_kutta_4(f, x, y, dt):
@@ -43,17 +43,15 @@ def test_if_proper_collision(a: MovingObject, b: MovingObject):
     return pos_diff * speed_diff < 0
 
 
-def project(vector: Vector2, base: Vector2) -> Vector2:
-    return (vector * base) / (base * base) * base
-
-
 def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.9) -> float:
     pos_diff = a.pos_xy - b.pos_xy
-    center_mass_speed = (a.speed_xy * a.mass + b.speed_xy * b.mass) / (a.mass + b.mass)
-    a_speed_norm = a.speed_xy - center_mass_speed
-    b_speed_norm = b.speed_xy - center_mass_speed
-    a_proj = project(a_speed_norm, pos_diff)
-    b_proj = project(b_speed_norm, pos_diff)
+    center_mass_speed: Vector2 = (a.speed_xy * a.mass + b.speed_xy * b.mass) / (
+        a.mass + b.mass
+    )
+    a_speed_norm: Vector2 = a.speed_xy - center_mass_speed
+    b_speed_norm: Vector2 = b.speed_xy - center_mass_speed
+    a_proj = a_speed_norm.project(pos_diff)
+    b_proj = b_speed_norm.project(pos_diff)
     a.speed = Vector3(*(a.speed_xy - (1.0 + elasticity) * a_proj), a.speed.z)
     b.speed = Vector3(*(b.speed_xy - (1.0 + elasticity) * b_proj), b.speed.z)
     return a_proj.length() * a.mass

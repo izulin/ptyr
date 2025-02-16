@@ -19,6 +19,9 @@ class CachedSurface:
     def get_rect(self, ang: int = 0, **kwargs):
         return self.get_image(ang).get_rect(**kwargs)
 
+    def scale(self, size) -> pg.Surface:
+        return pg.transform.scale(self.get_image(), size)
+
 
 class CachedAnimation:
     images: list[CachedSurface]
@@ -39,3 +42,10 @@ class CachedAnimation:
 
     def __len__(self):
         return len(self.images)
+
+    def scale_by(self, factor: float):
+        return CachedAnimation(
+            [pg.transform.scale_by(s.get_image(), factor) for s in self.images],
+            self.animation_time,
+            self.loops,
+        )
