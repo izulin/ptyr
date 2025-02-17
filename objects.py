@@ -57,6 +57,12 @@ class MovingObject(pg.sprite.Sprite):
     def mark_dead(self):
         self.alive = False
 
+    def apply_damage(self, dmg: float):
+        pass
+
+    def heal_hp(self, heal: float):
+        pass
+
     @property
     def pos_xy(self) -> Vector2:
         return Vector2(self.pos.x, self.pos.y)
@@ -135,7 +141,56 @@ class MovingObject(pg.sprite.Sprite):
         self.speed = new_speed
 
 
-class DrawsUI:
+class DrawableObject(MovingObject):
+    image: pg.Surface
+    rect: pg.Rect
+    mask: pg.Mask
+
+    def __init__(self, *args, image=None, **kwargs):
+        if image is None:
+            image = self.IMAGE
+
+        if isinstance(image, (list, tuple)):
+            self._image = random.choice(image)
+        else:
+            self._image = image
+        super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
+
+    def get_surface(self) -> CachedSurface:
+        raise NotImplementedError
+
+    def update_image_rect(self):
+        self.image = self.get_surface().get_image(self.pos.z)
+        self.rect = self.get_surface().get_rect(
+            self.pos.z,
+            topleft=self.pos_xy - self.get_surface().get_centroid(self.pos.z),
+        )
+        self.mask = self.get_surface().get_mask(self.pos.z)
+
+    def update(self, dt: float):
+        old_rect = self.rect
+        super().update(dt)
+        self.update_image_rect()
+        for group in self.groups():
+            if isinstance(group, GroupWithCD):
+                group.cd.move(self, self.rect, old_rect)
+
+
+class StaticDrawable(DrawableObject):
+    _image: CachedSurface
+
+    def get_surface(self) -> CachedSurface:
+        return self._image
+
+
+class AnimatedDrawable(DrawableObject):
+    _image: CachedAnimation
+
+    def get_surface(self) -> CachedSurface:
+        return self._image.get_frame(self.alive_time)
+
+
+class DrawsUI(DrawableObject):
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_UI_DRAWABLE_OBJECTS, *args, **kwargs)
 
@@ -175,52 +230,6 @@ class DrawsUI:
         return all_changes
 
 
-class DrawableObject:
-    image: pg.Surface
-    rect: pg.Rect
-    mask: pg.Mask
-
-    def __init__(self, *args, image=None, **kwargs):
-        if image is None:
-            image = self.IMAGE
-
-        if isinstance(image, (list, tuple)):
-            self._image = random.choice(image)
-        else:
-            self._image = image
-        super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
-
-    def get_surface(self) -> CachedSurface:
-        raise NotImplementedError
-
-    def update_image_rect(self):
-        self.image = self.get_surface().get_image(self.pos.z)
-        self.rect = self.get_surface().get_rect(self.pos.z, center=self.pos_xy)
-        self.mask = self.get_surface().get_mask(self.pos.z)
-
-    def update(self, dt: float):
-        old_rect = self.rect
-        super().update(dt)
-        self.update_image_rect()
-        for group in self.groups():
-            if isinstance(group, GroupWithCD):
-                group.cd.move(self, self.rect, old_rect)
-
-
-class StaticDrawable(DrawableObject):
-    _image: CachedSurface
-
-    def get_surface(self) -> CachedSurface:
-        return self._image
-
-
-class AnimatedDrawable(DrawableObject):
-    _image: CachedAnimation
-
-    def get_surface(self) -> CachedSurface:
-        return self._image.get_frame(self.alive_time)
-
-
 class Collides:
     MASS: float
     mass: float
@@ -233,7 +242,7 @@ class Collides:
         pass
 
 
-class HasShield:
+class HasShield(MovingObject):
     shield: float
 
     def __init__(self, *args, **kwargs):
@@ -256,7 +265,7 @@ class HasShield:
         self.heal_shield(dt / 1000 * 2)
 
 
-class HasHitpoints:
+class HasHitpoints(MovingObject):
     hp: float
 
     def __init__(self, *args, **kwargs):
@@ -267,12 +276,14 @@ class HasHitpoints:
         self.hp -= dmg
         if self.hp <= 0:
             self.mark_dead()
+        super().apply_damage(dmg)
 
     def heal_hp(self, heal: float):
         self.hp = min(self.hp + heal, self.HP)
+        super().heal_hp(heal)
 
 
-class HasTimer:
+class HasTimer(MovingObject):
     ttl: float
 
     def __init__(self, *args, **kwargs):

@@ -114,7 +114,7 @@ MediumExplosion = CachedAnimation(
         )
         for i in range(11)
     ],
-    animation_time=2_000,
+    animation_time=1_000,
     loops=False,
 )
 

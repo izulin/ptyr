@@ -3,24 +3,11 @@ from pygame import Vector3, Vector2
 
 from ammo import SmallBullet, Mine
 from assets import (
-    SmallBulletImage,
-    MineAnimation,
     SingleShotWeaponImage,
     DoubleShotWeaponImage,
     MineLauncherWeaponImage,
 )
-from explosions import MineExplosion
 from math_utils import internal_coord_to_xy
-
-from objects import (
-    NoControl,
-    MovingObject,
-    HasHitpoints,
-    HasTimer,
-    Collides,
-    StaticDrawable,
-    AnimatedDrawable,
-)
 from status import Status
 
 
@@ -71,7 +58,7 @@ class Weapon(Status):
             .cross(Vector3(*launch_speed_internal, 0.0))
             .z
             * m
-            / (1 / 4 * self.owner.mass * r**2)
+            / (self.owner.get_surface().inertia_moment_coef * self.owner.mass)
             * 180
             / 3.14
         )
@@ -146,7 +133,7 @@ class DoubleShotWeapon(Primary, Weapon):
 
 class MineLauncher(Secondary, Weapon):
     AMMO_CLS = Mine
-    COOLDOWN = 1000
+    COOLDOWN = 1000 / 10
     AMMO = 10
     icon = MineLauncherWeaponImage.scale((10, 10))
 

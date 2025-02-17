@@ -5,12 +5,8 @@ from status import HealingStatus
 from groups import ALL_POWERUPS
 from objects import NoControl, MovingObject, HasTimer, StaticDrawable
 import random
-from typing import TYPE_CHECKING
-
+from players import Player
 from weapons import DoubleShotWeapon, MineLauncher
-
-if TYPE_CHECKING:
-    from players import Player
 
 
 class PowerUp(HasTimer, NoControl, MovingObject):
@@ -24,11 +20,11 @@ class PowerUp(HasTimer, NoControl, MovingObject):
         super().__init__(ALL_POWERUPS, *args, **kwargs)
         self.used = False
 
-    def on_player_action(self, other: MovingObject):
+    def on_collision(self, other: MovingObject):
         if self.used:
             return
 
-        if not isinstance(other, NoControl):
+        if isinstance(other, Player):
             self.used = True
             self.action_logic(other)
             DelayedEvent(lambda: self.mark_dead(), 100, name="Powerup cleanup")

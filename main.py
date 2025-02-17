@@ -22,6 +22,7 @@ from groups import (
     ALL_POWERUPS,
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_STATUSES,
+    ALL_EXPLOSIONS,
 )
 from math_utils import collide_objects
 from timers import TIMERS
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
     from powerups import PowerUp
     from objects import MovingObject
     from players import Player
+    from explosions import Explosion
 
 import logging
 
@@ -68,7 +70,7 @@ DelayedEvent(
 )
 
 
-def on_collision(obj_a: MovingObject, obj_b: MovingObject):
+def _colliding_colliding(obj_a: MovingObject, obj_b: MovingObject):
     obj_a.on_collision(obj_b)
     obj_b.on_collision(obj_a)
     force = collide_objects(obj_a, obj_b)
@@ -76,8 +78,12 @@ def on_collision(obj_a: MovingObject, obj_b: MovingObject):
     obj_b.apply_damage(10 * force)
 
 
-def player_powerup_collision(player: Player, powerup: PowerUp):
-    powerup.on_player_action(player)
+def _player_powerup(player: Player, powerup: PowerUp):
+    powerup.on_collision(player)
+
+
+def _explosion_colliding(explosion: Explosion, obj: MovingObject):
+    explosion.on_collision(obj)
 
 
 def main():
@@ -150,18 +156,23 @@ def main():
             ALL_DRAWABLE_OBJECTS.update(dt)
             for sprite in ALL_DRAWABLE_OBJECTS:
                 if not sprite.alive:
-                    logger.info(f"killing {sprite}")
+                    # logger.info(f"killing {sprite}")
                     sprite.on_death()
                     sprite.kill()
 
         with TIMERS["collide"]:
             for sprite in ALL_COLLIDING_OBJECTS:
                 ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    sprite, on_collision=on_collision, stationary=False
+                    sprite, on_collision=_colliding_colliding, stationary=False
                 )
             for player in ALL_PLAYERS:
                 ALL_POWERUPS.cd.collide_with_callback(
-                    player, on_collision=player_powerup_collision, stationary=True
+                    player, on_collision=_player_powerup, stationary=True
+                )
+
+            for explosion in ALL_EXPLOSIONS:
+                ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+                    explosion, on_collision=_explosion_colliding, stationary=True
                 )
 
         cnt += 1

@@ -37,7 +37,7 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
     ANGULAR_DRAG = 200 / 1000
     IMAGE = MineAnimation
     HP = 5.0
-    MASS = 100.0
+    MASS = 10.0
 
     def on_collision(self, other: MovingObject):
         if isinstance(other, HasHitpoints) and other.HP >= 30:
