@@ -31,6 +31,8 @@ import logging
 if TYPE_CHECKING:
     from surface import CachedSurface, CachedAnimation
 
+from surface import CachedSurface
+
 logger = logging.getLogger(__name__)
 
 
@@ -300,3 +302,13 @@ class HasTimer(MovingObject):
 class NoControl:
     def get_accels(self):
         return Vector2(0.0, 0.0), 0.0
+
+
+tmp = pg.surface.Surface((10, 10))
+pg.draw.circle(tmp, WHITE, (5, 5), 5)
+
+
+class DebugArtifact(NoControl, StaticDrawable):
+    DRAG = 0.0
+    ANGULAR_DRAG = 0.0
+    IMAGE = CachedSurface(tmp)

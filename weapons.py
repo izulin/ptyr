@@ -50,21 +50,20 @@ class Weapon(Status):
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
 
-        r = self.owner.get_surface().get_image().get_height() / 2
-        m = self.AMMO_CLS.MASS
-
+        # momentum moment / inertia moment = angular speed
         rotational_recoil = (
             Vector3(*launch_pos_internal, 0.0)
             .cross(Vector3(*launch_speed_internal, 0.0))
             .z
-            * m
+            * self.AMMO_CLS.MASS
             / (self.owner.get_surface().inertia_moment_coef * self.owner.mass)
             * 180
             / 3.14
         )
+        # moment / mass = speed
         recoil_xy = (
             internal_coord_to_xy(launch_speed_internal, self.owner.pos.z)
-            * m
+            * self.AMMO_CLS.MASS
             / self.owner.mass
         )
 

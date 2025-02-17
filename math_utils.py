@@ -1,10 +1,11 @@
 from __future__ import annotations
-from consts import SCREEN_HEIGHT, SCREEN_WIDTH
+from consts import SCREEN_HEIGHT, SCREEN_WIDTH, WHITE
 from typing import TYPE_CHECKING
 from pygame.math import Vector2, Vector3
+import pygame as pg
 
 if TYPE_CHECKING:
-    from objects import MovingObject, Collides
+    from objects import MovingObject
 
 
 def range_kutta_4(f, x, y, dt):
@@ -44,17 +45,21 @@ def test_if_proper_collision(a: MovingObject, b: MovingObject):
 
 
 def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.9) -> float:
+    # xoffset = b.rect[0] - a.rect[0]
+    # yoffset = b.rect[1] - a.rect[1]
+    # overlap_mask: pg.Mask = a.mask.overlap_mask(b.mask, (xoffset, yoffset))
+    # bounding_rects: list[pg.Rect] = overlap_mask.get_bounding_rects()
+    # x_mid = (min(rect.left for rect in bounding_rects) + max(rect.right for rect in bounding_rects) - 1)/2
+    # y_mid = (min(rect.top for rect in bounding_rects) + max(rect.bottom for rect in bounding_rects) - 1)/2
+    # collision_point = Vector2(a.rect.x+x_mid, a.rect.y+y_mid)
+
     pos_diff = a.pos_xy - b.pos_xy
-    center_mass_speed: Vector2 = (a.speed_xy * a.mass + b.speed_xy * b.mass) / (
-        a.mass + b.mass
-    )
-    a_speed_norm: Vector2 = a.speed_xy - center_mass_speed
-    b_speed_norm: Vector2 = b.speed_xy - center_mass_speed
-    a_proj = a_speed_norm.project(pos_diff)
-    b_proj = b_speed_norm.project(pos_diff)
-    a.speed = Vector3(*(a.speed_xy - (1.0 + elasticity) * a_proj), a.speed.z)
-    b.speed = Vector3(*(b.speed_xy - (1.0 + elasticity) * b_proj), b.speed.z)
-    return a_proj.length() * a.mass
+    a_proj = a.speed_xy.project(pos_diff)
+    b_proj = b.speed_xy.project(pos_diff)
+    impulse: Vector2 = (a_proj - b_proj) / (1 / a.mass + 1 / b.mass)
+    a.speed = Vector3(*(a.speed_xy - (1.0 + elasticity) * impulse / a.mass), a.speed.z)
+    b.speed = Vector3(*(b.speed_xy + (1.0 + elasticity) * impulse / b.mass), b.speed.z)
+    return impulse.length()
 
 
 def internal_coord_to_xy(pos: Vector2, ang: float) -> Vector2:
