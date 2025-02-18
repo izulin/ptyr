@@ -1,5 +1,5 @@
 from __future__ import annotations
-from consts import SCREEN_HEIGHT, SCREEN_WIDTH, WHITE
+from consts import SCREEN_HEIGHT, SCREEN_WIDTH
 from typing import TYPE_CHECKING
 from pygame.math import Vector2, Vector3
 import pygame as pg
@@ -36,13 +36,6 @@ def normalize_pos2(pos: Vector2):
 
 def normalize_pos3(pos: Vector3):
     return Vector3(pos.x % SCREEN_WIDTH, pos.y % SCREEN_HEIGHT, pos.z % 360)
-
-
-def test_if_proper_collision(a: MovingObject, b: MovingObject):
-    return True
-    pos_diff = a.pos_xy - b.pos_xy
-    speed_diff = a.speed_xy - b.speed_xy
-    return pos_diff * speed_diff < 0
 
 
 def get_collision_point(a: MovingObject, b: MovingObject) -> Vector2:
@@ -94,14 +87,25 @@ def collide_objects(
     )
 
     impulse: Vector2 = (a_proj - b_proj) / (a_inertia + b_inertia)
-    a_dspeed = Vector3(
-        *(impulse / a.mass),
-        Vector3(*impulse, 0).cross(Vector3(*a_r, 0)).z / a.inertia_moment * 180 / 3.14,
+    a_dspeed = (
+        Vector3(
+            impulse.x / a.mass,
+            impulse.y / a.mass,
+            0,
+        )
+        + Vector3(impulse.x, impulse.y, 0).cross(Vector3(a_r.x, a_r.y, 0))
+        / a.inertia_moment
+        * 180
+        / 3.14
     )
-    b_dspeed = -Vector3(
-        *(impulse / b.mass),
-        Vector3(*impulse, 0).cross(Vector3(*b_r, 0)).z / b.inertia_moment * 180 / 3.14,
+    b_dspeed = (
+        -Vector3(impulse.x / b.mass, impulse.y / b.mass, 0)
+        - Vector3(impulse.x, impulse.y, 0).cross(Vector3(b_r.x, b_r.y, 0))
+        / b.inertia_moment
+        * 180
+        / 3.14
     )
+
     A = (
         a_dspeed.x**2 * a.mass
         + a_dspeed.y**2 * a.mass

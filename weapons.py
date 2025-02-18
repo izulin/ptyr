@@ -52,11 +52,11 @@ class Weapon(Status):
 
         # momentum moment / inertia moment = angular speed
         rotational_recoil = (
-            Vector3(*launch_pos_internal, 0.0)
-            .cross(Vector3(*launch_speed_internal, 0.0))
-            .z
+            Vector3(launch_pos_internal.x, launch_pos_internal.y, 0.0).cross(
+                Vector3(launch_speed_internal.x, launch_speed_internal.y, 0.0)
+            )
             * self.AMMO_CLS.MASS
-            / (self.owner.get_surface().inertia_moment_coef * self.owner.mass)
+            / self.owner.inertia_moment
             * 180
             / 3.14
         )
@@ -67,7 +67,7 @@ class Weapon(Status):
             / self.owner.mass
         )
 
-        return Vector3(*recoil_xy, rotational_recoil)
+        return Vector3(recoil_xy.x, recoil_xy.y, 0) + rotational_recoil
 
     def update(self, dt):
         self.cooldown_left -= dt

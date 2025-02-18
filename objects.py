@@ -125,14 +125,11 @@ class MovingObject(pg.sprite.Sprite):
         def f(pos: Vector3, speed: Vector3):
             self._acc = internal_coord_to_xy(accel, pos.z)
             angular_drag = speed.z * abs(speed.z) * self.ANGULAR_DRAG
-
             speed_xy = Vector2(speed.x, speed.y)
             # |drag| = self.DRAG * |speed|**2
             self._drag = speed_xy.length() * self.DRAG * speed_xy
-
-            acc = Vector3(*(self._acc - self._drag), angular_accel - angular_drag)
-
-            return speed, acc
+            acc = self._acc - self._drag
+            return speed, Vector3(acc.x, acc.y, angular_accel - angular_drag)
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 

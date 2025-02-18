@@ -122,7 +122,7 @@ def spawn_player(player_id):
             player_id=player_id,
         )
 
-        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(player, stationary=True):
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(player):
             player.kill()
         else:
             return

@@ -1,6 +1,8 @@
 from __future__ import annotations
 import pygame as pg
 import sys
+
+from pygame import Vector3, Vector2
 from pygame.locals import *
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent, ALL_DELAYED
@@ -61,7 +63,7 @@ with TIMERS["init"]:
         spawn_asteroid()
 
 DelayedEvent(
-    lambda: spawn_asteroid() if len(ALL_ENEMIES) < 50 else None,
+    lambda: spawn_asteroid() if len(ALL_ENEMIES) < 30 else None,
     5000,
     repeat=True,
     name="spawn_asteroid",
@@ -162,16 +164,16 @@ def main():
         with TIMERS["collide"]:
             for sprite in ALL_COLLIDING_OBJECTS:
                 ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    sprite, on_collision=_colliding_colliding, stationary=False
+                    sprite, on_collision=_colliding_colliding
                 )
             for player in ALL_PLAYERS:
                 ALL_POWERUPS.cd.collide_with_callback(
-                    player, on_collision=_player_powerup, stationary=True
+                    player, on_collision=_player_powerup
                 )
 
             for explosion in ALL_EXPLOSIONS:
                 ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    explosion, on_collision=_explosion_colliding, stationary=True
+                    explosion, on_collision=_explosion_colliding
                 )
 
         cnt += 1

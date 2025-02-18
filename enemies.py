@@ -88,7 +88,7 @@ def spawn_asteroid():
                 random.uniform(-0.05, 0.05),
             ],
         )
-        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(asteroid, stationary=True):
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(asteroid):
             asteroid.kill()
         else:
             return

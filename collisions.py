@@ -5,7 +5,6 @@ from pygame.math import Vector3
 from consts import ALL_SHIFTS
 from collections import defaultdict
 
-from math_utils import test_if_proper_collision
 import logging
 
 logger = logging.getLogger(__name__)
@@ -66,7 +65,7 @@ class CollisionDetector:
                 self._division[(x, y)].remove(sprite)
 
     def _collide_with_callback(
-        self, sprite: pg.sprite.Sprite, *, on_collision=None, stationary
+        self, sprite: pg.sprite.Sprite, *, on_collision=None
     ) -> bool:
         rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
@@ -86,23 +85,20 @@ class CollisionDetector:
                     if pg.sprite.collide_rect(sprite, other) and pg.sprite.collide_mask(
                         sprite, other
                     ):
-                        if stationary or test_if_proper_collision(sprite, other):
-                            ret = True
-                            if on_collision is None:
-                                return True
-                            on_collision(sprite, other)
+                        ret = True
+                        if on_collision is None:
+                            return True
+                        on_collision(sprite, other)
         return ret
 
     def collide_with_callback(
-        self, sprite: pg.sprite.Sprite, *, on_collision=None, stationary
+        self, sprite: pg.sprite.Sprite, *, on_collision=None
     ) -> bool:
         ret = False
         for shift in ALL_SHIFTS:
             sprite.pos += Vector3(*shift, 0)
             sprite.rect.move_ip(shift)
-            ret = self._collide_with_callback(
-                sprite, on_collision=on_collision, stationary=stationary
-            )
+            ret = self._collide_with_callback(sprite, on_collision=on_collision)
             sprite.pos -= Vector3(*shift, 0)
             sprite.rect.move_ip(-shift)
             if ret and on_collision is None:
