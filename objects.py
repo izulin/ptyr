@@ -42,6 +42,7 @@ class MovingObject(pg.sprite.Sprite):
     alive_time: float
     alive: bool
     all_statuses: pg.sprite.Group
+    _id: int
 
     def __init__(self, *args, init_pos, init_speed, **kwargs):
         self.pos = normalize_pos3(Vector3(init_pos))
@@ -113,7 +114,9 @@ class MovingObject(pg.sprite.Sprite):
         return all_changes
 
     def update(self, dt: float):
-        self.update_pos(dt)
+        new_pos, new_speed = self.updated_pos(dt)
+        self.pos = normalize_pos3(new_pos)
+        self.speed = new_speed
         self.alive_time += dt
 
     def on_death(self):
@@ -122,7 +125,7 @@ class MovingObject(pg.sprite.Sprite):
     def get_accels(self):
         raise NotImplementedError
 
-    def update_pos(self, dt: float):
+    def updated_pos(self, dt: float):
         accel, angular_accel = self.get_accels()
 
         def f(pos: Vector3, speed: Vector3):
@@ -137,10 +140,7 @@ class MovingObject(pg.sprite.Sprite):
 
             return speed, acc
 
-        new_pos, new_speed = range_kutta_2(f, self.pos, self.speed, dt)
-
-        self.pos = normalize_pos3(new_pos)
-        self.speed = new_speed
+        return range_kutta_2(f, self.pos, self.speed, dt)
 
 
 class DrawableObject(MovingObject):
@@ -242,6 +242,10 @@ class Collides:
 
     def on_collision(self, other: MovingObject):
         pass
+
+    @property
+    def inertia_moment(self):
+        return self.get_surface().inertia_moment_coef * self.mass
 
 
 class HasShield(MovingObject):

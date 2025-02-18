@@ -59,7 +59,7 @@ with TIMERS["init"]:
     spawn_player(1)
     spawn_player(2)
 
-    while len(ALL_ENEMIES) < 10:
+    while len(ALL_ENEMIES) < 3:
         spawn_asteroid()
 
 DelayedEvent(

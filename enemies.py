@@ -83,9 +83,9 @@ def spawn_asteroid():
                 random.randint(0, 360),
             ],
             init_speed=[
-                random.uniform(-0.1, 0.1),
-                random.uniform(-0.1, 0.1),
-                random.uniform(-0.1, 0.1),
+                random.uniform(-0.05, 0.05),
+                random.uniform(-0.05, 0.05),
+                random.uniform(-0.05, 0.05),
             ],
         )
         if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(asteroid, stationary=True):

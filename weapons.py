@@ -125,8 +125,8 @@ class DoubleShotWeapon(Primary, Weapon):
     def fire_logic(self):
         self._fire_at_pos(Vector2(5.0, 20.0), 0.0, 0.3)
         self._fire_at_pos(Vector2(-5.0, 20.0), 0.0, 0.3)
-        self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3) + self._recoil(
-            Vector2(0.0, 20.0), 0.0, 0.3
+        self.owner.speed -= self._recoil(Vector2(5.0, 20.0), 0.0, 0.3) + self._recoil(
+            Vector2(-5.0, 20.0), 0.0, 0.3
         )
 
 
