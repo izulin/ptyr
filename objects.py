@@ -18,8 +18,6 @@ from consts import (
     GREEN,
     RED,
     ALL_SHIFTS,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
     BLUE,
     BLACK,
 )
@@ -32,6 +30,7 @@ if TYPE_CHECKING:
     from surface import CachedSurface, CachedAnimation
 
 from surface import CachedSurface
+from display import DISPLAYSURF, ALL_CHANGES_DISPLAYSURF
 
 logger = logging.getLogger(__name__)
 
@@ -74,18 +73,14 @@ class MovingObject(pg.sprite.Sprite):
     def speed_xy(self) -> Vector2:
         return Vector2(self.speed.x, self.speed.y)
 
-    def draw_debugs(self, target: pg.Surface) -> list[pg.Rect]:
-        assert (
-            target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
-        )
+    def draw_debugs(self):
         pos_xy = self.pos_xy
         speed_xy = self.speed_xy
-        all_changes = []
         for shift in ALL_SHIFTS:
             dt = 200
-            all_changes.append(
+            ALL_CHANGES_DISPLAYSURF.append(
                 pg.draw.line(
-                    target,
+                    DISPLAYSURF,
                     WHITE,
                     shift + pos_xy,
                     shift + pos_xy + dt * speed_xy,
@@ -93,25 +88,24 @@ class MovingObject(pg.sprite.Sprite):
                 )
             )
             dt = 200000
-            all_changes.append(
+            ALL_CHANGES_DISPLAYSURF.append(
                 pg.draw.line(
-                    target,
+                    DISPLAYSURF,
                     GREEN,
                     shift + pos_xy,
                     shift + pos_xy + dt * self._acc,
                     1,
                 )
             )
-            all_changes.append(
+            ALL_CHANGES_DISPLAYSURF.append(
                 pg.draw.line(
-                    target,
+                    DISPLAYSURF,
                     RED,
                     shift + pos_xy + dt * self._acc,
                     shift + pos_xy + dt * self._acc - dt * self._drag,
                     1,
                 )
             )
-        return all_changes
 
     def update(self, dt: float):
         new_pos, new_speed = self.updated_pos(dt)
@@ -196,11 +190,7 @@ class DrawsUI(DrawableObject):
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_UI_DRAWABLE_OBJECTS, *args, **kwargs)
 
-    def draw_ui(self, target: pg.Surface) -> list[pg.Rect]:
-        assert (
-            target.get_width() == SCREEN_WIDTH and target.get_height() == SCREEN_HEIGHT
-        )
-        all_changes = []
+    def draw_ui(self):
         for shift in ALL_SHIFTS:
             rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
 
@@ -208,10 +198,12 @@ class DrawsUI(DrawableObject):
                 bar = pg.Rect(0, 0, 40, 3)
                 bar.midbottom = _rect.midtop
                 _rect = bar.copy()
-                all_changes.append(pg.draw.rect(target, BLACK, bar))
-                all_changes.append(pg.draw.rect(target, color, bar, width=1))
+                ALL_CHANGES_DISPLAYSURF.append(pg.draw.rect(DISPLAYSURF, BLACK, bar))
+                ALL_CHANGES_DISPLAYSURF.append(
+                    pg.draw.rect(DISPLAYSURF, color, bar, width=1)
+                )
                 bar.width = bar.width * fill
-                all_changes.append(pg.draw.rect(target, color, bar))
+                ALL_CHANGES_DISPLAYSURF.append(pg.draw.rect(DISPLAYSURF, color, bar))
                 return _rect
 
             if isinstance(self, HasHitpoints):
@@ -226,10 +218,8 @@ class DrawsUI(DrawableObject):
                     rect = icon.get_rect(bottomleft=rect.topleft)
                 else:
                     rect = icon.get_rect(bottomleft=rect.bottomright)
-                all_changes.append(target.blit(icon, rect))
+                ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(icon, rect))
                 first = False
-
-        return all_changes
 
 
 class Collides:

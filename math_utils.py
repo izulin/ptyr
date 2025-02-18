@@ -45,7 +45,7 @@ def test_if_proper_collision(a: MovingObject, b: MovingObject):
     return pos_diff * speed_diff < 0
 
 
-def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.75) -> float:
+def get_collision_point(a: MovingObject, b: MovingObject) -> Vector2:
     x_diff = b.rect.x - a.rect.x
     y_diff = b.rect.y - a.rect.y
     overlap_mask: pg.Mask = a.mask.overlap_mask(b.mask, (x_diff, y_diff))
@@ -60,8 +60,12 @@ def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.75) -> float:
         + max(rect.bottom for rect in bounding_rects)
         - 1
     ) / 2
-    collision_point = Vector2(a.rect.x + x_mid, a.rect.y + y_mid)
+    return Vector2(a.rect.x + x_mid, a.rect.y + y_mid)
 
+
+def collide_objects(
+    a: MovingObject, b: MovingObject, collision_point: Vector2, elasticity=0.75
+) -> float:
     a_r: Vector2 = collision_point - a.pos_xy
     b_r: Vector2 = collision_point - b.pos_xy
 
@@ -98,7 +102,6 @@ def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.75) -> float:
         *(impulse / b.mass),
         Vector3(*impulse, 0).cross(Vector3(*b_r, 0)).z / b.inertia_moment * 180 / 3.14,
     )
-
     A = (
         a_dspeed.x**2 * a.mass
         + a_dspeed.y**2 * a.mass
@@ -115,12 +118,13 @@ def collide_objects(a: MovingObject, b: MovingObject, elasticity=0.75) -> float:
         + a_dspeed.z * a.speed.z * (3.14 / 180) ** 2 * a.inertia_moment
         + b_dspeed.z * b.speed.z * (3.14 / 180) ** 2 * b.inertia_moment
     )
+
     t = -2 * B / A
 
     a.speed += t * a_dspeed * (1 + elasticity) / 2
     b.speed += t * b_dspeed * (1 + elasticity) / 2
 
-    return impulse.length()
+    return B**2 / A
 
 
 def internal_coord_to_xy(pos: Vector2, ang: float) -> Vector2:

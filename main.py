@@ -2,15 +2,13 @@ from __future__ import annotations
 import pygame as pg
 import sys
 from pygame.locals import *
-from consts import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, BLACK, ALL_SHIFTS
+from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent, ALL_DELAYED
 from typing import TYPE_CHECKING
 
 pg.init()
-DISPLAYSURF = pg.display.set_mode(
-    (SCREEN_WIDTH, SCREEN_HEIGHT),
-    flags=pg.NOFRAME | pg.SRCALPHA | pg.SCALED,
-)
+
+from display import DISPLAYSURF, ALL_CHANGES_DISPLAYSURF
 
 from players import spawn_player
 from enemies import spawn_asteroid
@@ -24,7 +22,7 @@ from groups import (
     ALL_STATUSES,
     ALL_EXPLOSIONS,
 )
-from math_utils import collide_objects
+from math_utils import collide_objects, get_collision_point
 from timers import TIMERS
 
 from assets import BackgroundImage
@@ -71,11 +69,14 @@ DelayedEvent(
 
 
 def _colliding_colliding(obj_a: MovingObject, obj_b: MovingObject):
+    if id(obj_b) < id(obj_a):
+        return
     obj_a.on_collision(obj_b)
     obj_b.on_collision(obj_a)
-    force = collide_objects(obj_a, obj_b)
-    obj_a.apply_damage(10 * force)
-    obj_b.apply_damage(10 * force)
+    collision_point = get_collision_point(obj_a, obj_b)
+    energy = collide_objects(obj_a, obj_b, collision_point)
+    obj_a.apply_damage(10 * energy)
+    obj_b.apply_damage(10 * energy)
 
 
 def _player_powerup(player: Player, powerup: PowerUp):
@@ -88,7 +89,6 @@ def _explosion_colliding(explosion: Explosion, obj: MovingObject):
 
 def main():
     cnt = 0
-    all_changes = []
     all_shift_sprites: dict(tuple(int, int), pg.sprite.RenderUpdates) = {
         (shift.x, shift.y): pg.sprite.RenderUpdates(*ALL_DRAWABLE_OBJECTS)
         for shift in ALL_SHIFTS
@@ -115,10 +115,10 @@ def main():
             for g in all_shift_sprites.values():
                 g.clear(DISPLAYSURF, BackgroundImage)
         with TIMERS["blits"]:
-            for change in all_changes:
+            for change in ALL_CHANGES_DISPLAYSURF:
                 DISPLAYSURF.blit(BackgroundImage, change, change)
 
-        all_changes = []
+        ALL_CHANGES_DISPLAYSURF.clear()
 
         with TIMERS["draw"]:
             for shift in ALL_SHIFTS:
@@ -132,19 +132,19 @@ def main():
             if SHOW_SPEEDS:
                 sprite: MovingObject
                 for sprite in ALL_DRAWABLE_OBJECTS.sprites():
-                    all_changes.extend(sprite.draw_debugs(DISPLAYSURF))
+                    sprite.draw_debugs()
 
         with TIMERS["UX"]:
             if SHOW_HP:
                 sprite: MovingObject
                 for sprite in ALL_UI_DRAWABLE_OBJECTS.sprites():
-                    all_changes.extend(sprite.draw_ui(DISPLAYSURF))
+                    sprite.draw_ui()
 
         fps = FramePerSec.get_fps()
         fps_render = font_small.render(f"{fps:.2f}.", True, BLACK)
 
         with TIMERS["blits"]:
-            all_changes.append(DISPLAYSURF.blit(fps_render, (10, 10)))
+            ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(fps_render, (10, 10)))
 
         pg.display.flip()
 
@@ -156,7 +156,6 @@ def main():
             ALL_DRAWABLE_OBJECTS.update(dt)
             for sprite in ALL_DRAWABLE_OBJECTS:
                 if not sprite.alive:
-                    # logger.info(f"killing {sprite}")
                     sprite.on_death()
                     sprite.kill()
 
