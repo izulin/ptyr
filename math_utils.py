@@ -3,6 +3,7 @@ from consts import SCREEN_HEIGHT, SCREEN_WIDTH
 from typing import TYPE_CHECKING
 from pygame.math import Vector2, Vector3
 import pygame as pg
+import math
 
 if TYPE_CHECKING:
     from objects import MovingObject
@@ -43,17 +44,11 @@ def get_collision_point(a: MovingObject, b: MovingObject) -> Vector2:
     y_diff = b.rect.y - a.rect.y
     overlap_mask: pg.Mask = a.mask.overlap_mask(b.mask, (x_diff, y_diff))
     bounding_rects: list[pg.Rect] = overlap_mask.get_bounding_rects()
-    x_mid = (
-        min(rect.left for rect in bounding_rects)
-        + max(rect.right for rect in bounding_rects)
-        - 1
-    ) / 2
-    y_mid = (
-        min(rect.top for rect in bounding_rects)
-        + max(rect.bottom for rect in bounding_rects)
-        - 1
-    ) / 2
-    return Vector2(a.rect.x + x_mid, a.rect.y + y_mid)
+    bounding_rect = bounding_rects[0].unionall(bounding_rects[1:])
+    return Vector2(
+        a.rect.x + (bounding_rect.left + bounding_rect.right - 1) / 2,
+        a.rect.y + (bounding_rect.top + bounding_rect.bottom - 1) / 2,
+    )
 
 
 def collide_objects(
@@ -62,8 +57,8 @@ def collide_objects(
     a_r: Vector2 = collision_point - a.pos_xy
     b_r: Vector2 = collision_point - b.pos_xy
 
-    a_local_speed = a.speed_xy + a_r.rotate(90) * a.speed.z * 3.14 / 180
-    b_local_speed = b.speed_xy + b_r.rotate(90) * b.speed.z * 3.14 / 180
+    a_local_speed = a.speed_xy + a_r.rotate(90) * math.radians(a.speed.z)
+    b_local_speed = b.speed_xy + b_r.rotate(90) * math.radians(b.speed.z)
 
     local_speed_diff = a_local_speed - b_local_speed
 
@@ -87,40 +82,32 @@ def collide_objects(
     )
 
     impulse: Vector2 = (a_proj - b_proj) / (a_inertia + b_inertia)
-    a_dspeed = (
-        Vector3(
-            impulse.x / a.mass,
-            impulse.y / a.mass,
-            0,
-        )
-        + Vector3(impulse.x, impulse.y, 0).cross(Vector3(a_r.x, a_r.y, 0))
-        / a.inertia_moment
-        * 180
-        / 3.14
-    )
-    b_dspeed = (
-        -Vector3(impulse.x / b.mass, impulse.y / b.mass, 0)
-        - Vector3(impulse.x, impulse.y, 0).cross(Vector3(b_r.x, b_r.y, 0))
-        / b.inertia_moment
-        * 180
-        / 3.14
-    )
+    a_dspeed = Vector3(
+        impulse.x / a.mass,
+        impulse.y / a.mass,
+        0,
+    ) + Vector3(
+        impulse.x, impulse.y, 0
+    ).cross(Vector3(a_r.x, a_r.y, 0)) / a.inertia_moment * math.degrees(1)
+    b_dspeed = -Vector3(impulse.x / b.mass, impulse.y / b.mass, 0) - Vector3(
+        impulse.x, impulse.y, 0
+    ).cross(Vector3(b_r.x, b_r.y, 0)) / b.inertia_moment * math.degrees(1)
 
     A = (
         a_dspeed.x**2 * a.mass
         + a_dspeed.y**2 * a.mass
         + b_dspeed.x**2 * b.mass
         + b_dspeed.y**2 * b.mass
-        + a_dspeed.z**2 * (3.14 / 180) ** 2 * a.inertia_moment
-        + b_dspeed.z**2 * (3.14 / 180) ** 2 * b.inertia_moment
+        + math.radians(a_dspeed.z) ** 2 * a.inertia_moment
+        + math.radians(b_dspeed.z) ** 2 * b.inertia_moment
     )
     B = (
         a_dspeed.x * a.speed.x * a.mass
         + a_dspeed.y * a.speed.y * a.mass
         + b_dspeed.x * b.speed.x * b.mass
         + b_dspeed.y * b.speed.y * b.mass
-        + a_dspeed.z * a.speed.z * (3.14 / 180) ** 2 * a.inertia_moment
-        + b_dspeed.z * b.speed.z * (3.14 / 180) ** 2 * b.inertia_moment
+        + math.radians(a_dspeed.z) * math.radians(a.speed.z) * a.inertia_moment
+        + math.radians(b_dspeed.z) * math.radians(b.speed.z) * b.inertia_moment
     )
 
     t = -2 * B / A

@@ -84,9 +84,9 @@ class CachedAnimation:
     def __len__(self):
         return len(self.images)
 
-    def scale_by(self, factor: float):
+    def scale_by(self, factor: float, slowdown: float):
         return CachedAnimation(
             [pg.transform.scale_by(s.get_image(), factor) for s in self.images],
-            self.animation_time,
+            self.animation_time * slowdown,
             self.loops,
         )

@@ -1,6 +1,10 @@
 from pygame import Vector2
 
-from assets import LargeExplosion1, LargeExplosion2, MediumExplosion
+from assets import (
+    LargeExplosionAnimation1,
+    LargeExplosionAnimation2,
+    MediumExplosionAnimation,
+)
 from groups import ALL_EXPLOSIONS
 from objects import AnimatedDrawable, NoControl, HasTimer, MovingObject
 
@@ -23,19 +27,22 @@ class Explosion(AnimatedDrawable, HasTimer, NoControl, MovingObject):
         obj.apply_damage(self._dt / self.TTL * self.DMG / max(1, distance))
 
 
-class PlayerExplosion(Explosion):
+class LargeExplosion(Explosion):
     TTL = 1000
     DMG = 100
-    IMAGE = (LargeExplosion1, LargeExplosion2)
+    IMAGE = (LargeExplosionAnimation1, LargeExplosionAnimation2)
 
 
-class MineExplosion(Explosion):
+class HugeExplosion(Explosion):
     TTL = 1000
     DMG = 200
-    IMAGE = (LargeExplosion1.scale_by(2), LargeExplosion2.scale_by(2))
+    IMAGE = (
+        LargeExplosionAnimation1.scale_by(2, 1),
+        LargeExplosionAnimation2.scale_by(2, 1),
+    )
 
 
-class AsteroidExplosion(Explosion):
-    TTL = 1000
+class SmallExplosion(Explosion):
+    TTL = 500
     DMG = 50
-    IMAGE = MediumExplosion.scale_by(0.5)
+    IMAGE = MediumExplosionAnimation.scale_by(0.5, 0.5)

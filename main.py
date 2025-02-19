@@ -2,7 +2,6 @@ from __future__ import annotations
 import pygame as pg
 import sys
 
-from pygame import Vector3, Vector2
 from pygame.locals import *
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent, ALL_DELAYED
@@ -77,8 +76,8 @@ def _colliding_colliding(obj_a: MovingObject, obj_b: MovingObject):
     obj_b.on_collision(obj_a)
     collision_point = get_collision_point(obj_a, obj_b)
     energy = collide_objects(obj_a, obj_b, collision_point)
-    obj_a.apply_damage(10 * energy)
-    obj_b.apply_damage(10 * energy)
+    obj_a.apply_damage(100 * energy)
+    obj_b.apply_damage(100 * energy)
 
 
 def _player_powerup(player: Player, powerup: PowerUp):

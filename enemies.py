@@ -4,7 +4,7 @@ from pygame import Vector2, Vector3
 
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
-from explosions import AsteroidExplosion
+from explosions import SmallExplosion
 from groups import ALL_ENEMIES, ALL_COLLIDING_OBJECTS
 from objects import (
     NoControl,
@@ -70,7 +70,7 @@ class SmallAsteroid(StaticDrawable, Asteroid):
     IMAGE = AsteroidSmallImages
 
     def on_death(self):
-        AsteroidExplosion(init_pos=self.pos, init_speed=self.speed)
+        SmallExplosion(init_pos=self.pos, init_speed=self.speed)
         super().on_death()
 
 

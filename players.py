@@ -9,7 +9,7 @@ from assets import PlayerImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
-from explosions import PlayerExplosion
+from explosions import LargeExplosion
 from groups import (
     ALL_PLAYERS,
     ALL_COLLIDING_OBJECTS,
@@ -99,7 +99,7 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
             repeat=False,
             name=f"spawn_player {self.player_id}",
         )
-        PlayerExplosion(init_pos=self.pos, init_speed=self.speed)
+        LargeExplosion(init_pos=self.pos, init_speed=self.speed)
         super().on_death()
 
 

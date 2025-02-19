@@ -9,6 +9,7 @@ from assets import (
 )
 from math_utils import internal_coord_to_xy
 from status import Status
+import math
 
 
 class Weapon(Status):
@@ -35,8 +36,8 @@ class Weapon(Status):
             *internal_coord_to_xy(launch_pos_internal, self.owner.pos.z), launch_angle
         )
 
-        rotational_delta = (
-            launch_pos_internal.rotate(90) * self.owner.speed.z * 3.14 / 180
+        rotational_delta = launch_pos_internal.rotate(90) * math.radians(
+            self.owner.speed.z
         )
 
         init_speed = self.owner.speed + Vector3(
@@ -45,7 +46,7 @@ class Weapon(Status):
             ),
             0.0,
         )
-        self.AMMO_CLS(init_pos=init_pos, init_speed=init_speed)
+        self.AMMO_CLS(init_pos=init_pos, init_speed=init_speed, owner=self.owner)
 
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
@@ -57,8 +58,7 @@ class Weapon(Status):
             )
             * self.AMMO_CLS.MASS
             / self.owner.inertia_moment
-            * 180
-            / 3.14
+            * math.degrees(1)
         )
         # moment / mass = speed
         recoil_xy = (

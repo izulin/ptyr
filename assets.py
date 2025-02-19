@@ -107,7 +107,7 @@ SmallPlasmaImage = CachedSurface(
     load_from_file(15, 3, 5, 5, "assets/tyrian/tyrian.shp.01D8A7.png")
 )
 
-MediumExplosion = CachedAnimation(
+MediumExplosionAnimation = CachedAnimation(
     [
         load_quad_from_file(
             0 + 12 * i, 126, 12, 14, "assets/tyrian/tyrian.shp.01D8A7.png"
@@ -118,7 +118,7 @@ MediumExplosion = CachedAnimation(
     loops=False,
 )
 
-LargeExplosion1 = CachedAnimation(
+LargeExplosionAnimation1 = CachedAnimation(
     [
         load_double_from_file(
             0 + 12 * i, -2, 12, 28, "assets/tyrian/newsh6.shp.000000.png"
@@ -129,7 +129,7 @@ LargeExplosion1 = CachedAnimation(
     loops=False,
 )
 
-LargeExplosion2 = CachedAnimation(
+LargeExplosionAnimation2 = CachedAnimation(
     [
         load_double_reversed_from_file(
             0 + 12 * i, 112, 12, 28, "assets/tyrian/newsh6.shp.000000.png"

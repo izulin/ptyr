@@ -1,5 +1,5 @@
 from assets import SmallBulletImage, MineAnimation
-from explosions import MineExplosion
+from explosions import HugeExplosion
 from objects import (
     Collides,
     NoControl,
@@ -15,9 +15,14 @@ class Bullet(Collides, NoControl, MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 
+    def __init__(self, *args, owner, **kwargs):
+        self.owner = owner
+        super().__init__(*args, **kwargs)
+
     def on_collision(self, other: MovingObject):
-        other.apply_damage(self.DMG)
-        self.mark_dead()
+        if other != self.owner:
+            other.apply_damage(self.DMG)
+            self.mark_dead()
         super().on_collision(other)
 
     def apply_damage(self, dmg):
@@ -39,11 +44,15 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
     HP = 5.0
     MASS = 10.0
 
+    def __init__(self, *args, owner, **kwargs):
+        self.owner = owner
+        super().__init__(*args, **kwargs)
+
     def on_collision(self, other: MovingObject):
-        if isinstance(other, HasHitpoints) and other.HP >= 30:
+        if isinstance(other, HasHitpoints) and other.HP >= 30 and other != self.owner:
             other.apply_damage(self.DMG)
             self.mark_dead()
 
     def on_death(self):
-        MineExplosion(init_pos=self.pos, init_speed=self.speed)
+        HugeExplosion(init_pos=self.pos, init_speed=self.speed)
         super().on_death()

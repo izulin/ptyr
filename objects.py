@@ -44,6 +44,8 @@ class MovingObject(pg.sprite.Sprite):
     _id: int
 
     def __init__(self, *args, init_pos, init_speed, **kwargs):
+        assert not kwargs
+        super().__init__()
         self.pos = normalize_pos3(Vector3(init_pos))
         self.speed = Vector3(init_speed)
         self.alive_time = 0.0
@@ -53,8 +55,7 @@ class MovingObject(pg.sprite.Sprite):
         self._acc = Vector2()
         self._drag = Vector2()
         self.all_statuses = pg.sprite.Group()
-        assert not kwargs
-        super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
+        self.add(ALL_DRAWABLE_OBJECTS, *args)
 
     def mark_dead(self):
         self.alive = False
