@@ -7,6 +7,7 @@ from assets import (
     DoubleShotWeaponImage,
     MineLauncherWeaponImage,
 )
+from groups import ALL_COLLIDING_OBJECTS
 from math_utils import internal_coord_to_xy
 from status import Status
 import math
@@ -46,7 +47,13 @@ class Weapon(Status):
             ),
             0.0,
         )
-        self.AMMO_CLS(init_pos=init_pos, init_speed=init_speed, owner=self.owner)
+        ammo = self.AMMO_CLS(init_pos=init_pos, init_speed=init_speed, owner=self.owner)
+
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(ammo, on_collision=None):
+            ammo.kill()
+            return None
+        else:
+            return ammo
 
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
@@ -112,8 +119,11 @@ class SingleShotWeapon(Primary, Weapon):
     icon = SingleShotWeaponImage.scale((10, 10))
 
     def fire_logic(self):
-        self._fire_at_pos(Vector2(0.0, 20.0), 0.0, 0.3)
-        self.owner.speed -= self._recoil(Vector2(0.0, 20.0), 0.0, 0.3)
+        ammo = self._fire_at_pos(Vector2(0.0, 20.0), 0.0, 0.3)
+        recoil = Vector3(0, 0, 0)
+        if ammo is not None:
+            recoil += self._recoil(Vector2(0.0, 20.0), 0.0, 0.3)
+        self.owner.speed -= recoil
 
 
 class DoubleShotWeapon(Primary, Weapon):
@@ -123,19 +133,25 @@ class DoubleShotWeapon(Primary, Weapon):
     icon = DoubleShotWeaponImage.scale((10, 10))
 
     def fire_logic(self):
-        self._fire_at_pos(Vector2(5.0, 20.0), 0.0, 0.3)
-        self._fire_at_pos(Vector2(-5.0, 20.0), 0.0, 0.3)
-        self.owner.speed -= self._recoil(Vector2(5.0, 20.0), 0.0, 0.3) + self._recoil(
-            Vector2(-5.0, 20.0), 0.0, 0.3
-        )
+        ammo1 = self._fire_at_pos(Vector2(5.0, 20.0), 0.0, 0.3)
+        ammo2 = self._fire_at_pos(Vector2(-5.0, 20.0), 0.0, 0.3)
+        recoil = Vector3(0, 0, 0)
+        if ammo1 is not None:
+            recoil += self._recoil(Vector2(5.0, 20.0), 0.0, 0.3)
+        if ammo2 is not None:
+            recoil += self._recoil(Vector2(-5.0, 20.0), 0.0, 0.3)
+        self.owner.speed -= recoil
 
 
 class MineLauncher(Secondary, Weapon):
     AMMO_CLS = Mine
-    COOLDOWN = 1000 / 10
+    COOLDOWN = 1000
     AMMO = 10
     icon = MineLauncherWeaponImage.scale((10, 10))
 
     def fire_logic(self):
-        self._fire_at_pos(Vector2(0.0, -10.0), 180, 0.01)
-        self.owner.speed -= self._recoil(Vector2(0.0, -10.0), 180, 0.01)
+        ammo = self._fire_at_pos(Vector2(0.0, -20.0), 180, 0.01)
+        recoil = Vector3(0, 0, 0)
+        if ammo is not None:
+            recoil += self._recoil(Vector2(0.0, -20.0), 180, 0.01)
+        self.owner.speed -= recoil

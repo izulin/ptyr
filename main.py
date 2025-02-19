@@ -23,16 +23,17 @@ from groups import (
     ALL_STATUSES,
     ALL_EXPLOSIONS,
 )
-from math_utils import collide_objects, get_collision_point
+from collision_logic import (
+    _colliding_colliding_logic,
+    _player_powerup_logic,
+    _explosion_colliding_logic,
+)
 from timers import TIMERS
 
 from assets import BackgroundImage
 
 if TYPE_CHECKING:
-    from powerups import PowerUp
     from objects import MovingObject
-    from players import Player
-    from explosions import Explosion
 
 import logging
 
@@ -58,7 +59,7 @@ with TIMERS["init"]:
     spawn_player(1)
     spawn_player(2)
 
-    while len(ALL_ENEMIES) < 3:
+    while len(ALL_ENEMIES) < 10:
         spawn_asteroid()
 
 DelayedEvent(
@@ -67,29 +68,6 @@ DelayedEvent(
     repeat=True,
     name="spawn_asteroid",
 )
-
-
-def _colliding_colliding(obj_a: MovingObject, obj_b: MovingObject):
-    if id(obj_b) < id(obj_a):
-        return
-    obj_a.on_collision(obj_b)
-    obj_b.on_collision(obj_a)
-    for _ in range(50):
-        collision_point = get_collision_point(obj_a, obj_b)
-        energy = collide_objects(obj_a, obj_b, collision_point)
-        obj_a.apply_damage(100 * energy)
-        obj_b.apply_damage(100 * energy)
-        if energy > 0:
-            print(collision_point, energy)
-    print("END")
-
-
-def _player_powerup(player: Player, powerup: PowerUp):
-    powerup.on_collision(player)
-
-
-def _explosion_colliding(explosion: Explosion, obj: MovingObject):
-    explosion.on_collision(obj)
 
 
 def main():
@@ -167,16 +145,16 @@ def main():
         with TIMERS["collide"]:
             for sprite in ALL_COLLIDING_OBJECTS:
                 ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    sprite, on_collision=_colliding_colliding
+                    sprite, on_collision=_colliding_colliding_logic
                 )
             for player in ALL_PLAYERS:
                 ALL_POWERUPS.cd.collide_with_callback(
-                    player, on_collision=_player_powerup
+                    player, on_collision=_player_powerup_logic
                 )
 
             for explosion in ALL_EXPLOSIONS:
                 ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    explosion, on_collision=_explosion_colliding
+                    explosion, on_collision=_explosion_colliding_logic
                 )
 
         cnt += 1

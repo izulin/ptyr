@@ -1,8 +1,5 @@
 from __future__ import annotations
 import pygame as pg
-import logging
-
-logger = logging.getLogger(__name__)
 
 ALL_DELAYED = pg.sprite.Group()
 
@@ -16,12 +13,10 @@ class DelayedEvent(pg.sprite.Sprite):
         self.add(ALL_DELAYED)
         self.repeat = repeat
         self.name = name
-        logger.info(f"creating {self}")
 
     def update(self, dt):
         self.t -= dt
         if self.t < 0:
-            logger.info(f"firing {self}")
             self.action()
             if self.repeat:
                 self.t += self.delay

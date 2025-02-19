@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from collisions import CollisionDetector
+from collision_detector import CollisionDetector
 
 
 class GroupWithCD(pg.sprite.Group):
