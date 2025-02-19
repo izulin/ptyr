@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from pygame.math import Vector2, Vector3
 import pygame as pg
 import math
+import random
 
 if TYPE_CHECKING:
     from objects import MovingObject
@@ -39,16 +40,39 @@ def normalize_pos3(pos: Vector3):
     return Vector3(pos.x % SCREEN_WIDTH, pos.y % SCREEN_HEIGHT, pos.z % 360)
 
 
+def bounding_rect(mask: pg.Mask) -> pg.Rect:
+    bounding_rects = mask.get_bounding_rects()
+    return bounding_rects[0].unionall(bounding_rects[1:])
+
+
+def get_from_mask(mask: pg.Mask):
+    br = bounding_rect(mask)
+    cnt = mask.count()
+
+    while br.width > 1 or br.height > 1:
+        if br.width > br.height:
+            midpoint = (br.left + br.right) // 2
+            submask = pg.Mask((midpoint - br.left, br.height), fill=True)
+        else:
+            midpoint = (br.top + br.bottom) // 2
+            submask = pg.Mask((br.width, midpoint - br.top), fill=True)
+        sub_cnt = mask.overlap_area(submask, br.topleft)
+        if random.uniform(0, 1) < sub_cnt / cnt:
+            mask = mask.overlap_mask(submask, br.topleft)
+        else:
+            mask.erase(submask, br.topleft)
+        br = bounding_rect(mask)
+        cnt = mask.count()
+
+    return Vector2(br.x, br.y)
+
+
 def get_collision_point(a: MovingObject, b: MovingObject) -> Vector2:
     x_diff = b.rect.x - a.rect.x
     y_diff = b.rect.y - a.rect.y
     overlap_mask: pg.Mask = a.mask.overlap_mask(b.mask, (x_diff, y_diff))
-    bounding_rects: list[pg.Rect] = overlap_mask.get_bounding_rects()
-    bounding_rect = bounding_rects[0].unionall(bounding_rects[1:])
-    return Vector2(
-        a.rect.x + (bounding_rect.left + bounding_rect.right - 1) / 2,
-        a.rect.y + (bounding_rect.top + bounding_rect.bottom - 1) / 2,
-    )
+
+    return get_from_mask(overlap_mask) + Vector2(a.rect.x, a.rect.y)
 
 
 def collide_objects(
@@ -62,17 +86,13 @@ def collide_objects(
 
     local_speed_diff = a_local_speed - b_local_speed
 
-    normal = (a.pos_xy - collision_point).normalize() - (
-        b.pos_xy - collision_point
-    ).normalize()
+    normal = a_r.normalize() - b_r.normalize()
 
     if normal * local_speed_diff >= 0:
         return 0.0
 
     impulse_direction: Vector2 = local_speed_diff.normalize()
 
-    a_proj = a_local_speed.project(impulse_direction)
-    b_proj = b_local_speed.project(impulse_direction)
     a_inertia = (
         1 / a.mass + a_r.project(impulse_direction).length_squared() / a.inertia_moment
     )
@@ -81,7 +101,9 @@ def collide_objects(
         1 / b.mass + b_r.project(impulse_direction).length_squared() / b.inertia_moment
     )
 
-    impulse: Vector2 = (a_proj - b_proj) / (a_inertia + b_inertia)
+    impulse: Vector2 = local_speed_diff.project(impulse_direction) / (
+        a_inertia + b_inertia
+    )
     a_dspeed = Vector3(
         impulse.x / a.mass,
         impulse.y / a.mass,
@@ -92,6 +114,15 @@ def collide_objects(
     b_dspeed = -Vector3(impulse.x / b.mass, impulse.y / b.mass, 0) - Vector3(
         impulse.x, impulse.y, 0
     ).cross(Vector3(b_r.x, b_r.y, 0)) / b.inertia_moment * math.degrees(1)
+
+    E = (
+        a.speed.x**2 * a.mass
+        + a.speed.y**2 * a.mass
+        + math.radians(a.speed.z) ** 2 * a.inertia_moment
+        + b.speed.x**2 * b.mass
+        + b.speed.y**2 * b.mass
+        + math.radians(b.speed.z) ** 2 * b.inertia_moment
+    )
 
     A = (
         a_dspeed.x**2 * a.mass
@@ -110,11 +141,18 @@ def collide_objects(
         + math.radians(b_dspeed.z) * math.radians(b.speed.z) * b.inertia_moment
     )
 
+    # if B<0:
+    #    return 0.0
+
     t = -2 * B / A
+    print("E", E, "t", t)
+
+    # print(a.speed, b.speed)
 
     a.speed += t * a_dspeed * (1 + elasticity) / 2
     b.speed += t * b_dspeed * (1 + elasticity) / 2
 
+    # print(a.speed, b.speed)
     return B**2 / A
 
 

@@ -74,10 +74,14 @@ def _colliding_colliding(obj_a: MovingObject, obj_b: MovingObject):
         return
     obj_a.on_collision(obj_b)
     obj_b.on_collision(obj_a)
-    collision_point = get_collision_point(obj_a, obj_b)
-    energy = collide_objects(obj_a, obj_b, collision_point)
-    obj_a.apply_damage(100 * energy)
-    obj_b.apply_damage(100 * energy)
+    for _ in range(50):
+        collision_point = get_collision_point(obj_a, obj_b)
+        energy = collide_objects(obj_a, obj_b, collision_point)
+        obj_a.apply_damage(100 * energy)
+        obj_b.apply_damage(100 * energy)
+        if energy > 0:
+            print(collision_point, energy)
+    print("END")
 
 
 def _player_powerup(player: Player, powerup: PowerUp):
