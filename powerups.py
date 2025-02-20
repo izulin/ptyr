@@ -17,6 +17,7 @@ class PowerUp(HasTimer, NoControl, MovingObject):
     used: bool
 
     def __init__(self, *args, **kwargs):
+        self._layer = -1
         super().__init__(ALL_POWERUPS, *args, **kwargs)
         self.used = False
 

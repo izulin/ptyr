@@ -15,6 +15,7 @@ class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
     ANGULAR_DRAG = 0.0
 
     def __init__(self, *args, **kwargs):
+        self._layer = -1
         super().__init__(ALL_PARTICLES, *args, **kwargs)
 
     def get_surface(self) -> CachedSurface:

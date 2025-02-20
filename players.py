@@ -54,9 +54,6 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         self.back_engine = Engine(
             pos=Vector3(0, -10, 180), strength=self.ENGINE_STRENGTH, owner=self.owner
         )
-        self.front_engine = Engine(
-            pos=Vector3(0, 10, 0), strength=self.ENGINE_STRENGTH / 2, owner=self.owner
-        )
         self.back_left_engine = Engine(
             pos=Vector3(-5, -9, 90 + 45),
             strength=self.ENGINE_STRENGTH / 4,
@@ -120,7 +117,6 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
             self.back_right_engine.active += 1
             self.back_left_engine.active += 1
         if pressed_keys[self.controls["backward"]]:
-            self.front_engine.active += 1
             self.front_right_engine.active += 1
             self.front_left_engine.active += 1
         if pressed_keys[self.controls["right_strafe"]]:

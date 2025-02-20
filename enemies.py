@@ -35,7 +35,7 @@ class LargeAsteroid(StaticDrawable, Asteroid):
 
     def on_death(self):
         shift_pos = Vector2(12.0, 0.0)
-        shift_speed = Vector2(0.1, 0.0)
+        shift_speed = Vector2(0.05, 0.0)
         for i in range(3):
             MediumAsteroid(
                 init_pos=self.pos
@@ -54,7 +54,7 @@ class MediumAsteroid(StaticDrawable, Asteroid):
 
     def on_death(self):
         shift_pos = Vector2(12.0, 0.0)
-        shift_speed = Vector2(0.1, 0.0)
+        shift_speed = Vector2(0.05, 0.0)
         for i in range(3):
             SmallAsteroid(
                 init_pos=self.pos

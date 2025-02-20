@@ -54,7 +54,7 @@ font_small = pg.font.SysFont("Lucida Console", 20)
 pg.display.set_caption("NotTyrian")
 
 SHOW_SPEEDS = False
-SHOW_HP = True
+SHOW_HP = 1
 
 with TIMERS["init"]:
     spawn_player(1)
@@ -73,8 +73,8 @@ DelayedEvent(
 
 def main():
     cnt = 0
-    all_shift_sprites: dict(tuple(int, int), pg.sprite.RenderUpdates) = {
-        (shift.x, shift.y): pg.sprite.RenderUpdates(*ALL_DRAWABLE_OBJECTS)
+    all_shift_sprites: dict(tuple(int, int), pg.sprite.LayeredUpdates) = {
+        (shift.x, shift.y): pg.sprite.LayeredUpdates(*ALL_DRAWABLE_OBJECTS)
         for shift in ALL_SHIFTS
     }
 
@@ -90,7 +90,7 @@ def main():
                     SHOW_SPEEDS = not SHOW_SPEEDS
                 elif event.key == K_EQUALS:
                     global SHOW_HP
-                    SHOW_HP = not SHOW_HP
+                    SHOW_HP = (SHOW_HP + 1) % 3
 
         with TIMERS["shifts"]:
             for shift_sprites in all_shift_sprites.values():
@@ -116,14 +116,17 @@ def main():
         with TIMERS["debugs"]:
             if SHOW_SPEEDS:
                 sprite: MovingObject
-                for sprite in ALL_DRAWABLE_OBJECTS.sprites():
+                for sprite in ALL_DRAWABLE_OBJECTS:
                     sprite.draw_debugs()
 
         with TIMERS["UX"]:
-            if SHOW_HP:
+            if SHOW_HP == 2:
                 sprite: MovingObject
-                for sprite in ALL_UI_DRAWABLE_OBJECTS.sprites():
+                for sprite in ALL_UI_DRAWABLE_OBJECTS:
                     sprite.draw_ui()
+            elif SHOW_HP == 1:
+                for player in ALL_PLAYERS:
+                    player.draw_ui()
 
         fps = FramePerSec.get_fps()
         fps_render = font_small.render(f"{fps:.2f}.", True, BLACK)
