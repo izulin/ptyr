@@ -12,7 +12,7 @@ from weapons import DoubleShotWeapon, MineLauncher
 class PowerUp(HasTimer, NoControl, MovingObject):
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000
-    TTL = 10_000
+    TTL = 30_000
 
     used: bool
 
@@ -31,7 +31,7 @@ class PowerUp(HasTimer, NoControl, MovingObject):
             DelayedEvent(lambda: self.mark_dead(), 100, name="Powerup cleanup")
 
     def action_logic(self, other: Player):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class HealPowerUp(StaticDrawable, PowerUp):

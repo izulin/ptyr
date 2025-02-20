@@ -21,4 +21,4 @@ class Timer:
         self.val = 0
 
 
-TIMERS = defaultdict(Timer)
+TIMERS: dict[str, Timer] = defaultdict(Timer)

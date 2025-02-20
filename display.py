@@ -7,4 +7,4 @@ DISPLAYSURF = pg.display.set_mode(
     flags=pg.NOFRAME | pg.SRCALPHA | pg.SCALED,
 )
 
-ALL_CHANGES_DISPLAYSURF = []
+ALL_CHANGES_DISPLAYSURF: list[pg.Rect] = []

@@ -12,6 +12,7 @@ version = "0.1.0"
 pixi-pycharm = ">=0.0.8,<0.0.9"
 black = ">=24.10.0,<25"
 nuitka = ">=2.6.5,<3"
+mypy = ">=1.15.0,<2"
 
 [pypi-dependencies]
 pygame-ce = ">=2.5.3, <3"

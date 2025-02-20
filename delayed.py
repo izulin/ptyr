@@ -1,16 +1,15 @@
 from __future__ import annotations
 import pygame as pg
 
-ALL_DELAYED = pg.sprite.Group()
+from groups import ALL_DELAYED
 
 
 class DelayedEvent(pg.sprite.Sprite):
     def __init__(self, action, delay, repeat=False, name=""):
-        super().__init__()
+        super().__init__(ALL_DELAYED)
         self.action = action
         self.t = delay
         self.delay = delay
-        self.add(ALL_DELAYED)
         self.repeat = repeat
         self.name = name
 

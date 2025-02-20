@@ -15,10 +15,7 @@ from objects import (
 class Bullet(Collides, NoControl, MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
-
-    def __init__(self, *args, owner, **kwargs):
-        self.owner = owner
-        super().__init__(*args, **kwargs)
+    DMG: float
 
     def on_collision(self, other: MovingObject):
         if other != self.owner:
@@ -44,10 +41,6 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
     IMAGE = MineAnimation
     HP = 5.0
     MASS = 10.0
-
-    def __init__(self, *args, owner, **kwargs):
-        self.owner = owner
-        super().__init__(*args, **kwargs)
 
     def on_collision(self, other: MovingObject):
         if isinstance(other, HasHitpoints) and other.HP >= 30 and other != self.owner:

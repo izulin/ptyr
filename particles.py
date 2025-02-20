@@ -3,10 +3,10 @@ import pygame as pg
 
 from consts import YELLOW, RED
 from groups import ALL_PARTICLES
-from objects import MovingObject, DrawableObject, HasTimer, NoControl
+from objects import MovingObject, DrawableObject, HasTimer, NoControl, Collides
 from surface import CachedSurface
 
-particles_cache: dict[pg.Color, CachedSurface] = {}
+particles_cache: dict[tuple[int, ...], CachedSurface] = {}
 
 
 class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
@@ -27,3 +27,11 @@ class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
             tmp.fill(color)
             particles_cache[tuple(color)] = CachedSurface(tmp, no_rotation=True)
         return particles_cache[tuple(color)]
+
+
+class ExplosionParticle(Collides, Particle):
+    MASS = 0.5
+
+    def on_collision(self, other: MovingObject):
+        other.apply_damage(0.1)
+        self.mark_dead()

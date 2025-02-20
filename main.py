@@ -4,7 +4,7 @@ import sys
 
 from pygame.locals import *
 from consts import FPS, BLACK, ALL_SHIFTS
-from delayed import DelayedEvent, ALL_DELAYED
+from delayed import DelayedEvent
 
 pg.init()
 
@@ -20,13 +20,12 @@ from groups import (
     ALL_POWERUPS,
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_STATUSES,
-    ALL_EXPLOSIONS,
     ALL_ENGINES,
+    ALL_DELAYED,
 )
 from collision_logic import (
     _colliding_colliding_logic,
     _player_powerup_logic,
-    _explosion_colliding_logic,
 )
 from timers import TIMERS
 
@@ -144,7 +143,7 @@ def main():
             ALL_DRAWABLE_OBJECTS.update(dt)
             ALL_ENGINES.update(dt)
             for sprite in ALL_DRAWABLE_OBJECTS:
-                if not sprite.alive:
+                if not sprite.alive_state:
                     sprite.on_death()
                     sprite.kill()
 
@@ -156,11 +155,6 @@ def main():
             for player in ALL_PLAYERS:
                 ALL_POWERUPS.cd.collide_with_callback(
                     player, on_collision=_player_powerup_logic
-                )
-
-            for explosion in ALL_EXPLOSIONS:
-                ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    explosion, on_collision=_explosion_colliding_logic
                 )
 
         cnt += 1

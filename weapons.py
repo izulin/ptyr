@@ -14,8 +14,8 @@ import math
 
 
 class Weapon(Status):
-    COOLDOWN = None
-    AMMO = None
+    COOLDOWN: int | None = None
+    AMMO: int | None = None
 
     cooldown: float
     ammo: int | None

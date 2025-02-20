@@ -4,7 +4,7 @@ from pygame import Vector2, Vector3
 
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
-from explosions import SmallExplosion
+from explosions import SmallExplosion, MediumExplosion, LargeExplosion
 from groups import ALL_ENEMIES, ALL_COLLIDING_OBJECTS
 from objects import (
     NoControl,
@@ -24,7 +24,6 @@ class Asteroid(Collides, HasHitpoints, NoControl, DrawsUI, MovingObject):
     ANGULAR_DRAG = 0.0
 
     def __init__(self, *args, **kwargs):
-        self.owner = self
         super().__init__(ALL_ENEMIES, *args, **kwargs)
 
 
@@ -34,6 +33,7 @@ class LargeAsteroid(StaticDrawable, Asteroid):
     IMAGE = AsteroidLargeImages
 
     def on_death(self):
+        LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
         shift_pos = Vector2(12.0, 0.0)
         shift_speed = Vector2(0.05, 0.0)
         for i in range(3):
@@ -53,6 +53,7 @@ class MediumAsteroid(StaticDrawable, Asteroid):
     IMAGE = AsteroidMediumImages
 
     def on_death(self):
+        MediumExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
         shift_pos = Vector2(12.0, 0.0)
         shift_speed = Vector2(0.05, 0.0)
         for i in range(3):

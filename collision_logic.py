@@ -7,7 +7,7 @@ import pygame as pg
 from pygame import Vector2, Vector3
 
 from explosions import Explosion
-from objects import MovingObject
+from objects import MovingObject, DrawableObject, Collides
 from players import Player
 from powerups import PowerUp
 
@@ -39,7 +39,7 @@ def bounding_rect(mask: pg.Mask) -> pg.Rect:
     return bounding_rects[0].unionall(bounding_rects[1:])
 
 
-def get_collision_point(a: MovingObject, b: MovingObject) -> Vector2:
+def get_collision_point(a: DrawableObject, b: DrawableObject) -> Vector2:
     x_diff = b.rect.x - a.rect.x
     y_diff = b.rect.y - a.rect.y
     overlap_mask: pg.Mask = a.mask.overlap_mask(b.mask, (x_diff, y_diff))
@@ -48,7 +48,7 @@ def get_collision_point(a: MovingObject, b: MovingObject) -> Vector2:
 
 
 def collide_objects(
-    a: MovingObject, b: MovingObject, collision_point: Vector2, elasticity=0.75
+    a: Collides, b: Collides, collision_point: Vector2, elasticity=0.75
 ) -> float:
     a_r: Vector2 = collision_point - a.pos_xy
     b_r: Vector2 = collision_point - b.pos_xy
@@ -106,7 +106,7 @@ def collide_objects(
     return B**2 / A
 
 
-def _colliding_colliding_logic(obj_a: MovingObject, obj_b: MovingObject):
+def _colliding_colliding_logic(obj_a: Collides, obj_b: Collides):
     if id(obj_b) < id(obj_a):
         return
     obj_a.on_collision(obj_b)
@@ -120,7 +120,3 @@ def _colliding_colliding_logic(obj_a: MovingObject, obj_b: MovingObject):
 
 def _player_powerup_logic(player: Player, powerup: PowerUp):
     powerup.on_collision(player)
-
-
-def _explosion_colliding_logic(explosion: Explosion, obj: MovingObject):
-    explosion.on_collision(obj)

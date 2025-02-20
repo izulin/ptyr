@@ -6,18 +6,22 @@ from consts import ALL_SHIFTS
 from collections import defaultdict
 
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from objects import DrawableObject
 
 logger = logging.getLogger(__name__)
 
 
 class CollisionDetector:
-    def __init__(self, *sprites: pg.sprite.Sprite):
+    def __init__(self, *sprites: DrawableObject):
         self.subs = 100
-        self._division: dict[tuple[int, int], set[pg.sprite.Sprite]] = defaultdict(set)
+        self._division: dict[tuple[int, int], set[DrawableObject]] = defaultdict(set)
         for sprite in sprites:
             self.add(sprite)
 
-    def add(self, sprite: pg.sprite.Sprite):
+    def add(self, sprite: DrawableObject):
         rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
         x_end = rect.right // self.subs
@@ -27,7 +31,7 @@ class CollisionDetector:
             for y in range(y_start, y_end + 1):
                 self._division[(x, y)].add(sprite)
 
-    def remove(self, sprite: pg.sprite.Sprite):
+    def remove(self, sprite: DrawableObject):
         rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
         x_end = rect.right // self.subs
@@ -37,7 +41,7 @@ class CollisionDetector:
             for y in range(y_start, y_end + 1):
                 self._division[(x, y)].remove(sprite)
 
-    def move(self, sprite: pg.sprite.Sprite, rect_a: pg.Rect, rect_b: pg.Rect):
+    def move(self, sprite: DrawableObject, rect_a: pg.Rect, rect_b: pg.Rect):
         x_start_a = rect_a.left // self.subs
         x_end_a = rect_a.right // self.subs
         y_start_a = rect_a.top // self.subs
@@ -65,7 +69,7 @@ class CollisionDetector:
                 self._division[(x, y)].remove(sprite)
 
     def _collide_with_callback(
-        self, sprite: pg.sprite.Sprite, *, on_collision=None
+        self, sprite: DrawableObject, *, on_collision=None
     ) -> bool:
         rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
@@ -92,14 +96,14 @@ class CollisionDetector:
         return ret
 
     def collide_with_callback(
-        self, sprite: pg.sprite.Sprite, *, on_collision=None
+        self, sprite: DrawableObject, *, on_collision=None
     ) -> bool:
         ret = False
         for shift in ALL_SHIFTS:
-            sprite.pos += Vector3(*shift, 0)
+            sprite.pos += Vector3(shift.x, shift.y, 0)
             sprite.rect.move_ip(shift)
             ret = self._collide_with_callback(sprite, on_collision=on_collision)
-            sprite.pos -= Vector3(*shift, 0)
+            sprite.pos -= Vector3(shift.x, shift.y, 0)
             sprite.rect.move_ip(-shift)
             if ret and on_collision is None:
                 return True

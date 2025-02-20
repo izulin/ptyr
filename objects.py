@@ -39,25 +39,30 @@ class MovingObject(pg.sprite.Sprite):
     pos: Vector3
     speed: Vector3
     alive_time: float
-    alive: bool
+    alive_state: bool
     all_statuses: pg.sprite.Group
     all_engines: pg.sprite.Group
     _id: int
+    DRAG: float
+    ANGULAR_DRAG: float
 
-    def __init__(self, *args, init_pos, init_speed, **kwargs):
+    def __init__(self, *args, init_pos, init_speed, owner=None, **kwargs):
         assert not kwargs
         super().__init__()
         self.pos = normalize_pos3(Vector3(init_pos))
         self.speed = Vector3(init_speed)
         self.alive_time = 0.0
 
-        self.alive = True
+        self.alive_state = True
         self.update_image_rect()
         self._acc = Vector2()
         self._drag = Vector2()
         self.all_statuses = pg.sprite.Group()
         self.all_engines = pg.sprite.Group()
         self.add(ALL_DRAWABLE_OBJECTS, *args)
+        if owner is None:
+            owner = self
+        self.owner = owner
 
     def kill(self):
         for status in self.all_statuses:
@@ -67,7 +72,7 @@ class MovingObject(pg.sprite.Sprite):
         super().kill()
 
     def mark_dead(self):
-        self.alive = False
+        self.alive_state = False
 
     def apply_damage(self, dmg: float):
         pass
@@ -197,11 +202,11 @@ class DrawsUI(DrawableObject):
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_UI_DRAWABLE_OBJECTS, *args, **kwargs)
 
-    def draw_ui(self):
+    def draw_ui(self) -> None:
         for shift in ALL_SHIFTS:
             rect: pg.Rect = self.get_surface().get_rect(center=self.rect.center + shift)
 
-            def draw_bar(color, fill, _rect):
+            def draw_bar(color, fill, _rect) -> pg.Rect:
                 bar = pg.Rect(0, 0, 40, 3)
                 bar.midbottom = _rect.midtop
                 _rect = bar.copy()
@@ -229,13 +234,14 @@ class DrawsUI(DrawableObject):
                 first = False
 
 
-class Collides:
-    MASS: float
+class Collides(DrawableObject):
     mass: float
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, mass=None, **kwargs):
         super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)
-        self.mass = self.MASS
+        if mass is None:
+            mass = self.MASS
+        self.mass = mass
 
     def on_collision(self, other: MovingObject):
         pass
@@ -247,10 +253,13 @@ class Collides:
 
 class HasShield(MovingObject):
     shield: float
+    SHIELD: float
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, shield=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.shield = self.SHIELD
+        if shield is None:
+            shield = self.SHIELD
+        self.shield = shield
 
     def apply_damage(self, dmg: float):
         if self.shield is not None:
@@ -270,10 +279,13 @@ class HasShield(MovingObject):
 
 class HasHitpoints(MovingObject):
     hp: float
+    HP: float
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, hp=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.hp = self.HP
+        if hp is None:
+            hp = self.HP
+        self.hp = hp
 
     def apply_damage(self, dmg: float):
         self.hp -= dmg
@@ -287,7 +299,8 @@ class HasHitpoints(MovingObject):
 
 
 class HasTimer(MovingObject):
-    ttl: float
+    ttl: int
+    TTL: int
 
     def __init__(self, *args, ttl=None, **kwargs):
         if ttl is None:

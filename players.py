@@ -45,7 +45,6 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
 
     def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
-        self.owner = self
         self.controls = controls
         self.weapon = None
         self.secondary_weapon = None
@@ -88,7 +87,7 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         MineLauncher(owner=self.owner)
         pass
 
-    def get_accels(self) -> tuple[Vector2, float]:
+    def get_accels(self) -> Vector3:
         thrust = Vector3(0.0, 0.0, 0.0)
         for engine in self.all_engines:
             impulse = Vector2(0, -engine.active * engine.strength / 100).rotate(
