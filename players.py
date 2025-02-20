@@ -102,7 +102,7 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
                 Vector3(engine.pos.x, engine.pos.y, 0)
             ) / self.inertia_moment * math.degrees(1)
 
-        return Vector2(thrust.x, thrust.y), thrust.z
+        return thrust
 
     def update(self, dt: float):
         self.use_defaults()

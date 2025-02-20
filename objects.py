@@ -130,16 +130,16 @@ class MovingObject(pg.sprite.Sprite):
         raise NotImplementedError
 
     def updated_pos(self, dt: float):
-        accel, angular_accel = self.get_accels()
+        all_accel = self.get_accels()
 
         def f(pos: Vector3, speed: Vector3):
-            self._acc = internal_coord_to_xy(accel, pos.z)
+            self._acc = internal_coord_to_xy(Vector2(all_accel.x, all_accel.y), pos.z)
             angular_drag = speed.z * abs(speed.z) * self.ANGULAR_DRAG
             speed_xy = Vector2(speed.x, speed.y)
             # |drag| = self.DRAG * |speed|**2
             self._drag = speed_xy.length() * self.DRAG * speed_xy
             acc = self._acc - self._drag
-            return speed, Vector3(acc.x, acc.y, angular_accel - angular_drag)
+            return speed, Vector3(acc.x, acc.y, all_accel.z - angular_drag)
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 
@@ -303,7 +303,7 @@ class HasTimer(MovingObject):
 
 class NoControl:
     def get_accels(self):
-        return Vector2(0.0, 0.0), 0.0
+        return Vector3(0.0, 0.0, 0.0)
 
 
 def _circle():
