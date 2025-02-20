@@ -1,3 +1,4 @@
+from __future__ import annotations
 from assets import SmallBulletImage, MineAnimation
 from explosions import HugeExplosion
 from objects import (

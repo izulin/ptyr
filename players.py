@@ -3,7 +3,8 @@ from __future__ import annotations
 import random
 
 import pygame as pg
-from pygame.math import Vector2
+from pygame import Vector2, Vector3
+
 
 from assets import PlayerImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
@@ -13,7 +14,9 @@ from explosions import LargeExplosion
 from groups import (
     ALL_PLAYERS,
     ALL_COLLIDING_OBJECTS,
+    ALL_DRAWABLE_OBJECTS,
 )
+from math_utils import internal_coord_to_xy
 from objects import (
     MovingObject,
     HasShield,
@@ -22,6 +25,7 @@ from objects import (
     StaticDrawable,
     DrawsUI,
 )
+from particles import Particle
 from weapons import Weapon, SingleShotWeapon, MineLauncher
 
 
@@ -65,20 +69,13 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         pass
 
     def get_accels(self) -> tuple[Vector2, float]:
-        pressed_keys = pg.key.get_pressed()
-
         forward_accel = self.FORWARD_THRUST * (
-            int(pressed_keys[self.controls["forward"]])
-            - int(pressed_keys[self.controls["backward"]])
+            self.engine_to_forward - self.engine_to_backward
         )
         angular_accel = self.ANGULAR_THRUST * (
-            int(pressed_keys[self.controls["left_turn"]])
-            - int(pressed_keys[self.controls["right_turn"]])
+            self.engine_turn_left - self.engine_turn_right
         )
-        side_accel = self.SIDE_THRUST * (
-            int(pressed_keys[self.controls["right_strafe"]])
-            - int(pressed_keys[self.controls["left_strafe"]])
-        )
+        side_accel = self.SIDE_THRUST * (self.engine_to_right - self.engine_to_left)
 
         return Vector2(side_accel, forward_accel), angular_accel
 
@@ -91,6 +88,30 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         if pressed_keys[self.controls["secondary"]]:
             if self.secondary_weapon is not None:
                 self.secondary_weapon.fire()
+        self.engine_to_forward = int(pressed_keys[self.controls["forward"]])
+        self.engine_to_backward = int(pressed_keys[self.controls["backward"]])
+        self.engine_to_left = int(pressed_keys[self.controls["left_strafe"]])
+        self.engine_to_right = int(pressed_keys[self.controls["right_strafe"]])
+        self.engine_turn_left = int(pressed_keys[self.controls["left_turn"]])
+        self.engine_turn_right = int(pressed_keys[self.controls["right_turn"]])
+        if self.engine_to_forward:
+            Particle(
+                init_pos=self.pos
+                + Vector3(
+                    *internal_coord_to_xy(
+                        Vector2(0.0, -10.0).rotate(random.uniform(-10, 10)), self.pos.z
+                    ),
+                    0.0,
+                ),
+                init_speed=self.speed
+                + Vector3(
+                    *internal_coord_to_xy(
+                        Vector2(0.0, -0.1).rotate(random.uniform(-10, 10)), self.pos.z
+                    ),
+                    0.0,
+                ),
+                ttl=random.uniform(100, 200),
+            )
         super().update(dt)
 
     def on_death(self):

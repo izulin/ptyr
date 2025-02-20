@@ -18,7 +18,6 @@ from consts import (
     GREEN,
     RED,
     ALL_SHIFTS,
-    BLUE,
     BLACK,
     YELLOW,
 )
@@ -281,13 +280,14 @@ class HasHitpoints(MovingObject):
 class HasTimer(MovingObject):
     ttl: float
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, ttl=None, **kwargs):
+        if ttl is None:
+            ttl = self.TTL
+        self.ttl = ttl
         super().__init__(*args, **kwargs)
-        self.ttl = self.TTL
 
     def update(self, dt: float):
-        self.ttl -= dt
-        if self.ttl <= 0:
+        if self.alive_time >= self.ttl:
             self.mark_dead()
         super().update(dt)
 

@@ -1,14 +1,15 @@
 from __future__ import annotations
 from pygame.math import Vector2
+import pygame as pg
 
 FPS = 1000
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-CYAN = (0, 255, 255)
-YELLOW = (255, 255, 0)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+BLUE = pg.Color(0, 0, 255)
+RED = pg.Color(255, 0, 0)
+GREEN = pg.Color(0, 255, 0)
+CYAN = pg.Color(0, 255, 255)
+YELLOW = pg.Color(255, 255, 0)
+BLACK = pg.Color(0, 0, 0)
+WHITE = pg.Color(255, 255, 255)
 
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480

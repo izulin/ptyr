@@ -5,7 +5,6 @@ import sys
 from pygame.locals import *
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent, ALL_DELAYED
-from typing import TYPE_CHECKING
 
 pg.init()
 
@@ -31,6 +30,7 @@ from collision_logic import (
 from timers import TIMERS
 
 from assets import BackgroundImage
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import MovingObject
