@@ -10,13 +10,12 @@ from assets import PlayerImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
+from engines import Engine
 from explosions import LargeExplosion
 from groups import (
     ALL_PLAYERS,
     ALL_COLLIDING_OBJECTS,
-    ALL_DRAWABLE_OBJECTS,
 )
-from math_utils import internal_coord_to_xy
 from objects import (
     MovingObject,
     HasShield,
@@ -25,17 +24,15 @@ from objects import (
     StaticDrawable,
     DrawsUI,
 )
-from particles import Particle
 from weapons import Weapon, SingleShotWeapon, MineLauncher
+import math
 
 
 class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingObject):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
 
-    FORWARD_THRUST = 0.1 / 1000
-    SIDE_THRUST = 0.05 / 1000
-    ANGULAR_THRUST = 0.2 / 1000
+    ENGINE_STRENGTH = 0.1
 
     MASS = 30.0
     HP = 30.0
@@ -54,6 +51,32 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         self.secondary_weapon = None
         self.use_defaults()
         self.player_id = player_id
+        self.back_engine = Engine(
+            pos=Vector3(0, -10, 180), strength=self.ENGINE_STRENGTH, owner=self.owner
+        )
+        self.front_engine = Engine(
+            pos=Vector3(0, 10, 0), strength=self.ENGINE_STRENGTH / 2, owner=self.owner
+        )
+        self.back_left_engine = Engine(
+            pos=Vector3(-5, -9, 90 + 45),
+            strength=self.ENGINE_STRENGTH / 4,
+            owner=self.owner,
+        )
+        self.back_right_engine = Engine(
+            pos=Vector3(5, -9, 270 - 45),
+            strength=self.ENGINE_STRENGTH / 4,
+            owner=self.owner,
+        )
+        self.front_left_engine = Engine(
+            pos=Vector3(-2, 9, 90 - 45),
+            strength=self.ENGINE_STRENGTH / 4,
+            owner=self.owner,
+        )
+        self.front_right_engine = Engine(
+            pos=Vector3(2, 9, 270 + 45),
+            strength=self.ENGINE_STRENGTH / 4,
+            owner=self.owner,
+        )
 
     def use_defaults(self):
         if self.weapon is None:
@@ -69,15 +92,17 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         pass
 
     def get_accels(self) -> tuple[Vector2, float]:
-        forward_accel = self.FORWARD_THRUST * (
-            self.engine_to_forward - self.engine_to_backward
-        )
-        angular_accel = self.ANGULAR_THRUST * (
-            self.engine_turn_left - self.engine_turn_right
-        )
-        side_accel = self.SIDE_THRUST * (self.engine_to_right - self.engine_to_left)
+        thrust = Vector3(0.0, 0.0, 0.0)
+        for engine in self.all_engines:
+            impulse = Vector2(0, -engine.active * engine.strength / 100).rotate(
+                engine.pos.z
+            )
+            impulse_ = Vector3(impulse.x, impulse.y, 0)
+            thrust += impulse_ / self.mass - impulse_.cross(
+                Vector3(engine.pos.x, engine.pos.y, 0)
+            ) / self.inertia_moment * math.degrees(1)
 
-        return Vector2(side_accel, forward_accel), angular_accel
+        return Vector2(thrust.x, thrust.y), thrust.z
 
     def update(self, dt: float):
         self.use_defaults()
@@ -88,30 +113,28 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         if pressed_keys[self.controls["secondary"]]:
             if self.secondary_weapon is not None:
                 self.secondary_weapon.fire()
-        self.engine_to_forward = int(pressed_keys[self.controls["forward"]])
-        self.engine_to_backward = int(pressed_keys[self.controls["backward"]])
-        self.engine_to_left = int(pressed_keys[self.controls["left_strafe"]])
-        self.engine_to_right = int(pressed_keys[self.controls["right_strafe"]])
-        self.engine_turn_left = int(pressed_keys[self.controls["left_turn"]])
-        self.engine_turn_right = int(pressed_keys[self.controls["right_turn"]])
-        if self.engine_to_forward:
-            Particle(
-                init_pos=self.pos
-                + Vector3(
-                    *internal_coord_to_xy(
-                        Vector2(0.0, -10.0).rotate(random.uniform(-10, 10)), self.pos.z
-                    ),
-                    0.0,
-                ),
-                init_speed=self.speed
-                + Vector3(
-                    *internal_coord_to_xy(
-                        Vector2(0.0, -0.1).rotate(random.uniform(-10, 10)), self.pos.z
-                    ),
-                    0.0,
-                ),
-                ttl=random.uniform(100, 200),
-            )
+        for engine in self.all_engines:
+            engine.active = 0
+        if pressed_keys[self.controls["forward"]]:
+            self.back_engine.active += 1
+            self.back_right_engine.active += 1
+            self.back_left_engine.active += 1
+        if pressed_keys[self.controls["backward"]]:
+            self.front_engine.active += 1
+            self.front_right_engine.active += 1
+            self.front_left_engine.active += 1
+        if pressed_keys[self.controls["right_strafe"]]:
+            self.back_left_engine.active += 1
+            self.front_left_engine.active += 1
+        if pressed_keys[self.controls["left_strafe"]]:
+            self.back_right_engine.active += 1
+            self.front_right_engine.active += 1
+        if pressed_keys[self.controls["left_turn"]]:
+            self.back_left_engine.active += 1
+            self.front_right_engine.active += 1
+        if pressed_keys[self.controls["right_turn"]]:
+            self.back_right_engine.active += 1
+            self.front_left_engine.active += 1
         super().update(dt)
 
     def on_death(self):

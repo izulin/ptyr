@@ -41,6 +41,7 @@ class MovingObject(pg.sprite.Sprite):
     alive_time: float
     alive: bool
     all_statuses: pg.sprite.Group
+    all_engines: pg.sprite.Group
     _id: int
 
     def __init__(self, *args, init_pos, init_speed, **kwargs):
@@ -55,7 +56,15 @@ class MovingObject(pg.sprite.Sprite):
         self._acc = Vector2()
         self._drag = Vector2()
         self.all_statuses = pg.sprite.Group()
+        self.all_engines = pg.sprite.Group()
         self.add(ALL_DRAWABLE_OBJECTS, *args)
+
+    def kill(self):
+        for status in self.all_statuses:
+            status.kill()
+        for engine in self.all_engines:
+            engine.kill()
+        super().kill()
 
     def mark_dead(self):
         self.alive = False
@@ -297,11 +306,13 @@ class NoControl:
         return Vector2(0.0, 0.0), 0.0
 
 
-tmp = pg.surface.Surface((10, 10))
-pg.draw.circle(tmp, WHITE, (5, 5), 5)
+def _circle():
+    surface = pg.surface.Surface((10, 10))
+    pg.draw.circle(surface, WHITE, (5, 5), 5)
+    return surface
 
 
 class DebugArtifact(NoControl, StaticDrawable):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
-    IMAGE = CachedSurface(tmp)
+    IMAGE = CachedSurface(_circle())

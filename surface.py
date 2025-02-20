@@ -12,9 +12,9 @@ class CachedSurface:
 
     def __init__(self, image: pg.Surface, no_rotation=False):
         if no_rotation:
-            self._image_cache = [image for i in range(360)]
+            self._image_cache = [image for _ in range(360)]
             mask = pg.mask.from_surface(image)
-            self._mask_cache = [mask for im in self._image_cache]
+            self._mask_cache = [mask for _ in self._image_cache]
         else:
             self._image_cache = [pg.transform.rotate(image, i) for i in range(360)]
             self._mask_cache = [pg.mask.from_surface(im) for im in self._image_cache]

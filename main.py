@@ -21,6 +21,7 @@ from groups import (
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_STATUSES,
     ALL_EXPLOSIONS,
+    ALL_ENGINES,
 )
 from collision_logic import (
     _colliding_colliding_logic,
@@ -91,8 +92,9 @@ def main():
                     global SHOW_HP
                     SHOW_HP = not SHOW_HP
 
-        for shift_sprites in all_shift_sprites.values():
-            shift_sprites.add(ALL_DRAWABLE_OBJECTS)
+        with TIMERS["shifts"]:
+            for shift_sprites in all_shift_sprites.values():
+                shift_sprites.add(ALL_DRAWABLE_OBJECTS)
 
         with TIMERS["clears"]:
             for g in all_shift_sprites.values():
@@ -137,6 +139,7 @@ def main():
             ALL_DELAYED.update(dt)
             ALL_STATUSES.update(dt)
             ALL_DRAWABLE_OBJECTS.update(dt)
+            ALL_ENGINES.update(dt)
             for sprite in ALL_DRAWABLE_OBJECTS:
                 if not sprite.alive:
                     sprite.on_death()
