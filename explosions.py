@@ -13,8 +13,9 @@ class Explosion(AnimatedDrawable, HasTimer, NoControl, MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, owner, **kwargs):
         super().__init__(ALL_EXPLOSIONS, *args, **kwargs)
+        self.owner = owner
         assert self.ttl == self._image.animation_time
         self._dt = 0
 
@@ -24,7 +25,8 @@ class Explosion(AnimatedDrawable, HasTimer, NoControl, MovingObject):
 
     def on_collision(self, obj: MovingObject):
         distance = Vector2.distance_to(self.pos_xy, obj.pos_xy)
-        obj.apply_damage(self._dt / self.TTL * self.DMG / max(1, distance))
+        if self.owner != obj.owner:
+            obj.apply_damage(self._dt / self.TTL * self.DMG / max(1, distance))
 
 
 class LargeExplosion(Explosion):

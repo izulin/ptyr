@@ -44,6 +44,7 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
 
     def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
+        self.owner = self
         self.controls = controls
         self.weapon = None
         self.secondary_weapon = None
@@ -57,10 +58,10 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
             self.default_secondary_weapon()
 
     def default_weapon(self):
-        SingleShotWeapon(owner=self)
+        SingleShotWeapon(owner=self.owner)
 
     def default_secondary_weapon(self):
-        MineLauncher(owner=self)
+        MineLauncher(owner=self.owner)
         pass
 
     def get_accels(self) -> tuple[Vector2, float]:
@@ -99,7 +100,7 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
             repeat=False,
             name=f"spawn_player {self.player_id}",
         )
-        LargeExplosion(init_pos=self.pos, init_speed=self.speed)
+        LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
         super().on_death()
 
 

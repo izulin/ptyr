@@ -54,5 +54,5 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
             self.mark_dead()
 
     def on_death(self):
-        HugeExplosion(init_pos=self.pos, init_speed=self.speed)
+        HugeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
         super().on_death()

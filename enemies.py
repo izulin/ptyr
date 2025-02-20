@@ -24,6 +24,7 @@ class Asteroid(Collides, HasHitpoints, NoControl, DrawsUI, MovingObject):
     ANGULAR_DRAG = 0.0
 
     def __init__(self, *args, **kwargs):
+        self.owner = self
         super().__init__(ALL_ENEMIES, *args, **kwargs)
 
 
@@ -70,7 +71,7 @@ class SmallAsteroid(StaticDrawable, Asteroid):
     IMAGE = AsteroidSmallImages
 
     def on_death(self):
-        SmallExplosion(init_pos=self.pos, init_speed=self.speed)
+        SmallExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
         super().on_death()
 
 
