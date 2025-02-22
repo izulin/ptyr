@@ -70,13 +70,13 @@ class CollisionDetector:
 
     def _collide_with_callback(
         self, sprite: DrawableObject, *, on_collision=None
-    ) -> bool:
+    ) -> list[DrawableObject]:
         rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
         x_end = rect.right // self.subs
         y_start = rect.top // self.subs
         y_end = rect.bottom // self.subs
-        ret = False
+        ret = []
         for x in range(x_start, x_end + 1):
             for y in range(y_start, y_end + 1):
                 for other in self._division[(x, y)]:
@@ -89,22 +89,22 @@ class CollisionDetector:
                     if pg.sprite.collide_rect(sprite, other) and pg.sprite.collide_mask(
                         sprite, other
                     ):
-                        ret = True
+                        ret.append(other)
                         if on_collision is None:
-                            return True
+                            return ret
                         on_collision(sprite, other)
         return ret
 
     def collide_with_callback(
         self, sprite: DrawableObject, *, on_collision=None
-    ) -> bool:
-        ret = False
+    ) -> list[DrawableObject]:
+        ret = []
         for shift in ALL_SHIFTS:
             sprite.pos += Vector3(shift.x, shift.y, 0)
             sprite.rect.move_ip(shift)
-            ret = self._collide_with_callback(sprite, on_collision=on_collision)
+            ret.extend(self._collide_with_callback(sprite, on_collision=on_collision))
             sprite.pos -= Vector3(shift.x, shift.y, 0)
             sprite.rect.move_ip(-shift)
             if ret and on_collision is None:
-                return True
+                return ret
         return ret

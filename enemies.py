@@ -4,7 +4,7 @@ from pygame import Vector2, Vector3
 
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
-from explosions import SmallExplosion, MediumExplosion, LargeExplosion
+from explosions import SmallExplosion
 from groups import ALL_ENEMIES, try_and_spawn_object
 from objects import (
     NoControl,
@@ -33,16 +33,15 @@ class LargeAsteroid(StaticDrawable, Asteroid):
     IMAGE = AsteroidLargeImages
 
     def on_death(self):
-        LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
-        shift_pos = Vector2(12.0, 0.0)
-        shift_speed = Vector2(0.05, 0.0)
-        for i in range(3):
-            MediumAsteroid(
+        def _tmp():
+            ang = random.uniform(0, 360)
+            return MediumAsteroid(
                 init_pos=self.pos
-                + Vector3(*shift_pos.rotate(120 * i), random.randint(0, 360)),
+                + Vector3(*Vector2(random.uniform(10.0,40.0), 0.0).rotate(ang), random.randint(0, 360)),
                 init_speed=self.speed
-                + Vector3(*shift_speed.rotate(120 * i), random.uniform(-0.1, 0.1)),
+                + Vector3(*Vector2(0.05, 0.0).rotate(ang), random.uniform(-0.1, 0.1)),
             )
+        try_and_spawn_object(_tmp, 3, 20)
         get_random_powerup()(init_pos=self.pos, init_speed=self.speed)
         super().on_death()
 
@@ -53,16 +52,15 @@ class MediumAsteroid(StaticDrawable, Asteroid):
     IMAGE = AsteroidMediumImages
 
     def on_death(self):
-        MediumExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
-        shift_pos = Vector2(12.0, 0.0)
-        shift_speed = Vector2(0.05, 0.0)
-        for i in range(3):
-            SmallAsteroid(
+        def _tmp():
+            ang = random.uniform(0,360)
+            return SmallAsteroid(
                 init_pos=self.pos
-                + Vector3(*shift_pos.rotate(120 * i), random.randint(0, 360)),
+                + Vector3(*Vector2(random.uniform(5.0, 20.0), 0.0).rotate(ang), random.randint(0, 360)),
                 init_speed=self.speed
-                + Vector3(*shift_speed.rotate(120 * i), random.uniform(-0.1, 0.1)),
-            )
+                + Vector3(*Vector2(0.05, 0.0).rotate(ang), random.uniform(-0.1, 0.1)),
+                )
+        try_and_spawn_object(_tmp, 3, 20)
         super().on_death()
 
 

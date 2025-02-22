@@ -1,14 +1,11 @@
 from __future__ import annotations
 import pygame as pg
 import sys
+import init #noqa: F401
 
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent
-
-pg.init()
-
 from display import DISPLAYSURF, ALL_CHANGES_DISPLAYSURF
-
 from players import spawn_player
 from enemies import spawn_asteroid
 from groups import (
@@ -33,7 +30,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import MovingObject
-
 
 import logging
 
@@ -144,8 +140,8 @@ def main():
             ALL_ENGINES.update(dt)
             for sprite in ALL_DRAWABLE_OBJECTS:
                 if not sprite.alive_state:
-                    sprite.on_death()
                     sprite.kill()
+                    sprite.on_death()
 
         with TIMERS["collide"]:
             for sprite in ALL_COLLIDING_OBJECTS:
