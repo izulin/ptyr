@@ -1,6 +1,10 @@
 from __future__ import annotations
 import pygame as pg
 from collision_detector import CollisionDetector
+from typing import Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from objects import Collides
 
 
 class GroupWithCD(pg.sprite.Group):
@@ -27,3 +31,17 @@ ALL_STATUSES: pg.sprite.Group = pg.sprite.Group()
 ALL_ENGINES: pg.sprite.Group = pg.sprite.Group()
 ALL_PARTICLES: pg.sprite.Group = pg.sprite.Group()
 ALL_DELAYED: pg.sprite.Group = pg.sprite.Group()
+
+
+def try_and_spawn_object(
+    func: Callable[[], Collides], num_copies: int, total_tries: int
+):
+    succ = []
+    while total_tries > 0 and len(succ) < num_copies:
+        obj: Collides = func()
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(obj):
+            obj.kill()
+        else:
+            succ.append(obj)
+        total_tries -= 1
+    return succ

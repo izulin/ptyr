@@ -7,9 +7,12 @@ from pygame import Vector3, Vector2
 
 from groups import ALL_ENGINES
 from math_utils import internal_coord_to_xy
-from objects import MovingObject
 from particles import Particle
 import math
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from objects import MovingObject
 
 
 class Engine(pg.sprite.Sprite):

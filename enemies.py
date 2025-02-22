@@ -5,7 +5,7 @@ from pygame import Vector2, Vector3
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
 from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from explosions import SmallExplosion, MediumExplosion, LargeExplosion
-from groups import ALL_ENEMIES, ALL_COLLIDING_OBJECTS
+from groups import ALL_ENEMIES, try_and_spawn_object
 from objects import (
     NoControl,
     HasHitpoints,
@@ -77,8 +77,8 @@ class SmallAsteroid(StaticDrawable, Asteroid):
 
 
 def spawn_asteroid():
-    for reps in range(100):
-        asteroid = LargeAsteroid(
+    succ = try_and_spawn_object(
+        lambda: LargeAsteroid(
             init_pos=[
                 random.randint(0, SCREEN_WIDTH),
                 random.randint(0, SCREEN_HEIGHT),
@@ -89,9 +89,9 @@ def spawn_asteroid():
                 random.uniform(-0.05, 0.05),
                 random.uniform(-0.05, 0.05),
             ],
-        )
-        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(asteroid):
-            asteroid.kill()
-        else:
-            return
-    print("Unable to spawn asteroid.")
+        ),
+        1,
+        10,
+    )
+    if not succ:
+        print("Unable to spawn asteroid.")

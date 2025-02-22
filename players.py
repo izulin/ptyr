@@ -14,7 +14,7 @@ from engines import Engine
 from explosions import LargeExplosion
 from groups import (
     ALL_PLAYERS,
-    ALL_COLLIDING_OBJECTS,
+    try_and_spawn_object,
 )
 from objects import (
     MovingObject,
@@ -146,11 +146,10 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
 def spawn_player(player_id):
     assert get_player(player_id) is None
     assert player_id in [1, 2]
-    for _ in range(1000):
-        controls = {1: PLAYER_1_CONTROLS, 2: PLAYER_2_CONTROLS}[player_id]
-        image = {1: PlayerImages[2], 2: PlayerImages[1]}[player_id]
-
-        player = Player(
+    controls = {1: PLAYER_1_CONTROLS, 2: PLAYER_2_CONTROLS}[player_id]
+    image = {1: PlayerImages[2], 2: PlayerImages[1]}[player_id]
+    spawned_players = try_and_spawn_object(
+        lambda: Player(
             controls=controls,
             image=image,
             init_pos=(
@@ -160,14 +159,13 @@ def spawn_player(player_id):
             ),
             init_speed=(0, 0, 0),
             player_id=player_id,
-        )
-
-        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(player):
-            player.kill()
-        else:
-            return
-    print(f"Unable to spawn player {player_id}.")
-    raise RuntimeError
+        ),
+        1,
+        1000,
+    )
+    if not spawned_players:
+        print(f"Unable to spawn player {player_id}.")
+        raise RuntimeError
 
 
 def get_player(player_id) -> Player | None:

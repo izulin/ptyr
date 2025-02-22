@@ -19,7 +19,7 @@ from consts import (
     RED,
     ALL_SHIFTS,
     BLACK,
-    YELLOW,
+    CYAN,
 )
 from pygame.math import Vector3, Vector2
 import random
@@ -221,7 +221,7 @@ class DrawsUI(DrawableObject):
             if isinstance(self, HasHitpoints):
                 rect = draw_bar(RED, self.hp / self.HP, rect)
             if isinstance(self, HasShield):
-                rect = draw_bar(YELLOW, self.shield / self.SHIELD, rect)
+                rect = draw_bar(CYAN, self.shield / self.SHIELD, rect)
 
             first = True
             for status in self.all_statuses:

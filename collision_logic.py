@@ -6,10 +6,12 @@ import random
 import pygame as pg
 from pygame import Vector2, Vector3
 
-from explosions import Explosion
-from objects import MovingObject, DrawableObject, Collides
-from players import Player
-from powerups import PowerUp
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from powerups import PowerUp
+    from players import Player
+    from objects import DrawableObject, Collides
 
 
 def sample_from_mask(mask: pg.Mask):

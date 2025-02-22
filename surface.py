@@ -20,8 +20,8 @@ class CachedSurface:
 
     @cached_property
     def inertia_moment_coef(self) -> float:
-        def avg(l):
-            return sum(l) / len(l)
+        def avg(_list):
+            return sum(_list) / len(_list)
 
         mask = self._mask_cache[0]
         x_size, y_size = mask.get_size()
@@ -88,7 +88,7 @@ class CachedAnimation:
     def __len__(self):
         return len(self.images)
 
-    def scale_by(self, factor: float, slowdown: float):
+    def scale_by(self, factor: float, slowdown: float = 1.0):
         return CachedAnimation(
             [pg.transform.scale_by(s.get_image(), factor) for s in self.images],
             int(self.animation_time * slowdown),

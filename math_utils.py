@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 from consts import SCREEN_HEIGHT, SCREEN_WIDTH
-from typing import TYPE_CHECKING
 from pygame.math import Vector2, Vector3
-
-if TYPE_CHECKING:
-    pass
 
 
 def range_kutta_4(f, x, y, dt):

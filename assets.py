@@ -114,7 +114,7 @@ MediumExplosionAnimation = CachedAnimation(
         )
         for i in range(11)
     ],
-    animation_time=1_000,
+    animation_time=800,
     loops=False,
 )
 
@@ -125,7 +125,7 @@ LargeExplosionAnimation1 = CachedAnimation(
         )
         for i in range(17)
     ],
-    animation_time=1_000,
+    animation_time=800,
     loops=False,
 )
 
@@ -136,7 +136,7 @@ LargeExplosionAnimation2 = CachedAnimation(
         )
         for i in range(13)
     ],
-    animation_time=1_000,
+    animation_time=800,
     loops=False,
 )
 

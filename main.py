@@ -2,7 +2,6 @@ from __future__ import annotations
 import pygame as pg
 import sys
 
-from pygame.locals import *
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent
 
@@ -34,6 +33,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import MovingObject
+
 
 import logging
 
@@ -79,15 +79,15 @@ def main():
 
     while True:
         for event in pg.event.get():
-            if event.type == QUIT:
+            if event.type == pg.QUIT:
                 return
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
                     return
-                elif event.key == K_BACKSPACE:
+                elif event.key == pg.K_BACKSPACE:
                     global SHOW_SPEEDS
                     SHOW_SPEEDS = not SHOW_SPEEDS
-                elif event.key == K_EQUALS:
+                elif event.key == pg.K_EQUALS:
                     global SHOW_HP
                     SHOW_HP = (SHOW_HP + 1) % 3
 

@@ -1,12 +1,18 @@
 from __future__ import annotations
 import pygame as pg
 
-from consts import YELLOW, RED
+from consts import YELLOW, RED, BLACK, WHITE
 from groups import ALL_PARTICLES
 from objects import MovingObject, DrawableObject, HasTimer, NoControl, Collides
 from surface import CachedSurface
 
 particles_cache: dict[tuple[int, ...], CachedSurface] = {}
+
+
+def mix(c1, c2, c3, c4, t):
+    c34 = pg.Color.lerp(c3, c4, t / (3 - 2 * t))
+    c12 = pg.Color.lerp(c1, c2, 3 * t / (1 + 2 * t))
+    return pg.Color.lerp(c12, c34, t**2 * (3 - 2 * t))
 
 
 class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
@@ -20,7 +26,7 @@ class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
 
     def get_surface(self) -> CachedSurface:
         t = min(1, self.alive_time / self.ttl)
-        color = pg.Color.lerp(YELLOW, RED, t)
+        color = mix(WHITE, YELLOW, RED, BLACK, t)
 
         if tuple(color) not in particles_cache:
             tmp = pg.surface.Surface((2, 2), flags=pg.SRCALPHA)
@@ -29,8 +35,8 @@ class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
         return particles_cache[tuple(color)]
 
 
-class ExplosionParticle(Collides, Particle):
-    MASS = 0.5
+class CollidingParticle(Collides, Particle):
+    MASS = 0.0
 
     def on_collision(self, other: MovingObject):
         other.apply_damage(0.1)
