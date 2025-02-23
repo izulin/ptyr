@@ -11,7 +11,7 @@ from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
 from engines import Engine
-from explosions import LargeExplosion
+from explosions import LargeExplosion, explosion_effect
 from groups import (
     ALL_PLAYERS,
     try_and_spawn_object,
@@ -140,6 +140,7 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
             name=f"spawn_player {self.player_id}",
         )
         LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
+        explosion_effect(owner=self)
         super().on_death()
 
 

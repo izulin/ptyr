@@ -36,7 +36,7 @@ class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
 
 
 class CollidingParticle(Collides, Particle):
-    MASS = 0.0
+    MASS = 0.1
 
     def on_collision(self, other: MovingObject):
         other.apply_damage(0.1)

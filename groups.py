@@ -39,8 +39,9 @@ def try_and_spawn_object(
     succ = []
     while total_tries > 0 and len(succ) < num_copies:
         obj: Collides = func()
-        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(obj, on_collision=None):
+        if col:=ALL_COLLIDING_OBJECTS.cd.collide_with_callback(obj, on_collision=None):
             obj.kill()
+            print(obj, col)
         else:
             succ.append(obj)
         total_tries -= 1

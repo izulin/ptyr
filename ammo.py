@@ -1,6 +1,6 @@
 from __future__ import annotations
 from assets import SmallBulletImage, MineAnimation
-from explosions import HugeExplosion
+from explosions import HugeExplosion, explosion_effect, LargeExplosion
 from objects import (
     Collides,
     NoControl,
@@ -48,5 +48,6 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, NoControl, MovingObject):
             self.mark_dead()
 
     def on_death(self):
-        HugeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
+        LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)
+        explosion_effect(self, particles=100)
         super().on_death()

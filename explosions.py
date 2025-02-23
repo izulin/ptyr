@@ -12,6 +12,29 @@ from objects import AnimatedDrawable, NoControl, HasTimer, MovingObject, Collide
 from particles import CollidingParticle
 import random
 
+def explosion_effect(owner: MovingObject, init_speed: float = 0.1, particles: int|None =None, pos_spread: float|None=None):
+    if pos_spread is None:
+        pos_spread = owner.get_surface().get_rect().h / 2
+    if particles is None:
+        particles = int(owner.mass)
+
+    def _tmp():
+        dpos = Vector3(
+            *Vector2(random.uniform(pos_spread, pos_spread * 1.5), 0.0).rotate(
+                random.uniform(0, 360)
+            ),
+            0.0,
+        )
+        dspeed = Vector3(
+            *Vector2(init_speed, 0.0).rotate(random.uniform(0, 360)), 0.0
+        )
+        return CollidingParticle(
+            init_pos=owner.pos + dpos,
+            init_speed=owner.speed + dspeed,
+            ttl=random.uniform(500, 1000),
+        )
+
+    try_and_spawn_object(_tmp, particles, 2*particles)
 
 class Explosion(AnimatedDrawable, HasTimer, NoControl, Collides, MovingObject):
     DRAG = 0.0
@@ -20,33 +43,11 @@ class Explosion(AnimatedDrawable, HasTimer, NoControl, Collides, MovingObject):
     def __init__(self, *args, owner, **kwargs):
         super().__init__(*args, owner=owner, mass=owner.mass, **kwargs)
         assert self.ttl == self._image.animation_time
-        POS_SPREAD = owner.get_surface().get_rect().h / 2
-        SPEED_SPREAD = 0.1
-
-        def _tmp():
-            dpos = Vector3(
-                *Vector2(random.uniform(POS_SPREAD, POS_SPREAD * 1.5), 0.0).rotate(
-                    random.uniform(0, 360)
-                ),
-                0.0,
-            )
-            dspeed = Vector3(
-                *Vector2(SPEED_SPREAD, 0.0).rotate(random.uniform(0, 360)), 0.0
-            )
-            return CollidingParticle(
-                init_pos=self.pos + dpos,
-                init_speed=self.speed + dspeed,
-                ttl=random.uniform(500, 1000),
-                mass=0.1,
-            )
-        try_and_spawn_object(_tmp, int(owner.mass), 2*int(owner.mass))
-
 
 
 class LargeExplosion(Explosion):
     TTL = LargeExplosionAnimation1.animation_time
     IMAGE = (LargeExplosionAnimation1, LargeExplosionAnimation2)
-
 
 class HugeExplosion(Explosion):
     TTL = LargeExplosionAnimation1.animation_time
@@ -55,11 +56,9 @@ class HugeExplosion(Explosion):
         LargeExplosionAnimation2.scale_by(2),
     )
 
-
 class MediumExplosion(Explosion):
     TTL = MediumExplosionAnimation.animation_time
     IMAGE = MediumExplosionAnimation
-
 
 class SmallExplosion(Explosion):
     TTL = MediumExplosionAnimation.animation_time / 2
