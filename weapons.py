@@ -5,7 +5,8 @@ from ammo import SmallBullet, Mine, SmallMissile
 from assets import (
     SingleShotWeaponImage,
     DoubleShotWeaponImage,
-    MineLauncherWeaponImage, MissileLauncherWeaponImage,
+    MineLauncherWeaponImage,
+    MissileLauncherWeaponImage,
 )
 from groups import try_and_spawn_object
 from math_utils import internal_coord_to_xy
@@ -48,7 +49,13 @@ class Weapon(Status):
             0.0,
         )
 
-        return try_and_spawn_object(lambda: self.AMMO_CLS(init_pos=init_pos, init_speed=init_speed, owner=self.owner), 1, 1)
+        return try_and_spawn_object(
+            lambda: self.AMMO_CLS(
+                init_pos=init_pos, init_speed=init_speed, owner=self.owner
+            ),
+            1,
+            1,
+        )
 
     def _recoil(self, launch_pos_internal, launch_angle, launch_speed):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
@@ -134,11 +141,12 @@ class DoubleShotWeapon(Primary, Weapon):
             recoil += self._recoil(Vector2(-5.0, 20.0), 0.0, 0.3)
         self.owner.speed -= recoil
 
+
 class SmallMissileWeapon(Secondary, Weapon):
     AMMO_CLS = SmallMissile
     COOLDOWN = 200
     AMMO = 50
-    icon = MissileLauncherWeaponImage.scale((10,10))
+    icon = MissileLauncherWeaponImage.scale((10, 10))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -158,8 +166,7 @@ class MineLauncher(Secondary, Weapon):
 
     def fire_logic(self):
         recoil = Vector3(0, 0, 0)
-        if self._fire_at_pos(Vector2(0.0, -20.0), 180, 0.01):
-            recoil += self._recoil(Vector2(0.0, -20.0), 180, 0.01)
+        if self._fire_at_pos(Vector2(0.0, -20.0), 180, 0.02):
+            recoil += self._recoil(Vector2(0.0, -20.0), 180, 0.02)
             self.ammo -= 1
         self.owner.speed -= recoil
-

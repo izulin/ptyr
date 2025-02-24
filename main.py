@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame as pg
 import sys
-import init #noqa: F401
+import init  # noqa: F401
 
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent

@@ -7,7 +7,7 @@ from pygame import Vector3
 
 
 from assets import PlayerImages
-from consts import SCREEN_WIDTH, SCREEN_HEIGHT
+from consts import SCREEN_WIDTH, SCREEN_HEIGHT, GREEN, CYAN
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
 from engines import Engine
@@ -22,12 +22,16 @@ from objects import (
     HasHitpoints,
     Collides,
     StaticDrawable,
-    DrawsUI, HasEngines,
+    DrawsUI,
+    HasEngines,
 )
+from postprocessing import with_outline
 from weapons import Weapon, SingleShotWeapon, SmallMissileWeapon
 
 
-class Player(StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Collides, MovingObject):
+class Player(
+    StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Collides, MovingObject
+):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
 
@@ -40,8 +44,11 @@ class Player(StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Colli
     secondary_weapon: Weapon | None
     player_id: int
 
-    def __init__(self, *args, controls: dict[str, int], player_id: int, **kwargs):
+    def __init__(
+        self, *args, controls: dict[str, int], player_id: int, color: pg.Color, **kwargs
+    ):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
+        self.color = color
         self.controls = controls
         self.weapon = None
         self.secondary_weapon = None
@@ -52,22 +59,22 @@ class Player(StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Colli
         )
         self.back_left_engine = Engine(
             pos=Vector3(-5, -9, 90 + 45),
-            strength=1/ 4,
+            strength=1 / 3,
             owner=self.owner,
         )
         self.back_right_engine = Engine(
             pos=Vector3(5, -9, 270 - 45),
-            strength=1 / 4,
+            strength=1 / 3,
             owner=self.owner,
         )
         self.front_left_engine = Engine(
             pos=Vector3(-2, 9, 90 - 45),
-            strength=1 / 4,
+            strength=1 / 3,
             owner=self.owner,
         )
         self.front_right_engine = Engine(
             pos=Vector3(2, 9, 270 + 45),
-            strength=1 / 4,
+            strength=1 / 3,
             owner=self.owner,
         )
 
@@ -83,6 +90,9 @@ class Player(StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Colli
     def default_secondary_weapon(self):
         SmallMissileWeapon(owner=self.owner)
         pass
+
+    def with_postprocessing(self):
+        return with_outline(self, self.color)
 
     def update(self, dt: float):
         self.use_defaults()
@@ -133,6 +143,7 @@ def spawn_player(player_id):
     assert player_id in [1, 2]
     controls = {1: PLAYER_1_CONTROLS, 2: PLAYER_2_CONTROLS}[player_id]
     image = {1: PlayerImages[2], 2: PlayerImages[1]}[player_id]
+    color = {1: GREEN, 2: CYAN}[player_id]
     spawned_players = try_and_spawn_object(
         lambda: Player(
             controls=controls,
@@ -144,6 +155,7 @@ def spawn_player(player_id):
             ),
             init_speed=(0, 0, 0),
             player_id=player_id,
+            color=color,
         ),
         1,
         1000,

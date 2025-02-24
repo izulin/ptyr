@@ -11,8 +11,10 @@ from objects import (
     HasTimer,
     StaticDrawable,
     AnimatedDrawable,
-    HasHitpoints, HasEngines,
+    HasHitpoints,
+    HasEngines,
 )
+from postprocessing import with_outline
 
 
 class Bullet(Collides, MovingObject):
@@ -36,6 +38,7 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
     DMG = 10.0
     IMAGE = SmallBulletImage
 
+
 class SmallMissile(StaticDrawable, HasEngines, Collides, HasTimer, MovingObject):
     MASS = 2.0
     DMG = 30.0
@@ -48,15 +51,18 @@ class SmallMissile(StaticDrawable, HasEngines, Collides, HasTimer, MovingObject)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.back_engine = Engine(self, Vector3(0, -5, 180), 0.5)
-        self.back_left_engine = Engine(self, Vector3(0,-5, 135), 0.05)
-        self.back_right_engine = Engine(self, Vector3(0,-5,225), 0.05)
+        self.back_left_engine = Engine(self, Vector3(0, -5, 135), 0.05)
+        self.back_right_engine = Engine(self, Vector3(0, -5, 225), 0.05)
 
     def update(self, dt: float):
         self.back_engine.active = int(self.alive_time < self.acc_time)
-        self.back_left_engine.active = int(self.speed.z <= 0) * int(self.alive_time < self.acc_time)
-        self.back_right_engine.active = int(self.speed.z >= 0) * int(self.alive_time < self.acc_time)
+        self.back_left_engine.active = int(self.speed.z <= 0) * int(
+            self.alive_time < self.acc_time
+        )
+        self.back_right_engine.active = int(self.speed.z >= 0) * int(
+            self.alive_time < self.acc_time
+        )
         super().update(dt)
-
 
     def on_collision(self, other: MovingObject):
         if other != self.owner:
@@ -85,6 +91,9 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, MovingObject):
         if isinstance(other, HasHitpoints) and other.HP >= 30 and other != self.owner:
             other.apply_damage(self.DMG)
             self.mark_dead()
+
+    def with_postprocessing(self):
+        return with_outline(self, self.owner.color)
 
     def on_death(self):
         LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)

@@ -45,6 +45,13 @@ def load_quad_from_file(
     return remove_background(ret_surface)
 
 
+def pad(surface: pg.Surface) -> pg.Surface:
+    x, y = surface.get_size()
+    ret_surface = pg.Surface((x + 2, y + 2), flags=pg.SRCALPHA)
+    ret_surface.blit(surface, (1, 1))
+    return ret_surface
+
+
 def remove_background(surface: pg.Surface) -> pg.Surface:
     """In place removal."""
     pxarray = pg.PixelArray(surface)
@@ -54,43 +61,53 @@ def remove_background(surface: pg.Surface) -> pg.Surface:
 
 PlayerImages = [
     CachedSurface(
-        load_from_file(48, 58 + i * 27, 24, 27, "assets/tyrian/tyrian.shp.007D3C.png")
+        pad(
+            load_from_file(
+                48, 58 + i * 27, 24, 27, "assets/tyrian/tyrian.shp.007D3C.png"
+            )
+        )
     )
     for i in range(6)
 ]
 AsteroidLargeImages = [
-    CachedSurface(load_from_file(2, 4, 42, 46, "assets/tyrian/newshd.shp.000000.png")),
-    CachedSurface(load_from_file(79, 4, 40, 50, "assets/tyrian/newshd.shp.000000.png")),
+    CachedSurface(
+        pad(load_from_file(2, 4, 42, 46, "assets/tyrian/newshd.shp.000000.png"))
+    ),
+    CachedSurface(
+        pad(load_from_file(79, 4, 40, 50, "assets/tyrian/newshd.shp.000000.png"))
+    ),
 ]
 
 AsteroidMediumImages = [
-    CachedSurface(load_from_file(50, 1, 22, 20, "assets/tyrian/newshd.shp.000000.png")),
     CachedSurface(
-        load_from_file(48, 29, 21, 23, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(50, 1, 22, 20, "assets/tyrian/newshd.shp.000000.png"))
     ),
     CachedSurface(
-        load_from_file(96, 57, 24, 25, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(48, 29, 21, 23, "assets/tyrian/newshd.shp.000000.png"))
     ),
     CachedSurface(
-        load_from_file(97, 86, 23, 23, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(96, 57, 24, 25, "assets/tyrian/newshd.shp.000000.png"))
     ),
     CachedSurface(
-        load_from_file(194, 57, 22, 20, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(97, 86, 23, 23, "assets/tyrian/newshd.shp.000000.png"))
+    ),
+    CachedSurface(
+        pad(load_from_file(194, 57, 22, 20, "assets/tyrian/newshd.shp.000000.png"))
     ),
 ]
 
 AsteroidSmallImages = [
     CachedSurface(
-        load_from_file(216, 56, 12, 14, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(216, 56, 12, 14, "assets/tyrian/newshd.shp.000000.png"))
     ),
     CachedSurface(
-        load_from_file(216, 70, 12, 14, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(216, 70, 12, 14, "assets/tyrian/newshd.shp.000000.png"))
     ),
     CachedSurface(
-        load_from_file(216, 85, 12, 12, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(216, 85, 12, 12, "assets/tyrian/newshd.shp.000000.png"))
     ),
     CachedSurface(
-        load_from_file(216, 98, 12, 15, "assets/tyrian/newshd.shp.000000.png")
+        pad(load_from_file(216, 98, 12, 15, "assets/tyrian/newshd.shp.000000.png"))
     ),
 ]
 
@@ -150,21 +167,21 @@ MineAnimation = CachedAnimation(
 )
 
 HealPowerupImage = CachedSurface(
-    load_from_file(171, 115, 19, 22, "assets/tyrian/newsh1.shp.000000.png")
+    pad(load_from_file(171, 115, 19, 22, "assets/tyrian/newsh1.shp.000000.png"))
 )
 
 SingleShotWeaponImage = CachedSurface(
-    load_from_file(170, 143, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
+    pad(load_from_file(170, 143, 20, 21, "assets/tyrian/tyrian.shp.010008.png"))
 )
 
 DoubleShotWeaponImage = CachedSurface(
-    load_from_file(194, 143, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
+    pad(load_from_file(194, 143, 20, 21, "assets/tyrian/tyrian.shp.010008.png"))
 )
 
 MineLauncherWeaponImage = CachedSurface(
-    load_from_file(2, 199, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
+    pad(load_from_file(2, 199, 20, 21, "assets/tyrian/tyrian.shp.010008.png"))
 )
 
 MissileLauncherWeaponImage = CachedSurface(
-    load_from_file(74,171,20,21,"assets/tyrian/tyrian.shp.010008.png")
+    pad(load_from_file(74, 171, 20, 21, "assets/tyrian/tyrian.shp.010008.png"))
 )

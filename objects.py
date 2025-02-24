@@ -75,9 +75,6 @@ class MovingObject(pg.sprite.Sprite):
     def apply_damage(self, dmg: float):
         pass
 
-    def heal_hp(self, heal: float):
-        pass
-
     def get_accels(self) -> Vector3:
         return Vector3(0.0, 0.0, 0.0)
 
@@ -146,6 +143,7 @@ class MovingObject(pg.sprite.Sprite):
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 
+
 class DrawableObject(MovingObject):
     image: pg.Surface
     rect: pg.Rect
@@ -161,17 +159,20 @@ class DrawableObject(MovingObject):
             self._image = image
         super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
 
-
     def get_surface(self) -> CachedSurface:
         raise NotImplementedError
 
     def update_image_rect(self):
-        self.image = self.get_surface().get_image(self.pos.z)
         self.rect = self.get_surface().get_rect(
             self.pos.z,
             topleft=self.pos_xy - self.get_surface().get_centroid(self.pos.z),
         )
         self.mask = self.get_surface().get_mask(self.pos.z)
+        self.image = self.get_surface().get_image(self.pos.z)
+        try:
+            self.image = self.with_postprocessing()
+        except AttributeError:
+            pass
 
     def update(self, dt: float):
         old_rect = self.rect
@@ -231,6 +232,7 @@ class DrawsUI(DrawableObject):
                 ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(icon, rect))
                 first = False
 
+
 class HasMass(MovingObject):
     mass: float
     MASS: float | None
@@ -240,6 +242,7 @@ class HasMass(MovingObject):
             mass = self.MASS
         self.mass = mass
         super().__init__(*args, **kwargs)
+
 
 class Collides(HasMass, DrawableObject):
     def __init__(self, *args, **kwargs):
@@ -251,6 +254,7 @@ class Collides(HasMass, DrawableObject):
     @property
     def inertia_moment(self):
         return self.get_surface().inertia_moment_coef * self.mass
+
 
 class HasEngines(Collides):
     all_engines: pg.sprite.Group
@@ -276,6 +280,7 @@ class HasEngines(Collides):
             ) / self.inertia_moment * math.degrees(1)
 
         return thrust
+
 
 class HasShield(MovingObject):
     shield: float
@@ -313,7 +318,6 @@ class HasHitpoints(MovingObject):
         self.hp = hp
         super().__init__(*args, **kwargs)
 
-
     def apply_damage(self, dmg: float):
         self.hp -= dmg
         if self.hp <= 0:
@@ -322,7 +326,6 @@ class HasHitpoints(MovingObject):
 
     def heal_hp(self, heal: float):
         self.hp = min(self.hp + heal, self.HP)
-        super().heal_hp(heal)
 
 
 class HasTimer(MovingObject):

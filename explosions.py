@@ -12,7 +12,13 @@ from objects import AnimatedDrawable, HasTimer, MovingObject, Collides
 from particles import CollidingParticle
 import random
 
-def explosion_effect(owner: MovingObject, init_speed: float = 0.1, particles: int|None =None, pos_spread: float|None=None):
+
+def explosion_effect(
+    owner: MovingObject,
+    init_speed: float = 0.1,
+    particles: int | None = None,
+    pos_spread: float | None = None,
+):
     if pos_spread is None:
         pos_spread = owner.get_surface().get_rect().h / 2
     if particles is None:
@@ -25,16 +31,15 @@ def explosion_effect(owner: MovingObject, init_speed: float = 0.1, particles: in
             ),
             0.0,
         )
-        dspeed = Vector3(
-            *Vector2(init_speed, 0.0).rotate(random.uniform(0, 360)), 0.0
-        )
+        dspeed = Vector3(*Vector2(init_speed, 0.0).rotate(random.uniform(0, 360)), 0.0)
         return CollidingParticle(
             init_pos=owner.pos + dpos,
             init_speed=owner.speed + dspeed,
             ttl=random.uniform(500, 1000),
         )
 
-    try_and_spawn_object(_tmp, particles, 2*particles)
+    try_and_spawn_object(_tmp, particles, 2 * particles)
+
 
 class Explosion(AnimatedDrawable, HasTimer, Collides, MovingObject):
     DRAG = 0.0
@@ -49,6 +54,7 @@ class LargeExplosion(Explosion):
     TTL = LargeExplosionAnimation1.animation_time
     IMAGE = (LargeExplosionAnimation1, LargeExplosionAnimation2)
 
+
 class HugeExplosion(Explosion):
     TTL = LargeExplosionAnimation1.animation_time
     IMAGE = (
@@ -56,9 +62,11 @@ class HugeExplosion(Explosion):
         LargeExplosionAnimation2.scale_by(2),
     )
 
+
 class MediumExplosion(Explosion):
     TTL = MediumExplosionAnimation.animation_time
     IMAGE = MediumExplosionAnimation
+
 
 class SmallExplosion(Explosion):
     TTL = MediumExplosionAnimation.animation_time / 2

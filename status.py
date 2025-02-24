@@ -33,6 +33,13 @@ class HealingStatus(Status):
     owner: HasHitpoints
     icon = HealPowerupImage.scale((10, 10))
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for status in self.owner.all_statuses:
+            if isinstance(status, HealingStatus) and status != self:
+                self.ttl += status.ttl
+                status.kill()
+
     def update(self, dt: float):
         self.owner.heal_hp(self.HEAL_AMOUNT * dt / self.ttl)
         super().update(dt)
