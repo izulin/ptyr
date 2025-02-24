@@ -146,31 +146,6 @@ class MovingObject(pg.sprite.Sprite):
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 
-class HasEngines(MovingObject):
-    all_engines: pg.sprite.Group
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.all_engines = pg.sprite.Group()
-
-    def kill(self):
-        for engine in self.all_engines:
-            engine.kill()
-        super().kill()
-
-    def get_accels(self) -> Vector3:
-        thrust = super().get_accels()
-        for engine in self.all_engines:
-            impulse = Vector2(0, -engine.active * engine.strength / 1000).rotate(
-                engine.pos.z
-            )
-            impulse_ = Vector3(impulse.x, impulse.y, 0)
-            thrust += impulse_ / self.mass - impulse_.cross(
-                Vector3(engine.pos.x, engine.pos.y, 0)
-            ) / self.inertia_moment * math.degrees(1)
-
-        return thrust
-
 class DrawableObject(MovingObject):
     image: pg.Surface
     rect: pg.Rect
@@ -185,6 +160,7 @@ class DrawableObject(MovingObject):
         else:
             self._image = image
         super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
+
 
     def get_surface(self) -> CachedSurface:
         raise NotImplementedError
@@ -255,15 +231,19 @@ class DrawsUI(DrawableObject):
                 ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(icon, rect))
                 first = False
 
-
-class Collides(DrawableObject):
+class HasMass(MovingObject):
     mass: float
+    MASS: float | None
 
     def __init__(self, *args, mass=None, **kwargs):
-        super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)
         if mass is None:
             mass = self.MASS
         self.mass = mass
+        super().__init__(*args, **kwargs)
+
+class Collides(HasMass, DrawableObject):
+    def __init__(self, *args, **kwargs):
+        super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)
 
     def on_collision(self, other: MovingObject):
         pass
@@ -272,16 +252,40 @@ class Collides(DrawableObject):
     def inertia_moment(self):
         return self.get_surface().inertia_moment_coef * self.mass
 
+class HasEngines(Collides):
+    all_engines: pg.sprite.Group
+
+    def __init__(self, *args, **kwargs):
+        self.all_engines = pg.sprite.Group()
+        super().__init__(*args, **kwargs)
+
+    def kill(self):
+        for engine in self.all_engines:
+            engine.kill()
+        super().kill()
+
+    def get_accels(self) -> Vector3:
+        thrust = super().get_accels()
+        for engine in self.all_engines:
+            impulse = Vector2(0, -engine.active * engine.strength / 1000).rotate(
+                engine.pos.z
+            )
+            impulse_ = Vector3(impulse.x, impulse.y, 0)
+            thrust += impulse_ / self.mass - impulse_.cross(
+                Vector3(engine.pos.x, engine.pos.y, 0)
+            ) / self.inertia_moment * math.degrees(1)
+
+        return thrust
 
 class HasShield(MovingObject):
     shield: float
     SHIELD: float
 
     def __init__(self, *args, shield=None, **kwargs):
-        super().__init__(*args, **kwargs)
         if shield is None:
             shield = self.SHIELD
         self.shield = shield
+        super().__init__(*args, **kwargs)
 
     def apply_damage(self, dmg: float):
         if self.shield is not None:
@@ -304,10 +308,11 @@ class HasHitpoints(MovingObject):
     HP: float
 
     def __init__(self, *args, hp=None, **kwargs):
-        super().__init__(*args, **kwargs)
         if hp is None:
             hp = self.HP
         self.hp = hp
+        super().__init__(*args, **kwargs)
+
 
     def apply_damage(self, dmg: float):
         self.hp -= dmg

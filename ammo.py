@@ -36,13 +36,14 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
     DMG = 10.0
     IMAGE = SmallBulletImage
 
-class SmallMissile(StaticDrawable, Collides, HasEngines, MovingObject):
+class SmallMissile(StaticDrawable, HasEngines, Collides, HasTimer, MovingObject):
     MASS = 2.0
     DMG = 30.0
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
     IMAGE = SmallMissileImage
-    acc_time = 2000
+    acc_time = 1_000
+    TTL = 3_000
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -27,7 +27,7 @@ from objects import (
 from weapons import Weapon, SingleShotWeapon, SmallMissileWeapon
 
 
-class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, HasEngines, MovingObject):
+class Player(StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Collides, MovingObject):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
 
