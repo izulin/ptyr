@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Engine(pg.sprite.Sprite):
-    def __init__(self, owner: MovingObject, pos, strength):
+    def __init__(self, owner: MovingObject, pos: Vector3, strength: float):
         super().__init__(ALL_ENGINES)
         self.pos = pos
         self.cooldown = 0.0

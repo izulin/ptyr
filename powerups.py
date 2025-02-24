@@ -3,13 +3,13 @@ from assets import HealPowerupImage, DoubleShotWeaponImage, MineLauncherWeaponIm
 from delayed import DelayedEvent
 from status import HealingStatus
 from groups import ALL_POWERUPS
-from objects import NoControl, MovingObject, HasTimer, StaticDrawable
+from objects import MovingObject, HasTimer, StaticDrawable
 import random
 from players import Player
 from weapons import DoubleShotWeapon, MineLauncher
 
 
-class PowerUp(HasTimer, NoControl, MovingObject):
+class PowerUp(HasTimer, MovingObject):
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000
     TTL = 30_000

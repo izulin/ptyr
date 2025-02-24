@@ -7,7 +7,6 @@ from consts import SCREEN_WIDTH, SCREEN_HEIGHT
 from explosions import SmallExplosion
 from groups import ALL_ENEMIES, try_and_spawn_object
 from objects import (
-    NoControl,
     HasHitpoints,
     Collides,
     StaticDrawable,
@@ -19,7 +18,7 @@ import random
 from powerups import get_random_powerup
 
 
-class Asteroid(Collides, HasHitpoints, NoControl, DrawsUI, MovingObject):
+class Asteroid(Collides, HasHitpoints, DrawsUI, MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 

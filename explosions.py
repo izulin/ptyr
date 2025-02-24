@@ -8,7 +8,7 @@ from assets import (
     MediumExplosionAnimation,
 )
 from groups import try_and_spawn_object
-from objects import AnimatedDrawable, NoControl, HasTimer, MovingObject, Collides
+from objects import AnimatedDrawable, HasTimer, MovingObject, Collides
 from particles import CollidingParticle
 import random
 
@@ -36,7 +36,7 @@ def explosion_effect(owner: MovingObject, init_speed: float = 0.1, particles: in
 
     try_and_spawn_object(_tmp, particles, 2*particles)
 
-class Explosion(AnimatedDrawable, HasTimer, NoControl, Collides, MovingObject):
+class Explosion(AnimatedDrawable, HasTimer, Collides, MovingObject):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 

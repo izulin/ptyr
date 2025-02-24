@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 import pygame as pg
-from pygame import Vector2, Vector3
+from pygame import Vector3
 
 
 from assets import PlayerImages
@@ -22,17 +22,14 @@ from objects import (
     HasHitpoints,
     Collides,
     StaticDrawable,
-    DrawsUI,
+    DrawsUI, HasEngines,
 )
-from weapons import Weapon, SingleShotWeapon, MineLauncher
-import math
+from weapons import Weapon, SingleShotWeapon, SmallMissileWeapon
 
 
-class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingObject):
+class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, HasEngines, MovingObject):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
-
-    ENGINE_STRENGTH = 0.1
 
     MASS = 30.0
     HP = 30.0
@@ -51,26 +48,26 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         self.use_defaults()
         self.player_id = player_id
         self.back_engine = Engine(
-            pos=Vector3(0, -10, 180), strength=self.ENGINE_STRENGTH, owner=self.owner
+            pos=Vector3(0, -10, 180), strength=1, owner=self.owner
         )
         self.back_left_engine = Engine(
             pos=Vector3(-5, -9, 90 + 45),
-            strength=self.ENGINE_STRENGTH / 4,
+            strength=1/ 4,
             owner=self.owner,
         )
         self.back_right_engine = Engine(
             pos=Vector3(5, -9, 270 - 45),
-            strength=self.ENGINE_STRENGTH / 4,
+            strength=1 / 4,
             owner=self.owner,
         )
         self.front_left_engine = Engine(
             pos=Vector3(-2, 9, 90 - 45),
-            strength=self.ENGINE_STRENGTH / 4,
+            strength=1 / 4,
             owner=self.owner,
         )
         self.front_right_engine = Engine(
             pos=Vector3(2, 9, 270 + 45),
-            strength=self.ENGINE_STRENGTH / 4,
+            strength=1 / 4,
             owner=self.owner,
         )
 
@@ -84,21 +81,8 @@ class Player(StaticDrawable, Collides, HasShield, HasHitpoints, DrawsUI, MovingO
         SingleShotWeapon(owner=self.owner)
 
     def default_secondary_weapon(self):
-        MineLauncher(owner=self.owner)
+        SmallMissileWeapon(owner=self.owner)
         pass
-
-    def get_accels(self) -> Vector3:
-        thrust = Vector3(0.0, 0.0, 0.0)
-        for engine in self.all_engines:
-            impulse = Vector2(0, -engine.active * engine.strength / 100).rotate(
-                engine.pos.z
-            )
-            impulse_ = Vector3(impulse.x, impulse.y, 0)
-            thrust += impulse_ / self.mass - impulse_.cross(
-                Vector3(engine.pos.x, engine.pos.y, 0)
-            ) / self.inertia_moment * math.degrees(1)
-
-        return thrust
 
     def update(self, dt: float):
         self.use_defaults()

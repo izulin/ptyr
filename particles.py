@@ -3,7 +3,7 @@ import pygame as pg
 
 from consts import YELLOW, RED, BLACK, WHITE
 from groups import ALL_PARTICLES
-from objects import MovingObject, DrawableObject, HasTimer, NoControl, Collides
+from objects import MovingObject, DrawableObject, HasTimer, Collides
 from surface import CachedSurface
 
 particles_cache: dict[tuple[int, ...], CachedSurface] = {}
@@ -15,7 +15,7 @@ def mix(c1, c2, c3, c4, t):
     return pg.Color.lerp(c12, c34, t**2 * (3 - 2 * t))
 
 
-class Particle(NoControl, HasTimer, DrawableObject, MovingObject):
+class Particle(HasTimer, DrawableObject, MovingObject):
     IMAGE = None
     DRAG = 0.0
     ANGULAR_DRAG = 0.0

@@ -1,11 +1,11 @@
 from __future__ import annotations
 from pygame import Vector3, Vector2
 
-from ammo import SmallBullet, Mine
+from ammo import SmallBullet, Mine, SmallMissile
 from assets import (
     SingleShotWeaponImage,
     DoubleShotWeaponImage,
-    MineLauncherWeaponImage,
+    MineLauncherWeaponImage, MissileLauncherWeaponImage,
 )
 from groups import try_and_spawn_object
 from math_utils import internal_coord_to_xy
@@ -134,6 +134,21 @@ class DoubleShotWeapon(Primary, Weapon):
             recoil += self._recoil(Vector2(-5.0, 20.0), 0.0, 0.3)
         self.owner.speed -= recoil
 
+class SmallMissileWeapon(Secondary, Weapon):
+    AMMO_CLS = SmallMissile
+    COOLDOWN = 200
+    AMMO = 50
+    icon = MissileLauncherWeaponImage.scale((10,10))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.side = True
+
+    def fire_logic(self):
+        if self._fire_at_pos(Vector2(20.0 if self.side else -20.0, 10.0), 0.0, 0.1):
+            self.ammo -= 1
+        self.side = not self.side
+
 
 class MineLauncher(Secondary, Weapon):
     AMMO_CLS = Mine
@@ -145,4 +160,6 @@ class MineLauncher(Secondary, Weapon):
         recoil = Vector3(0, 0, 0)
         if self._fire_at_pos(Vector2(0.0, -20.0), 180, 0.01):
             recoil += self._recoil(Vector2(0.0, -20.0), 180, 0.01)
+            self.ammo -= 1
         self.owner.speed -= recoil
+

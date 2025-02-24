@@ -103,8 +103,8 @@ SmallBulletImage = CachedSurface(
     load_from_file(183, 74, 5, 5, "assets/tyrian/newsh(.shp.000000.png")
 )
 
-SmallPlasmaImage = CachedSurface(
-    load_from_file(15, 3, 5, 5, "assets/tyrian/tyrian.shp.01D8A7.png")
+SmallMissileImage = CachedSurface(
+    load_from_file(159, 29, 7, 12, "assets/tyrian/tyrian.shp.000000.png")
 )
 
 MediumExplosionAnimation = CachedAnimation(
@@ -163,4 +163,8 @@ DoubleShotWeaponImage = CachedSurface(
 
 MineLauncherWeaponImage = CachedSurface(
     load_from_file(2, 199, 20, 21, "assets/tyrian/tyrian.shp.010008.png")
+)
+
+MissileLauncherWeaponImage = CachedSurface(
+    load_from_file(74,171,20,21,"assets/tyrian/tyrian.shp.010008.png")
 )

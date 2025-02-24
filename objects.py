@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import pygame as pg
 
 from groups import (
@@ -41,7 +43,6 @@ class MovingObject(pg.sprite.Sprite):
     alive_time: float
     alive_state: bool
     all_statuses: pg.sprite.Group
-    all_engines: pg.sprite.Group
     _id: int
     DRAG: float
     ANGULAR_DRAG: float
@@ -58,7 +59,6 @@ class MovingObject(pg.sprite.Sprite):
         self._acc = Vector2()
         self._drag = Vector2()
         self.all_statuses = pg.sprite.Group()
-        self.all_engines = pg.sprite.Group()
         self.add(ALL_DRAWABLE_OBJECTS, *args)
         if owner is None:
             owner = self
@@ -67,8 +67,6 @@ class MovingObject(pg.sprite.Sprite):
     def kill(self):
         for status in self.all_statuses:
             status.kill()
-        for engine in self.all_engines:
-            engine.kill()
         super().kill()
 
     def mark_dead(self):
@@ -79,6 +77,9 @@ class MovingObject(pg.sprite.Sprite):
 
     def heal_hp(self, heal: float):
         pass
+
+    def get_accels(self) -> Vector3:
+        return Vector3(0.0, 0.0, 0.0)
 
     @property
     def pos_xy(self) -> Vector2:
@@ -131,9 +132,6 @@ class MovingObject(pg.sprite.Sprite):
     def on_death(self):
         pass
 
-    def get_accels(self):
-        raise NotImplementedError
-
     def updated_pos(self, dt: float):
         all_accel = self.get_accels()
 
@@ -148,6 +146,30 @@ class MovingObject(pg.sprite.Sprite):
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 
+class HasEngines(MovingObject):
+    all_engines: pg.sprite.Group
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.all_engines = pg.sprite.Group()
+
+    def kill(self):
+        for engine in self.all_engines:
+            engine.kill()
+        super().kill()
+
+    def get_accels(self) -> Vector3:
+        thrust = super().get_accels()
+        for engine in self.all_engines:
+            impulse = Vector2(0, -engine.active * engine.strength / 1000).rotate(
+                engine.pos.z
+            )
+            impulse_ = Vector3(impulse.x, impulse.y, 0)
+            thrust += impulse_ / self.mass - impulse_.cross(
+                Vector3(engine.pos.x, engine.pos.y, 0)
+            ) / self.inertia_moment * math.degrees(1)
+
+        return thrust
 
 class DrawableObject(MovingObject):
     image: pg.Surface
@@ -314,18 +336,13 @@ class HasTimer(MovingObject):
         super().update(dt)
 
 
-class NoControl:
-    def get_accels(self):
-        return Vector3(0.0, 0.0, 0.0)
-
-
 def _circle():
     surface = pg.surface.Surface((10, 10))
     pg.draw.circle(surface, WHITE, (5, 5), 5)
     return surface
 
 
-class DebugArtifact(NoControl, StaticDrawable):
+class DebugArtifact(StaticDrawable):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
     IMAGE = CachedSurface(_circle())
