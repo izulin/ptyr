@@ -5,19 +5,19 @@ import random
 import pygame as pg
 from pygame import Vector3, Vector2
 
-from groups import ALL_ENGINES
+from groups import ALL_WITH_UPDATE
 from math_utils import internal_coord_to_xy
 from particles import Particle
 import math
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from objects import MovingObject
+    from objects import Object
 
 
 class Engine(pg.sprite.Sprite):
-    def __init__(self, owner: MovingObject, pos: Vector3, strength: float):
-        super().__init__(ALL_ENGINES)
+    def __init__(self, owner: Object, pos: Vector3, strength: float):
+        super().__init__(ALL_WITH_UPDATE)
         self.pos = pos
         self.cooldown = 0.0
         self.strength = strength

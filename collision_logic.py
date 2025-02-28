@@ -116,8 +116,11 @@ def _colliding_colliding_logic(obj_a: Collides, obj_b: Collides):
     for _ in range(10):
         collision_point = get_collision_point(obj_a, obj_b)
         energy = collide_objects(obj_a, obj_b, collision_point)
-        obj_a.apply_damage(100 * energy)
-        obj_b.apply_damage(100 * energy)
+        try:
+            obj_a.apply_damage(100 * energy)
+            obj_b.apply_damage(100 * energy)
+        except AttributeError:
+            pass
 
 
 def _player_powerup_logic(player: Player, powerup: PowerUp):

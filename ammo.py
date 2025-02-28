@@ -7,24 +7,29 @@ from engines import Engine
 from explosions import explosion_effect, LargeExplosion, SmallExplosion
 from objects import (
     Collides,
-    MovingObject,
+    Object,
     HasTimer,
     StaticDrawable,
     AnimatedDrawable,
     HasHitpoints,
     HasEngines,
+    UsesPhysics,
+    HasMass,
 )
 from postprocessing import with_outline
 
 
-class Bullet(Collides, MovingObject):
+class Bullet(Collides, UsesPhysics, HasMass, Object):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
     DMG: float
 
-    def on_collision(self, other: MovingObject):
+    def on_collision(self, other: Object):
         if other != self.owner:
-            other.apply_damage(self.DMG)
+            try:
+                other.apply_damage(self.DMG)
+            except AttributeError:
+                pass
             self.mark_dead()
         super().on_collision(other)
 
@@ -39,7 +44,9 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
     IMAGE = SmallBulletImage
 
 
-class SmallMissile(StaticDrawable, HasEngines, Collides, HasTimer, MovingObject):
+class SmallMissile(
+    StaticDrawable, HasEngines, Collides, UsesPhysics, HasMass, HasTimer, Object
+):
     MASS = 2.0
     DMG = 30.0
     DRAG = 0.0
@@ -64,9 +71,12 @@ class SmallMissile(StaticDrawable, HasEngines, Collides, HasTimer, MovingObject)
         )
         super().update(dt)
 
-    def on_collision(self, other: MovingObject):
+    def on_collision(self, other: Object):
         if other != self.owner:
-            other.apply_damage(self.DMG)
+            try:
+                other.apply_damage(self.DMG)
+            except AttributeError:
+                pass
             self.mark_dead()
         super().on_collision(other)
 
@@ -79,7 +89,7 @@ class SmallMissile(StaticDrawable, HasEngines, Collides, HasTimer, MovingObject)
         super().on_death()
 
 
-class Mine(AnimatedDrawable, Collides, HasHitpoints, MovingObject):
+class Mine(AnimatedDrawable, Collides, UsesPhysics, HasHitpoints, HasMass, Object):
     DMG = 1000.0
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000
@@ -87,7 +97,7 @@ class Mine(AnimatedDrawable, Collides, HasHitpoints, MovingObject):
     HP = 5.0
     MASS = 10.0
 
-    def on_collision(self, other: MovingObject):
+    def on_collision(self, other: Object):
         if isinstance(other, HasHitpoints) and other.HP >= 30 and other != self.owner:
             other.apply_damage(self.DMG)
             self.mark_dead()

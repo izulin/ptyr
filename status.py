@@ -3,18 +3,18 @@ import pygame as pg
 from typing import TYPE_CHECKING
 
 from assets import HealPowerupImage
-from groups import ALL_STATUSES
+from groups import ALL_WITH_UPDATE
 
 if TYPE_CHECKING:
-    from objects import MovingObject, HasHitpoints
+    from objects import Object, HasHitpoints
 
 
 class Status(pg.sprite.Sprite):
     TTL = None
-    owner: MovingObject
+    owner: Object
 
-    def __init__(self, *args, owner: MovingObject, ttl=None, **kwargs):
-        super().__init__(ALL_STATUSES, owner.all_statuses, *args, **kwargs)
+    def __init__(self, *args, owner: Object, ttl=None, **kwargs):
+        super().__init__(ALL_WITH_UPDATE, owner.all_statuses, *args, **kwargs)
         if ttl is None:
             ttl = self.TTL
         self.ttl = ttl

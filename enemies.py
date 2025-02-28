@@ -10,8 +10,10 @@ from objects import (
     HasHitpoints,
     Collides,
     StaticDrawable,
-    MovingObject,
+    Object,
     DrawsUI,
+    UsesPhysics,
+    HasMass,
 )
 import random
 
@@ -19,7 +21,7 @@ from postprocessing import with_outline
 from powerups import get_random_powerup
 
 
-class Asteroid(Collides, HasHitpoints, DrawsUI, MovingObject):
+class Asteroid(Collides, UsesPhysics, HasHitpoints, HasMass, DrawsUI, Object):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 
@@ -50,7 +52,7 @@ class LargeAsteroid(StaticDrawable, Asteroid):
             )
 
         try_and_spawn_object(_tmp, 3, 20)
-        get_random_powerup()(init_pos=self.pos, init_speed=self.speed)
+        get_random_powerup()(init_pos=Vector3(*self.pos_xy, 0))
         super().on_death()
 
 

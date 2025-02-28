@@ -8,7 +8,7 @@ from groups import (
     GroupWithCD,
     ALL_DRAWABLE_OBJECTS,
     ALL_COLLIDING_OBJECTS,
-    ALL_UI_DRAWABLE_OBJECTS,
+    ALL_UI_DRAWABLE_OBJECTS, ALL_WITH_UPDATE,
 )
 from math_utils import (
     normalize_pos3,
@@ -26,7 +26,6 @@ from consts import (
 from pygame.math import Vector3, Vector2
 import random
 from typing import TYPE_CHECKING
-import logging
 
 if TYPE_CHECKING:
     from surface import CachedSurface, CachedAnimation
@@ -34,32 +33,22 @@ if TYPE_CHECKING:
 from surface import CachedSurface
 from display import DISPLAYSURF, ALL_CHANGES_DISPLAYSURF
 
-logger = logging.getLogger(__name__)
 
-
-class MovingObject(pg.sprite.Sprite):
-    pos: Vector3
-    speed: Vector3
+class Object(pg.sprite.Sprite):
     alive_time: float
     alive_state: bool
+    pos: Vector3
     all_statuses: pg.sprite.Group
-    _id: int
-    DRAG: float
-    ANGULAR_DRAG: float
 
-    def __init__(self, *args, init_pos, init_speed, owner=None, **kwargs):
-        assert not kwargs
+    def __init__(self, *args, init_pos, owner=None, **kwargs):
+        assert not kwargs, f"{kwargs}"
         super().__init__()
         self.pos = normalize_pos3(Vector3(init_pos))
-        self.speed = Vector3(init_speed)
-        self.alive_time = 0.0
-
         self.alive_state = True
+        self.alive_time = 0.0
         self.update_image_rect()
-        self._acc = Vector2()
-        self._drag = Vector2()
         self.all_statuses = pg.sprite.Group()
-        self.add(ALL_DRAWABLE_OBJECTS, *args)
+        self.add(ALL_WITH_UPDATE, *args)
         if owner is None:
             owner = self
         self.owner = owner
@@ -72,19 +61,55 @@ class MovingObject(pg.sprite.Sprite):
     def mark_dead(self):
         self.alive_state = False
 
-    def apply_damage(self, dmg: float):
-        pass
+    def update(self, dt: float):
+        self.alive_time += dt
+        super().update(dt)
 
-    def get_accels(self) -> Vector3:
-        return Vector3(0.0, 0.0, 0.0)
+    def on_death(self):
+        pass
 
     @property
     def pos_xy(self) -> Vector2:
         return Vector2(self.pos.x, self.pos.y)
 
+
+class UsesPhysics:
+    DRAG: float
+    ANGULAR_DRAG: float
+    speed: Vector3
+
+    def __init__(self, *args, init_speed, **kwargs):
+        self.speed = Vector3(init_speed)
+        self._acc = Vector2()
+        self._drag = Vector2()
+        super().__init__(*args, **kwargs)
+
+    def update(self, dt: float):
+        new_pos, new_speed = self.updated_pos(dt)
+        self.pos = normalize_pos3(new_pos)
+        self.speed = new_speed
+        super().update(dt)
+
+    def get_accels(self) -> Vector3:
+        return Vector3(0.0, 0.0, 0.0)
+
     @property
     def speed_xy(self) -> Vector2:
         return Vector2(self.speed.x, self.speed.y)
+
+    def updated_pos(self, dt: float):
+        all_accel = self.get_accels()
+
+        def f(pos: Vector3, speed: Vector3):
+            self._acc = internal_coord_to_xy(Vector2(all_accel.x, all_accel.y), pos.z)
+            angular_drag = speed.z * abs(speed.z) * self.ANGULAR_DRAG
+            speed_xy = Vector2(speed.x, speed.y)
+            # |drag| = self.DRAG * |speed|**2
+            self._drag = speed_xy.length() * self.DRAG * speed_xy
+            acc = self._acc - self._drag
+            return speed, Vector3(acc.x, acc.y, all_accel.z - angular_drag)
+
+        return range_kutta_2(f, self.pos, self.speed, dt)
 
     def draw_debugs(self):
         pos_xy = self.pos_xy
@@ -120,31 +145,8 @@ class MovingObject(pg.sprite.Sprite):
                 )
             )
 
-    def update(self, dt: float):
-        new_pos, new_speed = self.updated_pos(dt)
-        self.pos = normalize_pos3(new_pos)
-        self.speed = new_speed
-        self.alive_time += dt
 
-    def on_death(self):
-        pass
-
-    def updated_pos(self, dt: float):
-        all_accel = self.get_accels()
-
-        def f(pos: Vector3, speed: Vector3):
-            self._acc = internal_coord_to_xy(Vector2(all_accel.x, all_accel.y), pos.z)
-            angular_drag = speed.z * abs(speed.z) * self.ANGULAR_DRAG
-            speed_xy = Vector2(speed.x, speed.y)
-            # |drag| = self.DRAG * |speed|**2
-            self._drag = speed_xy.length() * self.DRAG * speed_xy
-            acc = self._acc - self._drag
-            return speed, Vector3(acc.x, acc.y, all_accel.z - angular_drag)
-
-        return range_kutta_2(f, self.pos, self.speed, dt)
-
-
-class DrawableObject(MovingObject):
+class DrawableObject:
     image: pg.Surface
     rect: pg.Rect
     mask: pg.Mask
@@ -197,7 +199,7 @@ class AnimatedDrawable(DrawableObject):
         return self._image.get_frame(self.alive_time)
 
 
-class DrawsUI(DrawableObject):
+class DrawsUI:
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_UI_DRAWABLE_OBJECTS, *args, **kwargs)
 
@@ -229,11 +231,11 @@ class DrawsUI(DrawableObject):
                     rect = icon.get_rect(bottomleft=rect.topleft)
                 else:
                     rect = icon.get_rect(bottomleft=rect.bottomright)
-                ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(icon, rect))
+                ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(icon.get_image(), rect))
                 first = False
 
 
-class HasMass(MovingObject):
+class HasMass:
     mass: float
     MASS: float | None
 
@@ -244,11 +246,11 @@ class HasMass(MovingObject):
         super().__init__(*args, **kwargs)
 
 
-class Collides(HasMass, DrawableObject):
+class Collides:
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)
 
-    def on_collision(self, other: MovingObject):
+    def on_collision(self, other: Object):
         pass
 
     @property
@@ -256,7 +258,7 @@ class Collides(HasMass, DrawableObject):
         return self.get_surface().inertia_moment_coef * self.mass
 
 
-class HasEngines(Collides):
+class HasEngines(UsesPhysics):
     all_engines: pg.sprite.Group
 
     def __init__(self, *args, **kwargs):
@@ -282,33 +284,7 @@ class HasEngines(Collides):
         return thrust
 
 
-class HasShield(MovingObject):
-    shield: float
-    SHIELD: float
-
-    def __init__(self, *args, shield=None, **kwargs):
-        if shield is None:
-            shield = self.SHIELD
-        self.shield = shield
-        super().__init__(*args, **kwargs)
-
-    def apply_damage(self, dmg: float):
-        if self.shield is not None:
-            d = min(self.shield, dmg)
-            self.shield -= d
-            dmg -= d
-        super().apply_damage(dmg)
-
-    def heal_shield(self, heal: float):
-        if self.shield is not None:
-            self.shield = min(self.shield + heal, self.SHIELD)
-
-    def update(self, dt: float):
-        super().update(dt)
-        self.heal_shield(dt / 1000 * 2)
-
-
-class HasHitpoints(MovingObject):
+class HasHitpoints:
     hp: float
     HP: float
 
@@ -322,13 +298,40 @@ class HasHitpoints(MovingObject):
         self.hp -= dmg
         if self.hp <= 0:
             self.mark_dead()
-        super().apply_damage(dmg)
+        try:
+            super().apply_damage(dmg)
+        except AttributeError:
+            pass
 
     def heal_hp(self, heal: float):
         self.hp = min(self.hp + heal, self.HP)
 
 
-class HasTimer(MovingObject):
+class HasShield(HasHitpoints):
+    shield: float
+    SHIELD: float
+
+    def __init__(self, *args, shield=None, **kwargs):
+        if shield is None:
+            shield = self.SHIELD
+        self.shield = shield
+        super().__init__(*args, **kwargs)
+
+    def apply_damage(self, dmg: float):
+        d = min(self.shield, dmg)
+        self.shield -= d
+        dmg -= d
+        super().apply_damage(dmg)
+
+    def heal_shield(self, heal: float):
+        self.shield = min(self.shield + heal, self.SHIELD)
+
+    def update(self, dt: float):
+        super().update(dt)
+        self.heal_shield(dt / 1000 * 2)
+
+
+class HasTimer:
     ttl: int
     TTL: int
 

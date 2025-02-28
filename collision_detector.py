@@ -5,13 +5,11 @@ from pygame.math import Vector3
 from consts import ALL_SHIFTS
 from collections import defaultdict
 
-import logging
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import DrawableObject
-
-logger = logging.getLogger(__name__)
 
 
 class CollisionDetector:

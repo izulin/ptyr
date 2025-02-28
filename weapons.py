@@ -7,9 +7,12 @@ from assets import (
     DoubleShotWeaponImage,
     MineLauncherWeaponImage,
     MissileLauncherWeaponImage,
+    LaserShardImage,
+    LaserWeaponImage,
 )
-from groups import try_and_spawn_object
+from groups import try_and_spawn_object, ALL_COLLIDING_OBJECTS
 from math_utils import internal_coord_to_xy
+from objects import StaticDrawable, Object, HasTimer
 from status import Status
 import math
 
@@ -112,6 +115,53 @@ class Secondary:
             owner.secondary_weapon.kill()
         owner.secondary_weapon = self
         super().__init__(*args, owner=owner, **kwargs)
+
+
+class LaserShard(StaticDrawable, Object):
+    IMAGE = LaserShardImage.scale_by(0.75)
+
+    def update(self, dt: float):
+        for obj in ALL_COLLIDING_OBJECTS.cd.collide_with_callback(self, on_collision=None):
+            if obj.owner != self.owner:
+                try:
+                    obj.apply_damage(dt/10)
+                except AttributeError:
+                    pass
+        self.kill()
+
+class LaserWeapon(Primary, Weapon):
+    COOLDOWN = 0
+    AMMO_CLS = LaserShard
+    AMMO = None
+    icon = LaserWeaponImage.scale((10, 10))
+
+    def fire(self):
+        for i in range(5):
+            shard = self.AMMO_CLS(
+            init_pos=Vector3(
+                *(self.owner.pos_xy+internal_coord_to_xy(
+                    Vector2(6, 13 + (self.AMMO_CLS.IMAGE.get_rect().h-1) * (i+1/ 2)),
+                    self.owner.pos.z,
+                )),
+                self.owner.pos.z,
+            ),owner=self.owner
+        )
+            if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(shard, on_collision=None):
+                break
+
+        for i in range(5):
+            shard = self.AMMO_CLS(
+            init_pos=Vector3(
+                *(self.owner.pos_xy+internal_coord_to_xy(
+                    Vector2(-6, 13 + (self.AMMO_CLS.IMAGE.get_rect().h-1) * (i+1/ 2)),
+                    self.owner.pos.z,
+                )),
+                self.owner.pos.z
+            ), owner=self.owner
+        )
+            if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(shard, on_collision=None):
+                break
+
 
 
 class SingleShotWeapon(Primary, Weapon):

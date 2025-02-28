@@ -17,20 +17,30 @@ from groups import (
     try_and_spawn_object,
 )
 from objects import (
-    MovingObject,
+    Object,
     HasShield,
     HasHitpoints,
     Collides,
     StaticDrawable,
     DrawsUI,
     HasEngines,
+    UsesPhysics,
+    HasMass,
 )
 from postprocessing import with_outline
-from weapons import Weapon, SingleShotWeapon, SmallMissileWeapon
+from weapons import Weapon, SingleShotWeapon, SmallMissileWeapon, LaserWeapon
 
 
 class Player(
-    StaticDrawable, HasShield, HasHitpoints, DrawsUI, HasEngines, Collides, MovingObject
+    StaticDrawable,
+    HasShield,
+    HasHitpoints,
+    HasMass,
+    DrawsUI,
+    HasEngines,
+    Collides,
+    UsesPhysics,
+    Object,
 ):
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
@@ -85,7 +95,8 @@ class Player(
             self.default_secondary_weapon()
 
     def default_weapon(self):
-        SingleShotWeapon(owner=self.owner)
+        #SingleShotWeapon(owner=self.owner)
+        LaserWeapon(owner=self.owner)
 
     def default_secondary_weapon(self):
         SmallMissileWeapon(owner=self.owner)

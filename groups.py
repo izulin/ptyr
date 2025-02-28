@@ -5,6 +5,7 @@ from typing import Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import Collides
+from logger import logger
 
 
 class GroupWithCD(pg.sprite.Group):
@@ -27,10 +28,7 @@ ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
 ALL_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
 ALL_POWERUPS: GroupWithCD = GroupWithCD()
 ALL_UI_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
-ALL_STATUSES: pg.sprite.Group = pg.sprite.Group()
-ALL_ENGINES: pg.sprite.Group = pg.sprite.Group()
-ALL_PARTICLES: pg.sprite.Group = pg.sprite.Group()
-ALL_DELAYED: pg.sprite.Group = pg.sprite.Group()
+ALL_WITH_UPDATE: pg.sprite.Group = pg.sprite.Group()
 
 
 def try_and_spawn_object(
@@ -39,13 +37,11 @@ def try_and_spawn_object(
     succ = []
     while total_tries > 0 and len(succ) < num_copies:
         obj: Collides = func()
-        if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-            obj, on_collision=None
-        ):
+        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(obj, on_collision=None):
             obj.kill()
-            print(obj, col)
         else:
             succ.append(obj)
         total_tries -= 1
-    print("spawned", len(succ), "out of", num_copies)
+    if len(succ) < num_copies:
+        logger.info(f"spawned {type(obj).__qualname__} {len(succ)} out of {num_copies}")
     return succ

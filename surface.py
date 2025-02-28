@@ -8,6 +8,7 @@ class CachedSurface:
     _image_cache: list[pg.Surface]
     _mask_cache: list[pg.Mask]
     _centroids: list[Vector2]
+    _no_rotation: bool
 
     def __init__(self, image: pg.Surface, no_rotation=False):
         if no_rotation:
@@ -17,6 +18,7 @@ class CachedSurface:
         else:
             self._image_cache = [pg.transform.rotate(image, i) for i in range(360)]
             self._mask_cache = [pg.mask.from_surface(im) for im in self._image_cache]
+        self._no_rotation = no_rotation
 
     @cached_property
     def inertia_moment_coef(self) -> float:
@@ -65,7 +67,10 @@ class CachedSurface:
         return Vector2(self.get_mask(ang).centroid())
 
     def scale(self, size) -> pg.Surface:
-        return pg.transform.scale(self.get_image(), size)
+        return CachedSurface(pg.transform.scale(self.get_image(), size), no_rotation=self._no_rotation)
+
+    def scale_by(self, factor: float) -> pg.Surface:
+        return CachedSurface(pg.transform.scale_by(self.get_image(), factor), no_rotation=self._no_rotation)
 
 
 class CachedAnimation:

@@ -3,22 +3,22 @@ from assets import (
     HealPowerupImage,
     DoubleShotWeaponImage,
     MineLauncherWeaponImage,
-    MissileLauncherWeaponImage,
+    MissileLauncherWeaponImage, LaserWeaponImage,
 )
 from consts import YELLOW
 from delayed import DelayedEvent
 from postprocessing import with_outline
 from status import HealingStatus
 from groups import ALL_POWERUPS
-from objects import MovingObject, HasTimer, StaticDrawable
+from objects import Object, HasTimer, StaticDrawable, UsesPhysics
 import random
 from players import Player
-from weapons import DoubleShotWeapon, MineLauncher, SmallMissileWeapon
+from weapons import DoubleShotWeapon, MineLauncher, SmallMissileWeapon, LaserWeapon
 
 
-class PowerUp(HasTimer, MovingObject):
-    DRAG = 100 / 1000
-    ANGULAR_DRAG = 200 / 1000
+class PowerUp(StaticDrawable, HasTimer, Object):
+    # DRAG = 100 / 1000
+    # ANGULAR_DRAG = 200 / 1000
     TTL = 30_000
 
     used: bool
@@ -31,7 +31,7 @@ class PowerUp(HasTimer, MovingObject):
     def with_postprocessing(self):
         return with_outline(self, YELLOW)
 
-    def on_collision(self, other: MovingObject):
+    def on_collision(self, other: Object):
         if self.used:
             return
 
@@ -44,7 +44,7 @@ class PowerUp(HasTimer, MovingObject):
         raise NotImplementedError
 
 
-class HealPowerUp(StaticDrawable, PowerUp):
+class HealPowerUp(PowerUp):
     IMAGE = HealPowerupImage
 
     def action_logic(self, other: Player):
@@ -52,25 +52,31 @@ class HealPowerUp(StaticDrawable, PowerUp):
         HealingStatus(owner=other)
 
 
-class DoubleShotWeaponPowerUp(StaticDrawable, PowerUp):
+class DoubleShotWeaponPowerUp(PowerUp):
     IMAGE = DoubleShotWeaponImage
 
     def action_logic(self, other: Player):
         DoubleShotWeapon(owner=other)
 
 
-class MineLauncherWeaponPowerUp(StaticDrawable, PowerUp):
+class MineLauncherWeaponPowerUp(PowerUp):
     IMAGE = MineLauncherWeaponImage
 
     def action_logic(self, other: Player):
         MineLauncher(owner=other)
 
 
-class MissileLauncherWeaponPowerUp(StaticDrawable, PowerUp):
+class MissileLauncherWeaponPowerUp(PowerUp):
     IMAGE = MissileLauncherWeaponImage
 
     def action_logic(self, other: Player):
         SmallMissileWeapon(owner=other)
+
+class LaserWeaponPowerUp(PowerUp):
+    IMAGE = LaserWeaponImage
+
+    def action_logic(self, other: Player):
+        LaserWeapon(owner=other)
 
 
 def get_random_powerup() -> type[PowerUp]:
@@ -80,5 +86,6 @@ def get_random_powerup() -> type[PowerUp]:
             DoubleShotWeaponPowerUp,
             MineLauncherWeaponPowerUp,
             MissileLauncherWeaponPowerUp,
+            LaserWeaponPowerUp,
         ]
     )

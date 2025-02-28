@@ -185,3 +185,11 @@ MineLauncherWeaponImage = CachedSurface(
 MissileLauncherWeaponImage = CachedSurface(
     pad(load_from_file(74, 171, 20, 21, "assets/tyrian/tyrian.shp.010008.png"))
 )
+
+LaserWeaponImage = CachedSurface(
+    pad(load_from_file(74, 115, 20, 21, "assets/tyrian/tyrian.shp.010008.png"))
+)
+
+LaserShardImage = CachedSurface(
+    load_from_file(39, 210, 7, 12, "assets/tyrian/tyrian.shp.000000.png")
+)

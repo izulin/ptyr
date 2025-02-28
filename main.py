@@ -15,9 +15,7 @@ from groups import (
     ALL_DRAWABLE_OBJECTS,
     ALL_POWERUPS,
     ALL_UI_DRAWABLE_OBJECTS,
-    ALL_STATUSES,
-    ALL_ENGINES,
-    ALL_DELAYED,
+    ALL_WITH_UPDATE
 )
 from collision_logic import (
     _colliding_colliding_logic,
@@ -29,15 +27,9 @@ from assets import BackgroundImage
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from objects import MovingObject
+    from objects import Object
+from logger import logger
 
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(module)s.py %(funcName)s %(message)s",
-)
-logger = logging.getLogger(__name__)
 logger.info("Started")
 
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
@@ -110,13 +102,13 @@ def main():
 
         with TIMERS["debugs"]:
             if SHOW_SPEEDS:
-                sprite: MovingObject
+                sprite: Object
                 for sprite in ALL_DRAWABLE_OBJECTS:
                     sprite.draw_debugs()
 
         with TIMERS["UX"]:
             if SHOW_HP == 2:
-                sprite: MovingObject
+                sprite: Object
                 for sprite in ALL_UI_DRAWABLE_OBJECTS:
                     sprite.draw_ui()
             elif SHOW_HP == 1:
@@ -134,10 +126,7 @@ def main():
         dt = FramePerSec.tick(FPS)
 
         with TIMERS["update"]:
-            ALL_DELAYED.update(dt)
-            ALL_STATUSES.update(dt)
-            ALL_DRAWABLE_OBJECTS.update(dt)
-            ALL_ENGINES.update(dt)
+            ALL_WITH_UPDATE.update(dt)
             for sprite in ALL_DRAWABLE_OBJECTS:
                 if not sprite.alive_state:
                     sprite.kill()
