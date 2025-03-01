@@ -28,7 +28,7 @@ from objects import (
     HasMass,
 )
 from postprocessing import with_outline
-from weapons import Weapon, SingleShotWeapon, SmallMissileWeapon, LaserWeapon
+from weapons import Weapon, SmallMissileWeapon, LaserWeapon
 
 
 class Player(
@@ -95,7 +95,7 @@ class Player(
             self.default_secondary_weapon()
 
     def default_weapon(self):
-        #SingleShotWeapon(owner=self.owner)
+        # SingleShotWeapon(owner=self.owner)
         LaserWeapon(owner=self.owner)
 
     def default_secondary_weapon(self):

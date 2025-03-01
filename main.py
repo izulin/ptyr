@@ -15,7 +15,8 @@ from groups import (
     ALL_DRAWABLE_OBJECTS,
     ALL_POWERUPS,
     ALL_UI_DRAWABLE_OBJECTS,
-    ALL_WITH_UPDATE
+    ALL_WITH_UPDATE,
+    ALL_OBJECTS,
 )
 from collision_logic import (
     _colliding_colliding_logic,
@@ -29,6 +30,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from objects import Object
 from logger import logger
+
 
 logger.info("Started")
 
@@ -58,6 +60,8 @@ DelayedEvent(
 )
 
 
+
+
 def main():
     cnt = 0
     all_shift_sprites: dict(tuple(int, int), pg.sprite.LayeredUpdates) = {
@@ -80,8 +84,8 @@ def main():
                     SHOW_HP = (SHOW_HP + 1) % 3
 
         with TIMERS["shifts"]:
-            for shift_sprites in all_shift_sprites.values():
-                shift_sprites.add(ALL_DRAWABLE_OBJECTS)
+            for g in all_shift_sprites.values():
+                g.add(ALL_DRAWABLE_OBJECTS)
 
         with TIMERS["clears"]:
             for g in all_shift_sprites.values():
@@ -104,7 +108,10 @@ def main():
             if SHOW_SPEEDS:
                 sprite: Object
                 for sprite in ALL_DRAWABLE_OBJECTS:
-                    sprite.draw_debugs()
+                    try:
+                        sprite.draw_debugs()
+                    except AttributeError:
+                        pass
 
         with TIMERS["UX"]:
             if SHOW_HP == 2:
@@ -127,7 +134,7 @@ def main():
 
         with TIMERS["update"]:
             ALL_WITH_UPDATE.update(dt)
-            for sprite in ALL_DRAWABLE_OBJECTS:
+            for sprite in ALL_OBJECTS:
                 if not sprite.alive_state:
                     sprite.kill()
                     sprite.on_death()

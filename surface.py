@@ -67,10 +67,15 @@ class CachedSurface:
         return Vector2(self.get_mask(ang).centroid())
 
     def scale(self, size) -> pg.Surface:
-        return CachedSurface(pg.transform.scale(self.get_image(), size), no_rotation=self._no_rotation)
+        return CachedSurface(
+            pg.transform.scale(self.get_image(), size), no_rotation=self._no_rotation
+        )
 
     def scale_by(self, factor: float) -> pg.Surface:
-        return CachedSurface(pg.transform.scale_by(self.get_image(), factor), no_rotation=self._no_rotation)
+        return CachedSurface(
+            pg.transform.scale_by(self.get_image(), factor),
+            no_rotation=self._no_rotation,
+        )
 
 
 class CachedAnimation:

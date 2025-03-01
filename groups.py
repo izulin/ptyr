@@ -22,13 +22,19 @@ class GroupWithCD(pg.sprite.Group):
         self.cd.remove(sprite)
 
 
+class GroupWithPriority(pg.sprite.Group):
+    def sprites(self):
+        return sorted(super().sprites(), key=lambda x: getattr(x, "priority", 0))
+
+
 ALL_ENEMIES: pg.sprite.Group = pg.sprite.Group()
 ALL_PLAYERS: pg.sprite.Group = pg.sprite.Group()
+ALL_OBJECTS: pg.sprite.Group = pg.sprite.Group()
 ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
 ALL_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
 ALL_POWERUPS: GroupWithCD = GroupWithCD()
 ALL_UI_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
-ALL_WITH_UPDATE: pg.sprite.Group = pg.sprite.Group()
+ALL_WITH_UPDATE: GroupWithPriority = GroupWithPriority()
 
 
 def try_and_spawn_object(

@@ -12,6 +12,7 @@ class DelayedEvent(pg.sprite.Sprite):
         self.delay = delay
         self.repeat = repeat
         self.name = name
+        self.priority = -2
 
     def update(self, dt):
         self.t -= dt

@@ -3,14 +3,15 @@ from assets import (
     HealPowerupImage,
     DoubleShotWeaponImage,
     MineLauncherWeaponImage,
-    MissileLauncherWeaponImage, LaserWeaponImage,
+    MissileLauncherWeaponImage,
+    LaserWeaponImage,
 )
 from consts import YELLOW
 from delayed import DelayedEvent
 from postprocessing import with_outline
 from status import HealingStatus
 from groups import ALL_POWERUPS
-from objects import Object, HasTimer, StaticDrawable, UsesPhysics
+from objects import Object, HasTimer, StaticDrawable
 import random
 from players import Player
 from weapons import DoubleShotWeapon, MineLauncher, SmallMissileWeapon, LaserWeapon
@@ -71,6 +72,7 @@ class MissileLauncherWeaponPowerUp(PowerUp):
 
     def action_logic(self, other: Player):
         SmallMissileWeapon(owner=other)
+
 
 class LaserWeaponPowerUp(PowerUp):
     IMAGE = LaserWeaponImage

@@ -8,7 +8,9 @@ from groups import (
     GroupWithCD,
     ALL_DRAWABLE_OBJECTS,
     ALL_COLLIDING_OBJECTS,
-    ALL_UI_DRAWABLE_OBJECTS, ALL_WITH_UPDATE,
+    ALL_UI_DRAWABLE_OBJECTS,
+    ALL_WITH_UPDATE,
+    ALL_OBJECTS,
 )
 from math_utils import (
     normalize_pos3,
@@ -39,6 +41,7 @@ class Object(pg.sprite.Sprite):
     alive_state: bool
     pos: Vector3
     all_statuses: pg.sprite.Group
+    attachments: pg.sprite.Group
 
     def __init__(self, *args, init_pos, owner=None, **kwargs):
         assert not kwargs, f"{kwargs}"
@@ -48,7 +51,8 @@ class Object(pg.sprite.Sprite):
         self.alive_time = 0.0
         self.update_image_rect()
         self.all_statuses = pg.sprite.Group()
-        self.add(ALL_WITH_UPDATE, *args)
+        self.attachments = pg.sprite.Group()
+        self.add(ALL_WITH_UPDATE, ALL_OBJECTS, *args)
         if owner is None:
             owner = self
         self.owner = owner
@@ -56,6 +60,8 @@ class Object(pg.sprite.Sprite):
     def kill(self):
         for status in self.all_statuses:
             status.kill()
+        for attached in self.attachments:
+            attached.kill()
         super().kill()
 
     def mark_dead(self):
@@ -71,6 +77,24 @@ class Object(pg.sprite.Sprite):
     @property
     def pos_xy(self) -> Vector2:
         return Vector2(self.pos.x, self.pos.y)
+
+
+class Attached:
+    def __init__(self, *args, init_rel_pos: Vector3, base_object: Object, **kwargs):
+        self.base_object = base_object
+        self.priority = getattr(self.base_object, "priority", 0)
+        self.rel_pos = Vector3(init_rel_pos)
+        super().__init__(self.base_object.attachments, *args, init_pos=self.get_pos(), **kwargs)
+
+    def get_pos(self):
+        pos_xy = self.base_object.pos_xy + internal_coord_to_xy(
+            Vector2(self.rel_pos.x, self.rel_pos.y), self.base_object.pos.z
+        )
+        return Vector3(pos_xy.x, pos_xy.y, self.base_object.pos.z + self.rel_pos.z)
+
+    def update(self, dt: float):
+        self.pos = self.get_pos()
+        super().update(dt)
 
 
 class UsesPhysics:
