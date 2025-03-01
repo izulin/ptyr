@@ -30,6 +30,8 @@ class Engine(pg.sprite.Sprite):
             self.cooldown -= dt
         ANGLE_SPREAD = 10
         WIDTH = 1.0
+        self.active = min(1.0, self.active)
+        self.active = max(0.0, self.active)
         PARTICLE_SPEED = math.sqrt(0.1 * self.strength * self.active)
         while self.active and self.cooldown < 0.0:
             self.cooldown += math.sqrt(10 / (self.strength * self.active))

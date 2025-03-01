@@ -1,8 +1,14 @@
 from __future__ import annotations
 import pygame as pg
 import sys
-import init  # noqa: F401
 
+from timers import TIMERS, Timer
+from logger import logger
+
+with Timer("pg.init"):
+    import pg_init  # noqa: F401
+
+from text import display_text
 from consts import FPS, BLACK, ALL_SHIFTS
 from delayed import DelayedEvent
 from display import DISPLAYSURF, ALL_CHANGES_DISPLAYSURF
@@ -17,149 +23,149 @@ from groups import (
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_WITH_UPDATE,
     ALL_OBJECTS,
-)
+    )
 from collision_logic import (
     _colliding_colliding_logic,
     _player_powerup_logic,
-)
-from timers import TIMERS
+    )
 
 from assets import BackgroundImage
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import Object
-from logger import logger
 
-
-logger.info("Started")
 
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
-FramePerSec = pg.time.Clock()
 
-font = pg.font.SysFont("Lucida Console", 60)
-font_small = pg.font.SysFont("Lucida Console", 20)
+class Game:
+    def __init__(self):
+        self.SHOW_SPEEDS = False
+        self.SHOW_HP = 1
+        self.FramePerSec = pg.time.Clock()
+        self.done = False
 
-pg.display.set_caption("NotTyrian")
+        pg.display.set_caption("Project Iapetus")
 
-SHOW_SPEEDS = False
-SHOW_HP = 1
+        with Timer("Game state init"):
+            spawn_player(1)
+            spawn_player(2)
 
-with TIMERS["init"]:
-    spawn_player(1)
-    spawn_player(2)
+            while len(ALL_ENEMIES) < 10:
+                spawn_asteroid()
 
-    while len(ALL_ENEMIES) < 10:
-        spawn_asteroid()
+        DelayedEvent(
+            lambda: spawn_asteroid() if len(ALL_ENEMIES) < 30 else None,
+            5000,
+            repeat=True,
+            name="spawn_asteroid",
+                )
 
-DelayedEvent(
-    lambda: spawn_asteroid() if len(ALL_ENEMIES) < 30 else None,
-    5000,
-    repeat=True,
-    name="spawn_asteroid",
-)
-
-
-
-
-def main():
-    cnt = 0
-    all_shift_sprites: dict(tuple(int, int), pg.sprite.LayeredUpdates) = {
-        (shift.x, shift.y): pg.sprite.LayeredUpdates(*ALL_DRAWABLE_OBJECTS)
-        for shift in ALL_SHIFTS
-    }
-
-    while True:
+    def event_loop(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                return
+                self.done = True
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
-                    return
+                    self.done = True
                 elif event.key == pg.K_BACKSPACE:
-                    global SHOW_SPEEDS
-                    SHOW_SPEEDS = not SHOW_SPEEDS
+                    self.SHOW_SPEEDS = not self.SHOW_SPEEDS
                 elif event.key == pg.K_EQUALS:
-                    global SHOW_HP
-                    SHOW_HP = (SHOW_HP + 1) % 3
+                    self.SHOW_HP = (self.SHOW_HP + 1) % 3
 
-        with TIMERS["shifts"]:
-            for g in all_shift_sprites.values():
-                g.add(ALL_DRAWABLE_OBJECTS)
-
-        with TIMERS["clears"]:
-            for g in all_shift_sprites.values():
-                g.clear(DISPLAYSURF, BackgroundImage)
-        with TIMERS["blits"]:
-            for change in ALL_CHANGES_DISPLAYSURF:
-                DISPLAYSURF.blit(BackgroundImage, change, change)
-
-        ALL_CHANGES_DISPLAYSURF.clear()
-
-        with TIMERS["draw"]:
-            for shift in ALL_SHIFTS:
-                for sprite in ALL_DRAWABLE_OBJECTS:
-                    sprite.rect.move_ip(shift)
-                all_shift_sprites[(shift.x, shift.y)].draw(DISPLAYSURF)
-                for sprite in ALL_DRAWABLE_OBJECTS:
-                    sprite.rect.move_ip(-shift)
-
-        with TIMERS["debugs"]:
-            if SHOW_SPEEDS:
-                sprite: Object
-                for sprite in ALL_DRAWABLE_OBJECTS:
-                    try:
-                        sprite.draw_debugs()
-                    except AttributeError:
-                        pass
-
-        with TIMERS["UX"]:
-            if SHOW_HP == 2:
-                sprite: Object
-                for sprite in ALL_UI_DRAWABLE_OBJECTS:
-                    sprite.draw_ui()
-            elif SHOW_HP == 1:
-                for player in ALL_PLAYERS:
-                    player.draw_ui()
-
-        fps = FramePerSec.get_fps()
-        fps_render = font_small.render(f"{fps:.2f}.", True, BLACK)
-
-        with TIMERS["blits"]:
-            ALL_CHANGES_DISPLAYSURF.append(DISPLAYSURF.blit(fps_render, (10, 10)))
-
-        pg.display.flip()
-
-        dt = FramePerSec.tick(FPS)
-
-        with TIMERS["update"]:
-            ALL_WITH_UPDATE.update(dt)
-            for sprite in ALL_OBJECTS:
-                if not sprite.alive_state:
-                    sprite.kill()
-                    sprite.on_death()
-
-        with TIMERS["collide"]:
-            for sprite in ALL_COLLIDING_OBJECTS:
-                ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                    sprite, on_collision=_colliding_colliding_logic
-                )
-            for player in ALL_PLAYERS:
-                ALL_POWERUPS.cd.collide_with_callback(
-                    player, on_collision=_player_powerup_logic
-                )
-
-        cnt += 1
-        if cnt % 1000 == 0:
+    def stats(self):
+        self.cnt = getattr(self, "cnt", 0) + 1
+        if self.cnt % 1000 == 0:
+            total = Timer()
+            total.cnt = 1000
+            total.val = sum(timer.val for timer in TIMERS.values())
             logger.info(
-                f"total:{sum(timer.val for timer in TIMERS.values()):.3f} "
+                f"total:{total} "
                 + " ".join(f"{k}:{v}" for k, v in TIMERS.items())
             )
             for t in TIMERS.values():
                 t.reset()
 
+    def updates(self, dt: float):
+        ALL_WITH_UPDATE.update(dt)
+        for sprite in ALL_OBJECTS:
+            if not sprite.alive_state:
+                sprite.kill()
+                sprite.on_death()
 
-main()
+    def collisions(self):
+        for sprite in ALL_COLLIDING_OBJECTS:
+            ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+                sprite, on_collision=_colliding_colliding_logic
+            )
+        for player in ALL_PLAYERS:
+            ALL_POWERUPS.cd.collide_with_callback(
+                player, on_collision=_player_powerup_logic
+            )
+
+
+    def main(self):
+        while not self.done:
+            self.event_loop()
+
+            with TIMERS["clears"]:
+                for g in ALL_DRAWABLE_OBJECTS.values():
+                    g.clear(DISPLAYSURF, BackgroundImage)
+            with TIMERS["blits"]:
+                for change in ALL_CHANGES_DISPLAYSURF:
+                    DISPLAYSURF.blit(BackgroundImage, change, change)
+
+            ALL_CHANGES_DISPLAYSURF.clear()
+
+            with TIMERS["draw"]:
+                for shift in ALL_SHIFTS:
+                    for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
+                        sprite.rect.move_ip(shift)
+                    ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)].draw(DISPLAYSURF)
+                    for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
+                        sprite.rect.move_ip(-shift)
+
+            with TIMERS["debugs"]:
+                if self.SHOW_SPEEDS:
+                    sprite: Object
+                    for sprite in ALL_DRAWABLE_OBJECTS:
+                        try:
+                            sprite.draw_debugs()
+                        except AttributeError:
+                            pass
+
+            with TIMERS["UX"]:
+                if self.SHOW_HP == 2:
+                    sprite: Object
+                    for sprite in ALL_UI_DRAWABLE_OBJECTS:
+                        sprite.draw_ui()
+                elif self.SHOW_HP == 1:
+                    for player in ALL_PLAYERS:
+                        player.draw_ui()
+
+            fps = self.FramePerSec.get_fps()
+
+            display_text(f"{fps:.2f}.", BLACK, (10,10))
+
+            with TIMERS["flip"]:
+                pg.display.flip()
+
+            dt = self.FramePerSec.tick(FPS)
+
+            with TIMERS["updates"]:
+                self.updates(dt)
+
+
+            with TIMERS["collisions"]:
+                self.collisions()
+
+            self.stats()
+
+
+Game().main()
+
+
 logger.info("Finished")
 pg.quit()
 sys.exit()

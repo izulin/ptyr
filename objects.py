@@ -183,7 +183,7 @@ class DrawableObject:
             self._image = random.choice(image)
         else:
             self._image = image
-        super().__init__(ALL_DRAWABLE_OBJECTS, *args, **kwargs)
+        super().__init__(*ALL_DRAWABLE_OBJECTS.values(), *args, **kwargs)
 
     def get_surface(self) -> CachedSurface:
         raise NotImplementedError
