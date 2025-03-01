@@ -84,7 +84,9 @@ class Attached:
         self.base_object = base_object
         self.priority = getattr(self.base_object, "priority", 0)
         self.rel_pos = Vector3(init_rel_pos)
-        super().__init__(self.base_object.attachments, *args, init_pos=self.get_pos(), **kwargs)
+        super().__init__(
+            self.base_object.attachments, *args, init_pos=self.get_pos(), **kwargs
+        )
 
     def get_pos(self):
         pos_xy = self.base_object.pos_xy + internal_coord_to_xy(

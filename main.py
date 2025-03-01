@@ -23,11 +23,11 @@ from groups import (
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_WITH_UPDATE,
     ALL_OBJECTS,
-    )
+)
 from collision_logic import (
     _colliding_colliding_logic,
     _player_powerup_logic,
-    )
+)
 
 from assets import BackgroundImage
 
@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 
 
 DISPLAYSURF.blit(BackgroundImage, (0, 0))
+
 
 class Game:
     def __init__(self):
@@ -60,7 +61,7 @@ class Game:
             5000,
             repeat=True,
             name="spawn_asteroid",
-                )
+        )
 
     def event_loop(self):
         for event in pg.event.get():
@@ -81,8 +82,7 @@ class Game:
             total.cnt = 1000
             total.val = sum(timer.val for timer in TIMERS.values())
             logger.info(
-                f"total:{total} "
-                + " ".join(f"{k}:{v}" for k, v in TIMERS.items())
+                f"total:{total} " + " ".join(f"{k}:{v}" for k, v in TIMERS.items())
             )
             for t in TIMERS.values():
                 t.reset()
@@ -103,7 +103,6 @@ class Game:
             ALL_POWERUPS.cd.collide_with_callback(
                 player, on_collision=_player_powerup_logic
             )
-
 
     def main(self):
         while not self.done:
@@ -146,7 +145,7 @@ class Game:
 
             fps = self.FramePerSec.get_fps()
 
-            display_text(f"{fps:.2f}.", BLACK, (10,10))
+            display_text(f"{fps:.2f}.", BLACK, (10, 10))
 
             with TIMERS["flip"]:
                 pg.display.flip()
@@ -155,7 +154,6 @@ class Game:
 
             with TIMERS["updates"]:
                 self.updates(dt)
-
 
             with TIMERS["collisions"]:
                 self.collisions()

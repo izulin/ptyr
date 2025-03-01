@@ -35,9 +35,8 @@ ALL_OBJECTS: pg.sprite.Group = pg.sprite.Group()
 ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
 
 ALL_DRAWABLE_OBJECTS: dict(tuple(int, int), pg.sprite.LayeredUpdates) = {
-            (shift.x, shift.y): pg.sprite.LayeredUpdates()
-            for shift in ALL_SHIFTS
-        }
+    (shift.x, shift.y): pg.sprite.LayeredUpdates() for shift in ALL_SHIFTS
+}
 
 ALL_POWERUPS: GroupWithCD = GroupWithCD()
 ALL_UI_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()

@@ -24,10 +24,11 @@ class Timer:
             logger.info(f"{self.name} {self}.")
 
     def __repr__(self):
-        return pprint(self.val/self.cnt)
+        return pprint(self.val / self.cnt)
 
     def reset(self):
         self.val = 0
+
 
 def pprint(t):
     if t >= 1:
@@ -43,5 +44,6 @@ def pprint(t):
         scale = 1e9
         unit = "ns"
     return f"{scale * t:.1f}{unit}"
+
 
 TIMERS: dict[str, Timer] = defaultdict(Timer)

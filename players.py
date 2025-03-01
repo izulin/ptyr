@@ -32,6 +32,7 @@ from weapons import Weapon, SmallMissileWeapon, LaserWeapon
 from logger import logger
 
 import pygame._sdl2.controller as controller
+
 controller.init()
 logger.info(f"Num of controllers: {controller.get_count()}")
 
@@ -60,7 +61,13 @@ class Player(
     player_id: int
 
     def __init__(
-        self, *args, controls: dict[str, int], player_id: int, color: pg.Color, gamepad: controller.Controller, **kwargs
+        self,
+        *args,
+        controls: dict[str, int],
+        player_id: int,
+        color: pg.Color,
+        gamepad: controller.Controller,
+        **kwargs,
     ):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
         self.color = color
@@ -114,15 +121,19 @@ class Player(
     def update(self, dt: float):
         self.use_defaults()
         pressed_keys = pg.key.get_pressed()
-        if pressed_keys[self.controls["shoot"]] or self.gamepad.get_button(pg.CONTROLLER_BUTTON_B):
+        if pressed_keys[self.controls["shoot"]] or self.gamepad.get_button(
+            pg.CONTROLLER_BUTTON_B
+        ):
             if self.weapon is not None:
                 self.weapon.fire()
-        if pressed_keys[self.controls["secondary"]] or self.gamepad.get_button(pg.CONTROLLER_BUTTON_A):
+        if pressed_keys[self.controls["secondary"]] or self.gamepad.get_button(
+            pg.CONTROLLER_BUTTON_A
+        ):
             if self.secondary_weapon is not None:
                 self.secondary_weapon.fire()
 
-        left_right_axis = self.gamepad.get_axis(0)/2**15
-        forward_backward_axis = self.gamepad.get_axis(1)/2**15
+        left_right_axis = self.gamepad.get_axis(0) / 2**15
+        forward_backward_axis = self.gamepad.get_axis(1) / 2**15
         left_dir = max(-left_right_axis, 0.0)
         if pressed_keys[self.controls["left_turn"]]:
             left_dir += 1.0
@@ -144,7 +155,6 @@ class Player(
         if backward_dir < 0.25:
             backward_dir = 0.0
 
-
         for engine in self.all_engines:
             engine.active = 0
         self.back_engine.active += forward_dir
@@ -152,10 +162,14 @@ class Player(
         self.back_left_engine.active += forward_dir
         self.front_right_engine.active += backward_dir
         self.front_left_engine.active += backward_dir
-        if pressed_keys[self.controls["right_strafe"]] or self.gamepad.get_button(pg.CONTROLLER_BUTTON_RIGHTSHOULDER):
+        if pressed_keys[self.controls["right_strafe"]] or self.gamepad.get_button(
+            pg.CONTROLLER_BUTTON_RIGHTSHOULDER
+        ):
             self.back_left_engine.active += 1
             self.front_left_engine.active += 1
-        if pressed_keys[self.controls["left_strafe"]] or self.gamepad.get_button(pg.CONTROLLER_BUTTON_LEFTSHOULDER):
+        if pressed_keys[self.controls["left_strafe"]] or self.gamepad.get_button(
+            pg.CONTROLLER_BUTTON_LEFTSHOULDER
+        ):
             self.back_right_engine.active += 1
             self.front_right_engine.active += 1
         self.back_left_engine.active += left_dir
@@ -176,12 +190,14 @@ class Player(
         explosion_effect(owner=self)
         super().on_death()
 
+
 class MockController:
     def get_button(self, i: int):
         return False
 
     def get_axis(self, *args, **kwargs):
         return 0
+
 
 def spawn_player(player_id):
     assert get_player(player_id) is None
@@ -190,13 +206,13 @@ def spawn_player(player_id):
     image = {1: PlayerImages[2], 2: PlayerImages[1]}[player_id]
     color = {1: GREEN, 2: CYAN}[player_id]
     try:
-        gamepad = controller.Controller(player_id-1)
-    except:
+        gamepad = controller.Controller(player_id - 1)
+    except: #noqa E722
         gamepad = MockController()
     spawned_players = try_and_spawn_object(
         lambda: Player(
             controls=controls,
-            gamepad = gamepad,
+            gamepad=gamepad,
             image=image,
             init_pos=(
                 random.randint(0, SCREEN_WIDTH),

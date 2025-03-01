@@ -5,6 +5,7 @@ from surface import CachedSurface, CachedAnimation
 from timers import Timer
 
 with Timer("Assets"):
+
     def load_from_file(
         posx: int, posy: int, sizex: int, sizey: int, filename: str
     ) -> pg.Surface:
@@ -12,7 +13,6 @@ with Timer("Assets"):
         image = pg.image.load(filename).convert_alpha()
         ret_surface.blit(image, (0, 0), (posx, posy, sizex, sizey))
         return remove_background(ret_surface)
-
 
     def load_double_from_file(
         posx: int, posy: int, sizex: int, sizey: int, filename: str
@@ -23,7 +23,6 @@ with Timer("Assets"):
         ret_surface.blit(image, (sizex, 0), (posx, posy + sizey, sizex, sizey))
         return remove_background(ret_surface)
 
-
     def load_double_reversed_from_file(
         posx: int, posy: int, sizex: int, sizey: int, filename: str
     ) -> pg.Surface:
@@ -32,7 +31,6 @@ with Timer("Assets"):
         ret_surface.blit(image, (sizex, 0), (posx, posy, sizex, sizey))
         ret_surface.blit(image, (0, 0), (posx, posy + sizey, sizex, sizey))
         return remove_background(ret_surface)
-
 
     def load_quad_from_file(
         posx: int, posy: int, sizex: int, sizey: int, filename: str
@@ -45,20 +43,17 @@ with Timer("Assets"):
         ret_surface.blit(image, (sizex, sizey), (posx, posy + 3 * sizey, sizex, sizey))
         return remove_background(ret_surface)
 
-
     def pad(surface: pg.Surface) -> pg.Surface:
         x, y = surface.get_size()
         ret_surface = pg.Surface((x + 2, y + 2), flags=pg.SRCALPHA)
         ret_surface.blit(surface, (1, 1))
         return ret_surface
 
-
     def remove_background(surface: pg.Surface) -> pg.Surface:
         """In place removal."""
         pxarray = pg.PixelArray(surface)
         pxarray.replace((191, 220, 191, 255), (0, 0, 0, 0), 0.001)
         return surface
-
 
     PlayerImages = [
         CachedSurface(
@@ -160,7 +155,9 @@ with Timer("Assets"):
 
     MineAnimation = CachedAnimation(
         [
-            load_from_file(192, 113 + 28 * i, 22, 22, "assets/tyrian/newsha.shp.000000.png")
+            load_from_file(
+                192, 113 + 28 * i, 22, 22, "assets/tyrian/newsha.shp.000000.png"
+            )
             for i in range(3)
         ],
         animation_time=3_000,
