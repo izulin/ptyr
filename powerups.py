@@ -91,5 +91,5 @@ def get_random_powerup() -> type[PowerUp]:
             MineLauncherWeaponPowerUp,
             MissileLauncherWeaponPowerUp,
             LaserWeaponPowerUp,
-        ]
+        ],
     )

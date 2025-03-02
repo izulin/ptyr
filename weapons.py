@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import math
 
 from pygame import Vector2, Vector3
@@ -42,23 +43,27 @@ class Weapon(Status):
         launch_speed_internal = Vector2(0.0, launch_speed).rotate(launch_angle)
 
         init_pos = self.owner.pos + Vector3(
-            *internal_coord_to_xy(launch_pos_internal, self.owner.pos.z), launch_angle
+            *internal_coord_to_xy(launch_pos_internal, self.owner.pos.z),
+            launch_angle,
         )
 
         rotational_delta = launch_pos_internal.rotate(90) * math.radians(
-            self.owner.speed.z
+            self.owner.speed.z,
         )
 
         init_speed = self.owner.speed + Vector3(
             *internal_coord_to_xy(
-                launch_speed_internal + rotational_delta, self.owner.pos.z
+                launch_speed_internal + rotational_delta,
+                self.owner.pos.z,
             ),
             0.0,
         )
 
         return try_and_spawn_object(
             lambda: self.AMMO_CLS(
-                init_pos=init_pos, init_speed=init_speed, owner=self.owner
+                init_pos=init_pos,
+                init_speed=init_speed,
+                owner=self.owner,
             ),
             1,
             1,
@@ -70,7 +75,7 @@ class Weapon(Status):
         # momentum moment / inertia moment = angular speed
         rotational_recoil = (
             Vector3(launch_pos_internal.x, launch_pos_internal.y, 0.0).cross(
-                Vector3(launch_speed_internal.x, launch_speed_internal.y, 0.0)
+                Vector3(launch_speed_internal.x, launch_speed_internal.y, 0.0),
             )
             * self.AMMO_CLS.MASS
             / self.owner.inertia_moment
@@ -126,13 +131,12 @@ class LaserShard(StaticDrawable, Attached, Object):
 
     def update(self, dt: float):
         for obj in ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-            self, on_collision=None
+            self,
+            on_collision=None,
         ):
             if obj.owner != self.owner:
-                try:
+                with contextlib.suppress(AttributeError):
                     obj.apply_damage(dt / 10)
-                except AttributeError:
-                    pass
         self.kill()
 
 
@@ -146,13 +150,16 @@ class LaserWeapon(Primary, Weapon):
         for i in range(10):
             shard = self.AMMO_CLS(
                 init_rel_pos=Vector3(
-                    6, 13 + (self.AMMO_CLS.IMAGE.get_rect().h - 1) * (i + 1 / 2), 0
+                    6,
+                    13 + (self.AMMO_CLS.IMAGE.get_rect().h - 1) * (i + 1 / 2),
+                    0,
                 ),
                 owner=self.owner,
                 base_object=self.owner,
             )
             if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                shard, on_collision=None
+                shard,
+                on_collision=None,
             ):
                 col = [c for c in col if c is not self.owner]
                 if col:
@@ -161,13 +168,16 @@ class LaserWeapon(Primary, Weapon):
         for i in range(10):
             shard = self.AMMO_CLS(
                 init_rel_pos=Vector3(
-                    -6, 13 + (self.AMMO_CLS.IMAGE.get_rect().h - 1) * (i + 1 / 2), 0
+                    -6,
+                    13 + (self.AMMO_CLS.IMAGE.get_rect().h - 1) * (i + 1 / 2),
+                    0,
                 ),
                 owner=self.owner,
                 base_object=self.owner,
             )
             if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                shard, on_collision=None
+                shard,
+                on_collision=None,
             ):
                 col = [c for c in col if c is not self.owner]
                 if col:

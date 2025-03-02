@@ -28,7 +28,7 @@ def explosion_effect(
     def _tmp():
         dpos = Vector3(
             *Vector2(random.uniform(pos_spread, pos_spread * 1.5), 0.0).rotate(
-                random.uniform(0, 360)
+                random.uniform(0, 360),
             ),
             0.0,
         )

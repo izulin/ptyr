@@ -49,7 +49,7 @@ class Engine(pg.sprite.Sprite):
                 + Vector3(
                     *internal_coord_to_xy(
                         Vector2(0.0, PARTICLE_SPEED).rotate(
-                            self.pos.z + random.uniform(-ANGLE_SPREAD, ANGLE_SPREAD)
+                            self.pos.z + random.uniform(-ANGLE_SPREAD, ANGLE_SPREAD),
                         ),
                         self.owner.pos.z,
                     ),

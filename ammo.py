@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+
 from pygame import Vector3
 
 from assets import MineAnimation, SmallBulletImage, SmallMissileImage
@@ -26,10 +28,8 @@ class Bullet(Collides, UsesPhysics, HasMass, Object):
 
     def on_collision(self, other: Object):
         if other != self.owner:
-            try:
+            with contextlib.suppress(AttributeError):
                 other.apply_damage(self.DMG)
-            except AttributeError:
-                pass
             self.mark_dead()
         super().on_collision(other)
 
@@ -45,7 +45,13 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
 
 
 class SmallMissile(
-    StaticDrawable, HasEngines, Collides, UsesPhysics, HasMass, HasTimer, Object
+    StaticDrawable,
+    HasEngines,
+    Collides,
+    UsesPhysics,
+    HasMass,
+    HasTimer,
+    Object,
 ):
     MASS = 2.0
     DMG = 30.0
@@ -64,19 +70,17 @@ class SmallMissile(
     def update(self, dt: float):
         self.back_engine.active = int(self.alive_time < self.acc_time)
         self.back_left_engine.active = int(self.speed.z <= 0) * int(
-            self.alive_time < self.acc_time
+            self.alive_time < self.acc_time,
         )
         self.back_right_engine.active = int(self.speed.z >= 0) * int(
-            self.alive_time < self.acc_time
+            self.alive_time < self.acc_time,
         )
         super().update(dt)
 
     def on_collision(self, other: Object):
         if other != self.owner:
-            try:
+            with contextlib.suppress(AttributeError):
                 other.apply_damage(self.DMG)
-            except AttributeError:
-                pass
             self.mark_dead()
         super().on_collision(other)
 

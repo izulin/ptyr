@@ -33,7 +33,9 @@ def normalize_pos2(pos: Vector2):
 
 def normalize_pos3(pos: Vector3):
     return Vector3(
-        pos.x % CONFIG.SCREEN_WIDTH, pos.y % CONFIG.SCREEN_HEIGHT, pos.z % 360
+        pos.x % CONFIG.SCREEN_WIDTH,
+        pos.y % CONFIG.SCREEN_HEIGHT,
+        pos.z % 360,
     )
 
 

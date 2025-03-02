@@ -19,7 +19,7 @@ class MenuElement:
 class TextMenuElement(MenuElement):
     text: str
 
-    def __init__(self, text: str = None):
+    def __init__(self, text: str | None = None):
         if text is not None:
             self.text = text
 
@@ -58,7 +58,7 @@ class Menu:
             DISPLAYSURF.blit(
                 RightArrowImage,
                 (posx - CONFIG.SCREEN_WIDTH / 10, posy + self.attention * step_y),
-            )
+            ),
         )
 
     def take_action(self):

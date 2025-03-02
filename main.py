@@ -10,7 +10,7 @@ from timers import TIMERS, Timer
 with Timer("pg.init"):
     import pg_init  # noqa: F401
 
-from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF # noqa: I001
+from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF  # noqa: I001
 
 from typing import TYPE_CHECKING
 
@@ -36,6 +36,7 @@ from groups import (
 from menu import MENU_STACK, init_menu
 from players import spawn_player
 from text import display_text
+import contextlib
 
 if TYPE_CHECKING:
     from objects import Object
@@ -90,7 +91,7 @@ class Game:
             total.cnt = 1000
             total.val = sum(timer.val for timer in TIMERS.values())
             logger.info(
-                f"total:{total} " + " ".join(f"{k}:{v}" for k, v in TIMERS.items())
+                f"total:{total} " + " ".join(f"{k}:{v}" for k, v in TIMERS.items()),
             )
             for t in TIMERS.values():
                 t.reset()
@@ -105,11 +106,13 @@ class Game:
     def collisions(self):
         for sprite in ALL_COLLIDING_OBJECTS:
             ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
-                sprite, on_collision=_colliding_colliding_logic
+                sprite,
+                on_collision=_colliding_colliding_logic,
             )
         for player in ALL_PLAYERS:
             ALL_POWERUPS.cd.collide_with_callback(
-                player, on_collision=_player_powerup_logic
+                player,
+                on_collision=_player_powerup_logic,
             )
 
     def main(self):
@@ -137,10 +140,8 @@ class Game:
                 if CONFIG.SHOW_SPEEDS:
                     sprite: Object
                     for sprite in ALL_DRAWABLE_OBJECTS:
-                        try:
+                        with contextlib.suppress(AttributeError):
                             sprite.draw_debugs()
-                        except AttributeError:
-                            pass
 
             with TIMERS["UX"]:
                 if CONFIG.SHOW_HP == 2:
@@ -157,7 +158,7 @@ class Game:
 
             if MENU_STACK:
                 MENU_STACK[-1].draw(
-                    (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10)
+                    (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10),
                 )
 
             with TIMERS["flip"]:

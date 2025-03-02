@@ -10,7 +10,9 @@ fonts = {}
 for bold in [False, True]:
     for size in range(1, 6):
         fonts[(bold, size)] = pg.font.SysFont(
-            "Lucida Console", int((CONFIG.SCREEN_HEIGHT / 50) * size), bold=bold
+            "Lucida Console",
+            int((CONFIG.SCREEN_HEIGHT / 50) * size),
+            bold=bold,
         )
 
 

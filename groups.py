@@ -46,7 +46,9 @@ ALL_WITH_UPDATE: GroupWithPriority = GroupWithPriority()
 
 
 def try_and_spawn_object(
-    func: Callable[[], Collides], num_copies: int, total_tries: int
+    func: Callable[[], Collides],
+    num_copies: int,
+    total_tries: int,
 ):
     succ = []
     while total_tries > 0 and len(succ) < num_copies:

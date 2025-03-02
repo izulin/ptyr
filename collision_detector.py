@@ -67,7 +67,10 @@ class CollisionDetector:
                 self._division[(x, y)].remove(sprite)
 
     def _collide_with_callback(
-        self, sprite: DrawableObject, *, on_collision=None
+        self,
+        sprite: DrawableObject,
+        *,
+        on_collision=None,
     ) -> list[DrawableObject]:
         rect: pg.Rect = sprite.rect
         x_start = rect.left // self.subs
@@ -85,7 +88,8 @@ class CollisionDetector:
                     ):
                         continue
                     if pg.sprite.collide_rect(sprite, other) and pg.sprite.collide_mask(
-                        sprite, other
+                        sprite,
+                        other,
                     ):
                         ret.append(other)
                         if on_collision is None:
@@ -94,7 +98,10 @@ class CollisionDetector:
         return ret
 
     def collide_with_callback(
-        self, sprite: DrawableObject, *, on_collision=None
+        self,
+        sprite: DrawableObject,
+        *,
+        on_collision=None,
     ) -> list[DrawableObject]:
         ret = []
         for shift in ALL_SHIFTS:

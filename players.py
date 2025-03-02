@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import random
+from typing import TYPE_CHECKING
 
 import pygame as pg
 from pygame import Vector3
-from pygame._sdl2.controller import Controller
 
 from assets import PlayerImages
 from config import CONFIG
@@ -31,6 +31,9 @@ from objects import (
 )
 from postprocessing import with_outline
 from weapons import LaserWeapon, SmallMissileWeapon, Weapon
+
+if TYPE_CHECKING:
+    from pygame._sdl2.controller import Controller
 
 
 class Player(
@@ -74,7 +77,9 @@ class Player(
         self.use_defaults()
         self.player_id = player_id
         self.back_engine = Engine(
-            pos=Vector3(0, -10, 180), strength=1, owner=self.owner
+            pos=Vector3(0, -10, 180),
+            strength=1,
+            owner=self.owner,
         )
         self.back_left_engine = Engine(
             pos=Vector3(-5, -9, 90 + 45),
@@ -117,16 +122,20 @@ class Player(
     def update(self, dt: float):
         self.use_defaults()
         pressed_keys = pg.key.get_pressed()
-        if pressed_keys[self.controls["shoot"]] or self.gamepad.get_button(
-            pg.CONTROLLER_BUTTON_B
-        ):
-            if self.weapon is not None:
-                self.weapon.fire()
-        if pressed_keys[self.controls["secondary"]] or self.gamepad.get_button(
-            pg.CONTROLLER_BUTTON_A
-        ):
-            if self.secondary_weapon is not None:
-                self.secondary_weapon.fire()
+        if (
+            pressed_keys[self.controls["shoot"]]
+            or self.gamepad.get_button(
+                pg.CONTROLLER_BUTTON_B,
+            )
+        ) and self.weapon is not None:
+            self.weapon.fire()
+        if (
+            pressed_keys[self.controls["secondary"]]
+            or self.gamepad.get_button(
+                pg.CONTROLLER_BUTTON_A,
+            )
+        ) and self.secondary_weapon is not None:
+            self.secondary_weapon.fire()
 
         left_right_axis = self.gamepad.get_axis(0) / 2**15
         forward_backward_axis = self.gamepad.get_axis(1) / 2**15
@@ -159,12 +168,12 @@ class Player(
         self.front_right_engine.active += backward_dir
         self.front_left_engine.active += backward_dir
         if pressed_keys[self.controls["right_strafe"]] or self.gamepad.get_button(
-            pg.CONTROLLER_BUTTON_RIGHTSHOULDER
+            pg.CONTROLLER_BUTTON_RIGHTSHOULDER,
         ):
             self.back_left_engine.active += 1
             self.front_left_engine.active += 1
         if pressed_keys[self.controls["left_strafe"]] or self.gamepad.get_button(
-            pg.CONTROLLER_BUTTON_LEFTSHOULDER
+            pg.CONTROLLER_BUTTON_LEFTSHOULDER,
         ):
             self.back_right_engine.active += 1
             self.front_right_engine.active += 1

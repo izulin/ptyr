@@ -1,4 +1,4 @@
-import pygame._sdl2.controller as controller
+from pygame._sdl2 import controller
 
 from logger import logger
 

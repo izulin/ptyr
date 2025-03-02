@@ -49,7 +49,10 @@ def get_collision_point(a: DrawableObject, b: DrawableObject) -> Vector2:
 
 
 def collide_objects(
-    a: Collides, b: Collides, collision_point: Vector2, elasticity=0.75
+    a: Collides,
+    b: Collides,
+    collision_point: Vector2,
+    elasticity=0.75,
 ) -> float:
     a_r: Vector2 = collision_point - a.pos_xy
     b_r: Vector2 = collision_point - b.pos_xy
@@ -73,10 +76,10 @@ def collide_objects(
     )
 
     a_dspeed = impulse_ / a.mass + impulse_.cross(
-        Vector3(a_r.x, a_r.y, 0)
+        Vector3(a_r.x, a_r.y, 0),
     ) / a.inertia_moment * math.degrees(1)
     b_dspeed = -impulse_ / b.mass - impulse_.cross(
-        Vector3(b_r.x, b_r.y, 0)
+        Vector3(b_r.x, b_r.y, 0),
     ) / b.inertia_moment * math.degrees(1)
 
     A = (

@@ -32,6 +32,8 @@ from math_utils import (
 if TYPE_CHECKING:
     from surface import CachedAnimation, CachedSurface
 
+import contextlib
+
 from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF
 from surface import CachedSurface
 
@@ -85,12 +87,16 @@ class Attached:
         self.priority = getattr(self.base_object, "priority", 0)
         self.rel_pos = Vector3(init_rel_pos)
         super().__init__(
-            self.base_object.attachments, *args, init_pos=self.get_pos(), **kwargs
+            self.base_object.attachments,
+            *args,
+            init_pos=self.get_pos(),
+            **kwargs,
         )
 
     def get_pos(self):
         pos_xy = self.base_object.pos_xy + internal_coord_to_xy(
-            Vector2(self.rel_pos.x, self.rel_pos.y), self.base_object.pos.z
+            Vector2(self.rel_pos.x, self.rel_pos.y),
+            self.base_object.pos.z,
         )
         return Vector3(pos_xy.x, pos_xy.y, self.base_object.pos.z + self.rel_pos.z)
 
@@ -149,7 +155,7 @@ class UsesPhysics:
                     shift + pos_xy,
                     shift + pos_xy + dt * speed_xy,
                     1,
-                )
+                ),
             )
             dt = 200000
             ALL_CHANGES_DISPLAYSURF.append(
@@ -159,7 +165,7 @@ class UsesPhysics:
                     shift + pos_xy,
                     shift + pos_xy + dt * self._acc,
                     1,
-                )
+                ),
             )
             ALL_CHANGES_DISPLAYSURF.append(
                 pg.draw.line(
@@ -168,7 +174,7 @@ class UsesPhysics:
                     shift + pos_xy + dt * self._acc,
                     shift + pos_xy + dt * self._acc - dt * self._drag,
                     1,
-                )
+                ),
             )
 
 
@@ -197,10 +203,8 @@ class DrawableObject:
         )
         self.mask = self.get_surface().get_mask(self.pos.z)
         self.image = self.get_surface().get_image(self.pos.z)
-        try:
+        with contextlib.suppress(AttributeError):
             self.image = self.with_postprocessing()
-        except AttributeError:
-            pass
 
     def update(self, dt: float):
         old_rect = self.rect
@@ -239,7 +243,7 @@ class DrawsUI:
                 _rect = bar.copy()
                 ALL_CHANGES_DISPLAYSURF.append(pg.draw.rect(DISPLAYSURF, BLACK, bar))
                 ALL_CHANGES_DISPLAYSURF.append(
-                    pg.draw.rect(DISPLAYSURF, color, bar, width=1)
+                    pg.draw.rect(DISPLAYSURF, color, bar, width=1),
                 )
                 bar.width = bar.width * fill
                 ALL_CHANGES_DISPLAYSURF.append(pg.draw.rect(DISPLAYSURF, color, bar))
@@ -300,11 +304,11 @@ class HasEngines(UsesPhysics):
         thrust = super().get_accels()
         for engine in self.all_engines:
             impulse = Vector2(0, -engine.active * engine.strength / 1000).rotate(
-                engine.pos.z
+                engine.pos.z,
             )
             impulse_ = Vector3(impulse.x, impulse.y, 0)
             thrust += impulse_ / self.mass - impulse_.cross(
-                Vector3(engine.pos.x, engine.pos.y, 0)
+                Vector3(engine.pos.x, engine.pos.y, 0),
             ) / self.inertia_moment * math.degrees(1)
 
         return thrust
@@ -324,10 +328,8 @@ class HasHitpoints:
         self.hp -= dmg
         if self.hp <= 0:
             self.mark_dead()
-        try:
+        with contextlib.suppress(AttributeError):
             super().apply_damage(dmg)
-        except AttributeError:
-            pass
 
     def heal_hp(self, heal: float):
         self.hp = min(self.hp + heal, self.HP)

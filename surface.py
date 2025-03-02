@@ -36,7 +36,7 @@ class CachedSurface:
                     for x in range(x_size)
                     for y in range(y_size)
                     if mask.get_at((x, y))
-                ]
+                ],
             )
             + avg(
                 [
@@ -44,14 +44,24 @@ class CachedSurface:
                     for x in range(x_size)
                     for y in range(y_size)
                     if mask.get_at((x, y))
-                ]
+                ],
             )
             - avg(
-                [x for x in range(x_size) for y in range(y_size) if mask.get_at((x, y))]
+                [
+                    x
+                    for x in range(x_size)
+                    for y in range(y_size)
+                    if mask.get_at((x, y))
+                ],
             )
             ** 2
             - avg(
-                [y for x in range(x_size) for y in range(y_size) if mask.get_at((x, y))]
+                [
+                    y
+                    for x in range(x_size)
+                    for y in range(y_size)
+                    if mask.get_at((x, y))
+                ],
             )
             ** 2
         )
@@ -70,7 +80,8 @@ class CachedSurface:
 
     def scale(self, size) -> pg.Surface:
         return CachedSurface(
-            pg.transform.scale(self.get_image(), size), no_rotation=self._no_rotation
+            pg.transform.scale(self.get_image(), size),
+            no_rotation=self._no_rotation,
         )
 
     def scale_by(self, factor: float) -> pg.Surface:
