@@ -1,39 +1,39 @@
 from __future__ import annotations
 
 import math
-
-import pygame as pg
-
-from groups import (
-    GroupWithCD,
-    ALL_DRAWABLE_OBJECTS,
-    ALL_COLLIDING_OBJECTS,
-    ALL_UI_DRAWABLE_OBJECTS,
-    ALL_WITH_UPDATE,
-    ALL_OBJECTS,
-)
-from math_utils import (
-    normalize_pos3,
-    range_kutta_2,
-    internal_coord_to_xy,
-)
-from consts import (
-    WHITE,
-    GREEN,
-    RED,
-    ALL_SHIFTS,
-    BLACK,
-    CYAN,
-)
-from pygame.math import Vector3, Vector2
 import random
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from surface import CachedSurface, CachedAnimation
+import pygame as pg
+from pygame.math import Vector2, Vector3
 
+from consts import (
+    ALL_SHIFTS,
+    BLACK,
+    CYAN,
+    GREEN,
+    RED,
+    WHITE,
+)
+from groups import (
+    ALL_COLLIDING_OBJECTS,
+    ALL_DRAWABLE_OBJECTS,
+    ALL_OBJECTS,
+    ALL_UI_DRAWABLE_OBJECTS,
+    ALL_WITH_UPDATE,
+    GroupWithCD,
+)
+from math_utils import (
+    internal_coord_to_xy,
+    normalize_pos3,
+    range_kutta_2,
+)
+
+if TYPE_CHECKING:
+    from surface import CachedAnimation, CachedSurface
+
+from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF
 from surface import CachedSurface
-from display import DISPLAYSURF, ALL_CHANGES_DISPLAYSURF
 
 
 class Object(pg.sprite.Sprite):

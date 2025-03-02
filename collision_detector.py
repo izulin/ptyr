@@ -1,12 +1,12 @@
 from __future__ import annotations
+
+from collections import defaultdict
+from typing import TYPE_CHECKING
+
 import pygame as pg
 from pygame.math import Vector3
 
 from consts import ALL_SHIFTS
-from collections import defaultdict
-
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import DrawableObject

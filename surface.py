@@ -1,7 +1,9 @@
 from __future__ import annotations
+
+from functools import cached_property
+
 import pygame as pg
 from pygame import Vector2
-from functools import cached_property
 
 
 class CachedSurface:

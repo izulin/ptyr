@@ -4,37 +4,33 @@ import random
 
 import pygame as pg
 from pygame import Vector3
-
+from pygame._sdl2.controller import Controller
 
 from assets import PlayerImages
-from consts import SCREEN_WIDTH, SCREEN_HEIGHT, GREEN, CYAN
+from config import CONFIG
+from consts import CYAN, GREEN
 from controls import PLAYER_1_CONTROLS, PLAYER_2_CONTROLS
 from delayed import DelayedEvent
 from engines import Engine
 from explosions import LargeExplosion, explosion_effect
+from gamepad import get_gamepad
 from groups import (
     ALL_PLAYERS,
     try_and_spawn_object,
 )
 from objects import (
-    Object,
-    HasShield,
-    HasHitpoints,
     Collides,
-    StaticDrawable,
     DrawsUI,
     HasEngines,
-    UsesPhysics,
+    HasHitpoints,
     HasMass,
+    HasShield,
+    Object,
+    StaticDrawable,
+    UsesPhysics,
 )
 from postprocessing import with_outline
-from weapons import Weapon, SmallMissileWeapon, LaserWeapon
-from logger import logger
-
-import pygame._sdl2.controller as controller
-
-controller.init()
-logger.info(f"Num of controllers: {controller.get_count()}")
+from weapons import LaserWeapon, SmallMissileWeapon, Weapon
 
 
 class Player(
@@ -66,7 +62,7 @@ class Player(
         controls: dict[str, int],
         player_id: int,
         color: pg.Color,
-        gamepad: controller.Controller,
+        gamepad: Controller,
         **kwargs,
     ):
         super().__init__(ALL_PLAYERS, *args, **kwargs)
@@ -191,32 +187,21 @@ class Player(
         super().on_death()
 
 
-class MockController:
-    def get_button(self, i: int):
-        return False
-
-    def get_axis(self, *args, **kwargs):
-        return 0
-
-
 def spawn_player(player_id):
     assert get_player(player_id) is None
     assert player_id in [1, 2]
     controls = {1: PLAYER_1_CONTROLS, 2: PLAYER_2_CONTROLS}[player_id]
     image = {1: PlayerImages[2], 2: PlayerImages[1]}[player_id]
     color = {1: GREEN, 2: CYAN}[player_id]
-    try:
-        gamepad = controller.Controller(player_id - 1)
-    except: #noqa E722
-        gamepad = MockController()
+
     spawned_players = try_and_spawn_object(
         lambda: Player(
             controls=controls,
-            gamepad=gamepad,
+            gamepad=get_gamepad(player_id),
             image=image,
             init_pos=(
-                random.randint(0, SCREEN_WIDTH),
-                random.randint(0, SCREEN_HEIGHT),
+                random.randint(0, CONFIG.SCREEN_WIDTH),
+                random.randint(0, CONFIG.SCREEN_HEIGHT),
                 random.randint(0, 360),
             ),
             init_speed=(0, 0, 0),

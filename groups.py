@@ -1,8 +1,10 @@
 from __future__ import annotations
-import pygame as pg
-from collision_detector import CollisionDetector
-from typing import Callable, TYPE_CHECKING
 
+from typing import TYPE_CHECKING, Callable
+
+import pygame as pg
+
+from collision_detector import CollisionDetector
 from consts import ALL_SHIFTS
 
 if TYPE_CHECKING:

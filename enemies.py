@@ -1,22 +1,23 @@
 from __future__ import annotations
 
+import random
+
 from pygame import Vector2, Vector3
 
 from assets import AsteroidLargeImages, AsteroidMediumImages, AsteroidSmallImages
-from consts import SCREEN_WIDTH, SCREEN_HEIGHT, RED
+from config import CONFIG
+from consts import RED
 from explosions import SmallExplosion
 from groups import ALL_ENEMIES, try_and_spawn_object
 from objects import (
-    HasHitpoints,
     Collides,
-    StaticDrawable,
-    Object,
     DrawsUI,
-    UsesPhysics,
+    HasHitpoints,
     HasMass,
+    Object,
+    StaticDrawable,
+    UsesPhysics,
 )
-import random
-
 from postprocessing import with_outline
 from powerups import get_random_powerup
 
@@ -92,8 +93,8 @@ def spawn_asteroid():
     succ = try_and_spawn_object(
         lambda: LargeAsteroid(
             init_pos=[
-                random.randint(0, SCREEN_WIDTH),
-                random.randint(0, SCREEN_HEIGHT),
+                random.randint(0, CONFIG.SCREEN_WIDTH),
+                random.randint(0, CONFIG.SCREEN_HEIGHT),
                 random.randint(0, 360),
             ],
             init_speed=[

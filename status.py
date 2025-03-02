@@ -1,12 +1,14 @@
 from __future__ import annotations
-import pygame as pg
+
 from typing import TYPE_CHECKING
+
+import pygame as pg
 
 from assets import HealPowerupImage
 from groups import ALL_WITH_UPDATE
 
 if TYPE_CHECKING:
-    from objects import Object, HasHitpoints
+    from objects import HasHitpoints, Object
 
 
 class Status(pg.sprite.Sprite):

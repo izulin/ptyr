@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import pygame as pg
 
-from consts import YELLOW, RED, BLACK, WHITE
-from objects import Object, DrawableObject, HasTimer, Collides, UsesPhysics, HasMass
+from consts import BLACK, RED, WHITE, YELLOW
+from objects import Collides, DrawableObject, HasMass, HasTimer, Object, UsesPhysics
 from surface import CachedSurface
 
 particles_cache: dict[tuple[int, ...], CachedSurface] = {}

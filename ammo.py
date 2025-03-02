@@ -2,19 +2,19 @@ from __future__ import annotations
 
 from pygame import Vector3
 
-from assets import SmallBulletImage, MineAnimation, SmallMissileImage
+from assets import MineAnimation, SmallBulletImage, SmallMissileImage
 from engines import Engine
-from explosions import explosion_effect, LargeExplosion, SmallExplosion
+from explosions import LargeExplosion, SmallExplosion, explosion_effect
 from objects import (
-    Collides,
-    Object,
-    HasTimer,
-    StaticDrawable,
     AnimatedDrawable,
-    HasHitpoints,
+    Collides,
     HasEngines,
-    UsesPhysics,
+    HasHitpoints,
     HasMass,
+    HasTimer,
+    Object,
+    StaticDrawable,
+    UsesPhysics,
 )
 from postprocessing import with_outline
 

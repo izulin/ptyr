@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+import math
 import random
+from typing import TYPE_CHECKING
 
 import pygame as pg
-from pygame import Vector3, Vector2
+from pygame import Vector2, Vector3
 
 from groups import ALL_WITH_UPDATE
 from math_utils import internal_coord_to_xy
 from particles import Particle
-import math
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from objects import Object

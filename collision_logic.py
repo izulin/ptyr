@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import math
 import random
+from typing import TYPE_CHECKING
 
 import pygame as pg
 from pygame import Vector2, Vector3
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from powerups import PowerUp
+    from objects import Collides, DrawableObject
     from players import Player
-    from objects import DrawableObject, Collides
+    from powerups import PowerUp
 
 
 def sample_from_mask(mask: pg.Mask):

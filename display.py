@@ -1,9 +1,9 @@
 import pygame as pg
 
-from consts import SCREEN_WIDTH, SCREEN_HEIGHT
+from config import CONFIG
 
 DISPLAYSURF = pg.display.set_mode(
-    (SCREEN_WIDTH, SCREEN_HEIGHT),
+    (CONFIG.SCREEN_WIDTH, CONFIG.SCREEN_HEIGHT),
     flags=pg.NOFRAME | pg.SRCALPHA | pg.SCALED,
 )
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from consts import SCREEN_HEIGHT, SCREEN_WIDTH
 from pygame.math import Vector2, Vector3
+
+from config import CONFIG
 
 
 def range_kutta_4(f, x, y, dt):
@@ -27,11 +28,13 @@ def range_kutta_2(f, x, y, dt):
 
 
 def normalize_pos2(pos: Vector2):
-    return Vector2(pos.x % SCREEN_WIDTH, pos.y % SCREEN_HEIGHT)
+    return Vector2(pos.x % CONFIG.SCREEN_WIDTH, pos.y % CONFIG.SCREEN_HEIGHT)
 
 
 def normalize_pos3(pos: Vector3):
-    return Vector3(pos.x % SCREEN_WIDTH, pos.y % SCREEN_HEIGHT, pos.z % 360)
+    return Vector3(
+        pos.x % CONFIG.SCREEN_WIDTH, pos.y % CONFIG.SCREEN_HEIGHT, pos.z % 360
+    )
 
 
 def internal_coord_to_xy(pos: Vector2, ang: float) -> Vector2:

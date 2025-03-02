@@ -1,20 +1,22 @@
 from __future__ import annotations
+
+import random
+
 from assets import (
-    HealPowerupImage,
     DoubleShotWeaponImage,
+    HealPowerupImage,
+    LaserWeaponImage,
     MineLauncherWeaponImage,
     MissileLauncherWeaponImage,
-    LaserWeaponImage,
 )
 from consts import YELLOW
 from delayed import DelayedEvent
+from groups import ALL_POWERUPS
+from objects import HasTimer, Object, StaticDrawable
+from players import Player
 from postprocessing import with_outline
 from status import HealingStatus
-from groups import ALL_POWERUPS
-from objects import Object, HasTimer, StaticDrawable
-import random
-from players import Player
-from weapons import DoubleShotWeapon, MineLauncher, SmallMissileWeapon, LaserWeapon
+from weapons import DoubleShotWeapon, LaserWeapon, MineLauncher, SmallMissileWeapon
 
 
 class PowerUp(StaticDrawable, HasTimer, Object):

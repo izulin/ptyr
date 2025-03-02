@@ -1,6 +1,6 @@
 from __future__ import annotations
-import pygame as pg
 
+import pygame as pg
 
 PLAYER_1_CONTROLS = dict(
     forward=pg.K_w,

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pygame import Vector3, Vector2
+import random
+
+from pygame import Vector2, Vector3
 
 from assets import (
     LargeExplosionAnimation1,
@@ -8,9 +10,8 @@ from assets import (
     MediumExplosionAnimation,
 )
 from groups import try_and_spawn_object
-from objects import AnimatedDrawable, HasTimer, Object, Collides, UsesPhysics, HasMass
+from objects import AnimatedDrawable, Collides, HasMass, HasTimer, Object, UsesPhysics
 from particles import CollidingParticle
-import random
 
 
 def explosion_effect(

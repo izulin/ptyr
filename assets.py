@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import pygame as pg
-from consts import SCREEN_HEIGHT, SCREEN_WIDTH
-from surface import CachedSurface, CachedAnimation
+
+from config import CONFIG
+from surface import CachedAnimation, CachedSurface
 from timers import Timer
 
 with Timer("Assets"):
@@ -109,7 +111,7 @@ with Timer("Assets"):
 
     BackgroundImage = pg.transform.scale(
         pg.image.load("assets/background.jpg").convert_alpha(),
-        (SCREEN_WIDTH, SCREEN_HEIGHT),
+        (CONFIG.SCREEN_WIDTH, CONFIG.SCREEN_HEIGHT),
     )
 
     SmallBulletImage = CachedSurface(
@@ -190,4 +192,9 @@ with Timer("Assets"):
 
     LaserShardImage = CachedSurface(
         load_from_file(39, 210, 7, 12, "assets/tyrian/tyrian.shp.000000.png")
+    )
+
+    RightArrowImage = pg.transform.scale(
+        load_from_file(176, 196, 16, 21, "assets/tyrian/newsh1.shp.000000.png"),
+        (CONFIG.SCREEN_WIDTH / 20, CONFIG.SCREEN_HEIGHT / 20),
     )

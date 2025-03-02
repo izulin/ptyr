@@ -1,20 +1,22 @@
 from __future__ import annotations
-from pygame import Vector3, Vector2
 
-from ammo import SmallBullet, Mine, SmallMissile
+import math
+
+from pygame import Vector2, Vector3
+
+from ammo import Mine, SmallBullet, SmallMissile
 from assets import (
-    SingleShotWeaponImage,
     DoubleShotWeaponImage,
-    MineLauncherWeaponImage,
-    MissileLauncherWeaponImage,
     LaserShardImage,
     LaserWeaponImage,
+    MineLauncherWeaponImage,
+    MissileLauncherWeaponImage,
+    SingleShotWeaponImage,
 )
-from groups import try_and_spawn_object, ALL_COLLIDING_OBJECTS
+from groups import ALL_COLLIDING_OBJECTS, try_and_spawn_object
 from math_utils import internal_coord_to_xy
-from objects import StaticDrawable, Object, Attached
+from objects import Attached, Object, StaticDrawable
 from status import Status
-import math
 
 
 class Weapon(Status):
@@ -149,8 +151,12 @@ class LaserWeapon(Primary, Weapon):
                 owner=self.owner,
                 base_object=self.owner,
             )
-            if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(shard, on_collision=None):
-                break
+            if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+                shard, on_collision=None
+            ):
+                col = [c for c in col if c is not self.owner]
+                if col:
+                    break
 
         for i in range(10):
             shard = self.AMMO_CLS(
@@ -160,8 +166,12 @@ class LaserWeapon(Primary, Weapon):
                 owner=self.owner,
                 base_object=self.owner,
             )
-            if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(shard, on_collision=None):
-                break
+            if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+                shard, on_collision=None
+            ):
+                col = [c for c in col if c is not self.owner]
+                if col:
+                    break
 
 
 class SingleShotWeapon(Primary, Weapon):
