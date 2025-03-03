@@ -12,16 +12,14 @@ from assets import (
 from consts import YELLOW
 from delayed import DelayedEvent
 from groups import ALL_POWERUPS
-from objects import HasTimer, Object, StaticDrawable
+from objects import HasTimer, Object, StaticDrawable, Stationary
 from players import Player
 from postprocessing import with_outline
 from status import HealingStatus
 from weapons import DoubleShotWeapon, LaserWeapon, MineLauncher, SmallMissileWeapon
 
 
-class PowerUp(StaticDrawable, HasTimer, Object):
-    # DRAG = 100 / 1000
-    # ANGULAR_DRAG = 200 / 1000
+class PowerUp(StaticDrawable, Stationary, HasTimer, Object):
     TTL = 30_000
 
     used: bool

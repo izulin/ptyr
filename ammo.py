@@ -15,14 +15,14 @@ from objects import (
     HasHitpoints,
     HasMass,
     HasTimer,
+    Moves,
     Object,
     StaticDrawable,
-    UsesPhysics,
 )
 from postprocessing import with_outline
 
 
-class Bullet(UsesPhysics, HasMass, Collides, Object):
+class Bullet(Moves, HasMass, Collides, Object):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
     DMG: float
@@ -48,7 +48,7 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
 class SmallMissile(
     StaticDrawable,
     HasEngines,
-    UsesPhysics,
+    Moves,
     HasMass,
     HasTimer,
     Collides,
@@ -97,7 +97,7 @@ class SmallMissile(
         super().on_death()
 
 
-class Mine(AnimatedDrawable, Collides, UsesPhysics, HasHitpoints, HasMass, Object):
+class Mine(AnimatedDrawable, Collides, Moves, HasHitpoints, HasMass, Object):
     DMG = 1000.0
     DRAG = 100 / 1000
     ANGULAR_DRAG = 200 / 1000

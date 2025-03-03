@@ -99,12 +99,14 @@ class Attached:
         )
         return Vector3(pos_xy.x, pos_xy.y, self.base_object.pos.z + self.rel_pos.z)
 
-    def update(self, dt: float):
+    def update_pos(self, dt: float):
         self.pos = self.get_pos()
-        super().update(dt)
 
+class Stationary:
+    def update_pos(self, dt: float):
+        pass
 
-class UsesPhysics:
+class MovesAbstract:
     DRAG: float
     ANGULAR_DRAG: float
     speed: Vector3
@@ -113,11 +115,10 @@ class UsesPhysics:
         self.speed = Vector3(init_speed)
         super().__init__(*args, **kwargs)
 
-    def update(self, dt: float):
+    def update_pos(self, dt: float):
         new_pos, new_speed = self.updated_pos(dt)
         self.pos = normalize_pos3(new_pos)
         self.speed = new_speed
-        super().update(dt)
 
     def get_accels(self) -> Vector3:
         return Vector3(0.0, 0.0, 0.0)
@@ -126,6 +127,11 @@ class UsesPhysics:
     def speed_xy(self) -> Vector2:
         return Vector2(self.speed.x, self.speed.y)
 
+    def updated_pos(self, dt: float) -> tuple[Vector3, Vector3]:
+        raise NotImplementedError
+
+
+class Moves(MovesAbstract):
     def updated_pos(self, dt: float) -> tuple[Vector3, Vector3]:
         all_accel = self.get_accels()
 
@@ -140,6 +146,9 @@ class UsesPhysics:
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 
+class MovesSimplified(MovesAbstract):
+    def updated_pos(self, dt: float) -> tuple[Vector3, Vector3]:
+        return self.pos+self.speed*dt, self.speed
 
 class DrawableObject:
     image: pg.Surface
@@ -183,9 +192,10 @@ class DrawableObject:
             self.image = self.with_postprocessing()
 
     def update(self, dt: float):
+        super().update(dt)
         old_rect = self.rect
         old_pos = self.pos
-        super().update(dt)
+        self.update_pos(dt)
         new_pos = self.pos
         if (
             int(old_pos.x) == int(new_pos.x)
@@ -307,7 +317,7 @@ class Collides:
         return self.get_surface().inertia_moment_coef * self.mass
 
 
-class HasEngines(UsesPhysics):
+class HasEngines(Moves):
     all_engines: pg.sprite.Group
 
     def __init__(self, *args, **kwargs):

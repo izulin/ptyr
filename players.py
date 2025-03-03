@@ -25,9 +25,9 @@ from objects import (
     HasHitpoints,
     HasMass,
     HasShield,
+    Moves,
     Object,
     StaticDrawable,
-    UsesPhysics,
 )
 from postprocessing import with_outline
 from weapons import SingleShotWeapon, SmallMissileWeapon, Weapon
@@ -43,8 +43,8 @@ class Player(
     DrawsUI,
     HasEngines,
     Collides,
-    UsesPhysics,
     StaticDrawable,
+    Moves,
     Object,
 ):
     DRAG = 1 / 1000

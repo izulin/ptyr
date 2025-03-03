@@ -21,9 +21,9 @@ from objects import (
     HasHitpoints,
     HasMass,
     HasShield,
+    Moves,
     Object,
     StaticDrawable,
-    UsesPhysics,
 )
 from postprocessing import with_outline
 from powerups import get_random_powerup
@@ -31,7 +31,7 @@ from powerups import get_random_powerup
 
 class GeometricEnemy(
     AnimatedDrawable,
-    UsesPhysics,
+    Moves,
     HasShield,
     HasHitpoints,
     HasMass,
@@ -56,7 +56,7 @@ class GeometricEnemy(
         return with_outline(self, self.color)
 
 
-class Asteroid(UsesPhysics, HasHitpoints, HasMass, DrawsUI, Collides, Object):
+class Asteroid(Moves, HasHitpoints, HasMass, DrawsUI, Collides, Object):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
 

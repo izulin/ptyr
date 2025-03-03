@@ -3,10 +3,9 @@ from __future__ import annotations
 import contextlib
 
 import pygame as pg
-from pygame import Vector3
 
 from consts import BLACK, RED, WHITE, YELLOW
-from objects import Collides, DrawableObject, HasMass, HasTimer, Object, UsesPhysics
+from objects import Collides, DrawableObject, HasMass, HasTimer, MovesSimplified, Object
 from surface import CachedSurface
 
 particles_cache: dict[tuple[int, ...], CachedSurface] = {}
@@ -19,10 +18,8 @@ def mix(c1: pg.Color, c2: pg.Color, c3: pg.Color, c4: pg.Color, t: float) -> pg.
     return pg.Color.lerp(c12, c34, t**2 * (3 - 2 * t))
 
 
-class Particle(HasTimer, UsesPhysics, DrawableObject, Object):
+class Particle(HasTimer, MovesSimplified, DrawableObject, Object):
     IMAGE = None
-    DRAG = 0.0
-    ANGULAR_DRAG = 0.0
 
     def __init__(self, *args, **kwargs):
         self._layer = -1
@@ -39,10 +36,6 @@ class Particle(HasTimer, UsesPhysics, DrawableObject, Object):
             tmp.fill(color)
             particles_cache[tuple(color)] = CachedSurface(tmp, no_rotation=True)
         return particles_cache[tuple(color)]
-
-    # simplified physics
-    def updated_pos(self, dt: float) -> tuple[Vector3, Vector3]:
-        return self.pos + self.speed * dt, self.speed
 
 
 class CollidingParticle(Collides, HasMass, Particle):
