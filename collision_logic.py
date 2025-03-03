@@ -62,7 +62,12 @@ def collide_objects(
 
     local_speed_diff = a_local_speed - b_local_speed
 
-    normal = (b_r.normalize() * 1.01 - a_r.normalize()).normalize()
+    a_r_n = a_r.normalize() if a_r != Vector2() else Vector2()
+    b_r_n = b_r.normalize() if b_r != Vector2() else Vector2()
+
+    normal = b_r_n * 1.01 - a_r_n
+    if normal != Vector2():
+        normal = normal.normalize()
 
     if normal * local_speed_diff >= 0:
         return 0.0

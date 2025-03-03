@@ -7,18 +7,17 @@ from typing import TYPE_CHECKING
 import pygame as pg
 from pygame.math import Vector2, Vector3
 
+from config import CONFIG
 from consts import (
     ALL_SHIFTS,
     BLACK,
     CYAN,
-    GREEN,
     RED,
     WHITE,
 )
 from groups import (
     ALL_COLLIDING_OBJECTS,
     ALL_DRAWABLE_OBJECTS,
-    ALL_OBJECTS,
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_WITH_UPDATE,
     GroupWithCD,
@@ -54,7 +53,7 @@ class Object(pg.sprite.Sprite):
         self.update_image_rect()
         self.all_statuses = pg.sprite.Group()
         self.attachments = pg.sprite.Group()
-        self.add(ALL_WITH_UPDATE, ALL_OBJECTS, *args)
+        self.add(ALL_WITH_UPDATE, *args)
         if owner is None:
             owner = self
         self.owner = owner
@@ -112,8 +111,6 @@ class UsesPhysics:
 
     def __init__(self, *args, init_speed, **kwargs):
         self.speed = Vector3(init_speed)
-        self._acc = Vector2()
-        self._drag = Vector2()
         super().__init__(*args, **kwargs)
 
     def update(self, dt: float):
@@ -129,53 +126,19 @@ class UsesPhysics:
     def speed_xy(self) -> Vector2:
         return Vector2(self.speed.x, self.speed.y)
 
-    def updated_pos(self, dt: float):
+    def updated_pos(self, dt: float) -> tuple[Vector3, Vector3]:
         all_accel = self.get_accels()
 
         def f(pos: Vector3, speed: Vector3):
-            self._acc = internal_coord_to_xy(Vector2(all_accel.x, all_accel.y), pos.z)
+            acc = internal_coord_to_xy(Vector2(all_accel.x, all_accel.y), pos.z)
             angular_drag = speed.z * abs(speed.z) * self.ANGULAR_DRAG
             speed_xy = Vector2(speed.x, speed.y)
             # |drag| = self.DRAG * |speed|**2
-            self._drag = speed_xy.length() * self.DRAG * speed_xy
-            acc = self._acc - self._drag
+            drag = speed_xy.length() * self.DRAG * speed_xy
+            acc -= drag
             return speed, Vector3(acc.x, acc.y, all_accel.z - angular_drag)
 
         return range_kutta_2(f, self.pos, self.speed, dt)
-
-    def draw_debugs(self):
-        pos_xy = self.pos_xy
-        speed_xy = self.speed_xy
-        for shift in ALL_SHIFTS:
-            dt = 200
-            ALL_CHANGES_DISPLAYSURF.append(
-                pg.draw.line(
-                    DISPLAYSURF,
-                    WHITE,
-                    shift + pos_xy,
-                    shift + pos_xy + dt * speed_xy,
-                    1,
-                ),
-            )
-            dt = 200000
-            ALL_CHANGES_DISPLAYSURF.append(
-                pg.draw.line(
-                    DISPLAYSURF,
-                    GREEN,
-                    shift + pos_xy,
-                    shift + pos_xy + dt * self._acc,
-                    1,
-                ),
-            )
-            ALL_CHANGES_DISPLAYSURF.append(
-                pg.draw.line(
-                    DISPLAYSURF,
-                    RED,
-                    shift + pos_xy + dt * self._acc,
-                    shift + pos_xy + dt * self._acc - dt * self._drag,
-                    1,
-                ),
-            )
 
 
 class DrawableObject:
@@ -191,28 +154,84 @@ class DrawableObject:
             self._image = random.choice(image)
         else:
             self._image = image
-        super().__init__(*ALL_DRAWABLE_OBJECTS.values(), *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        rect = self.rect
+        x_start_a = rect.left // CONFIG.SCREEN_WIDTH
+        x_end_a = rect.right // CONFIG.SCREEN_WIDTH
+        y_start_a = rect.top // CONFIG.SCREEN_HEIGHT
+        y_end_a = rect.bottom // CONFIG.SCREEN_HEIGHT
+        for x in range(x_start_a, x_end_a + 1):
+            for y in range(y_start_a, y_end_a + 1):
+                ALL_DRAWABLE_OBJECTS[
+                    (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                ].add(self)
 
     def get_surface(self) -> CachedSurface:
         raise NotImplementedError
 
     def update_image_rect(self):
-        self.rect = self.get_surface().get_rect(
+        surf = self.get_surface()
+
+        self.rect = surf.get_rect(
             self.pos.z,
-            topleft=self.pos_xy - self.get_surface().get_centroid(self.pos.z),
+            topleft=self.pos_xy - surf.get_centroid(self.pos.z),
         )
-        self.mask = self.get_surface().get_mask(self.pos.z)
-        self.image = self.get_surface().get_image(self.pos.z)
+        self.mask = surf.get_mask(self.pos.z)
+        self.image = surf.get_image(self.pos.z)
+
         with contextlib.suppress(AttributeError):
             self.image = self.with_postprocessing()
 
     def update(self, dt: float):
         old_rect = self.rect
+        old_pos = self.pos
         super().update(dt)
+        new_pos = self.pos
+        if (
+            int(old_pos.x) == int(new_pos.x)
+            and int(old_pos.y) == int(new_pos.y)
+            and int(old_pos.z) == int(new_pos.z)
+            and isinstance(self, StaticDrawable)
+        ):
+            return
+
         self.update_image_rect()
+
+        new_rect = self.rect
+
         for group in self.groups():
             if isinstance(group, GroupWithCD):
-                group.cd.move(self, self.rect, old_rect)
+                group.cd.move(self, new_rect, old_rect)
+
+        x_start_a = new_rect.left // CONFIG.SCREEN_WIDTH
+        x_end_a = new_rect.right // CONFIG.SCREEN_WIDTH
+        y_start_a = new_rect.top // CONFIG.SCREEN_HEIGHT
+        y_end_a = new_rect.bottom // CONFIG.SCREEN_HEIGHT
+        x_start_b = old_rect.left // CONFIG.SCREEN_WIDTH
+        x_end_b = old_rect.right // CONFIG.SCREEN_WIDTH
+        y_start_b = old_rect.top // CONFIG.SCREEN_HEIGHT
+        y_end_b = old_rect.bottom // CONFIG.SCREEN_HEIGHT
+        if (
+            x_start_a == x_start_b
+            and x_end_a == x_end_b
+            and y_start_a == y_start_b
+            and y_end_a == y_end_b
+        ):
+            return
+        for x in range(x_start_b, x_end_b + 1):
+            for y in range(y_start_b, y_end_b + 1):
+                if x_start_a <= x <= x_end_a and y_start_a <= y <= y_end_a:
+                    continue
+                ALL_DRAWABLE_OBJECTS[
+                    (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                ].remove(self)
+        for x in range(x_start_a, x_end_a + 1):
+            for y in range(y_start_a, y_end_a + 1):
+                if x_start_b <= x <= x_end_b and y_start_b <= y <= y_end_b:
+                    continue
+                ALL_DRAWABLE_OBJECTS[
+                    (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                ].add(self)
 
 
 class StaticDrawable(DrawableObject):

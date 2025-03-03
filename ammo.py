@@ -5,6 +5,7 @@ import contextlib
 from pygame import Vector3
 
 from assets import MineAnimation, SmallBulletImage, SmallMissileImage
+from consts import CYAN
 from engines import Engine
 from explosions import LargeExplosion, SmallExplosion, explosion_effect
 from objects import (
@@ -21,7 +22,7 @@ from objects import (
 from postprocessing import with_outline
 
 
-class Bullet(Collides, UsesPhysics, HasMass, Object):
+class Bullet(UsesPhysics, HasMass, Collides, Object):
     DRAG = 0.0
     ANGULAR_DRAG = 0.0
     DMG: float
@@ -47,10 +48,10 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
 class SmallMissile(
     StaticDrawable,
     HasEngines,
-    Collides,
     UsesPhysics,
     HasMass,
     HasTimer,
+    Collides,
     Object,
 ):
     MASS = 2.0
@@ -76,6 +77,9 @@ class SmallMissile(
             self.alive_time < self.acc_time,
         )
         super().update(dt)
+
+    def with_postprocessing(self):
+        return with_outline(self, CYAN)
 
     def on_collision(self, other: Object):
         if other != self.owner:

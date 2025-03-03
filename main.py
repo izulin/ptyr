@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from collections import defaultdict
 
 import pygame as pg
 
@@ -14,6 +15,7 @@ from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF  # noqa: I001
 
 from typing import TYPE_CHECKING
 
+from game_state import init_game_state
 from assets import BackgroundImage
 from collision_logic import (
     _colliding_colliding_logic,
@@ -21,22 +23,16 @@ from collision_logic import (
 )
 from config import CONFIG
 from consts import ALL_SHIFTS
-from delayed import DelayedEvent
-from enemies import spawn_asteroid
 from groups import (
     ALL_COLLIDING_OBJECTS,
     ALL_DRAWABLE_OBJECTS,
-    ALL_ENEMIES,
-    ALL_OBJECTS,
     ALL_PLAYERS,
     ALL_POWERUPS,
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_WITH_UPDATE,
 )
 from menu import MENU_STACK, init_menu
-from players import spawn_player
 from text import display_text
-import contextlib
 
 if TYPE_CHECKING:
     from objects import Object
@@ -49,22 +45,11 @@ class Game:
     def __init__(self):
         self.FramePerSec = pg.time.Clock()
         self.done = False
+        self.cnt = 0
+        self.object_count = defaultdict(int)
 
         pg.display.set_caption("Project Iapetus")
-
-        with Timer("Game state init"):
-            spawn_player(1)
-            spawn_player(2)
-
-            while len(ALL_ENEMIES) < 10:
-                spawn_asteroid()
-
-        DelayedEvent(
-            lambda: spawn_asteroid() if len(ALL_ENEMIES) < 30 else None,
-            5000,
-            repeat=True,
-            name="spawn_asteroid",
-        )
+        init_game_state()
 
     def event_loop(self):
         for event in pg.event.get():
@@ -85,25 +70,37 @@ class Game:
                         MENU_STACK.append(init_menu())
 
     def stats(self):
-        self.cnt = getattr(self, "cnt", 0) + 1
-        if self.cnt % 1000 == 0:
-            total = Timer()
-            total.cnt = 1000
-            total.val = sum(timer.val for timer in TIMERS.values())
+        self.cnt += 1
+        for t in TIMERS.values():
+            t.click()
+        if TIMERS["TOTAL"].val >= 1:
+            for k, v in sorted(TIMERS.items(), key=lambda x: x[1].val, reverse=True):
+                logger.info(f"{k}:{v}")
             logger.info(
-                f"total:{total} " + " ".join(f"{k}:{v}" for k, v in TIMERS.items()),
+                " ".join(
+                    f"{k}:{v / self.cnt:.1f}" for k, v in self.object_count.items()
+                ),
             )
             for t in TIMERS.values():
                 t.reset()
+            self.cnt = 0
+            self.object_count = defaultdict(int)
 
     def updates(self, dt: float):
-        ALL_WITH_UPDATE.update(dt)
-        for sprite in ALL_OBJECTS:
-            if not sprite.alive_state:
-                sprite.kill()
-                sprite.on_death()
+        for sprite in ALL_WITH_UPDATE:
+            with TIMERS[f"updates:{sprite.__class__.__qualname__}"]:
+                sprite.update(dt)
+                self.object_count[sprite.__class__.__qualname__] += 1
+        for sprite in ALL_WITH_UPDATE:
+            try:
+                if not sprite.alive_state:
+                    sprite.kill()
+                    sprite.on_death()
+            except AttributeError:  # noqa: PERF203
+                pass
 
-    def collisions(self):
+    @staticmethod
+    def collisions():
         for sprite in ALL_COLLIDING_OBJECTS:
             ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
                 sprite,
@@ -117,60 +114,56 @@ class Game:
 
     def main(self):
         while not self.done:
-            self.event_loop()
+            with TIMERS["TOTAL"]:
+                self.event_loop()
 
-            with TIMERS["clears"]:
-                for g in ALL_DRAWABLE_OBJECTS.values():
-                    g.clear(DISPLAYSURF, BackgroundImage)
-            with TIMERS["blits"]:
-                for change in ALL_CHANGES_DISPLAYSURF:
-                    DISPLAYSURF.blit(BackgroundImage, change, change)
+                with TIMERS["clears"]:
+                    for g in ALL_DRAWABLE_OBJECTS.values():
+                        g.clear(DISPLAYSURF, BackgroundImage)
+                with TIMERS["blits"]:
+                    for change in ALL_CHANGES_DISPLAYSURF:
+                        DISPLAYSURF.blit(BackgroundImage, change, change)
 
-            ALL_CHANGES_DISPLAYSURF.clear()
+                ALL_CHANGES_DISPLAYSURF.clear()
 
-            with TIMERS["draw"]:
-                for shift in ALL_SHIFTS:
-                    for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
-                        sprite.rect.move_ip(shift)
-                    ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)].draw(DISPLAYSURF)
-                    for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
-                        sprite.rect.move_ip(-shift)
+                with TIMERS["draw"]:
+                    for shift in ALL_SHIFTS:
+                        with TIMERS["draw::move_ip"]:
+                            for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
+                                sprite.rect.move_ip(shift)
+                        ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)].draw(DISPLAYSURF)
+                        with TIMERS["draw::move_ip"]:
+                            for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
+                                sprite.rect.move_ip(-shift)
 
-            with TIMERS["debugs"]:
-                if CONFIG.SHOW_SPEEDS:
-                    sprite: Object
-                    for sprite in ALL_DRAWABLE_OBJECTS:
-                        with contextlib.suppress(AttributeError):
-                            sprite.draw_debugs()
+                with TIMERS["UX"]:
+                    if CONFIG.SHOW_HP == 2:
+                        sprite: Object
+                        for sprite in ALL_UI_DRAWABLE_OBJECTS:
+                            sprite.draw_ui()
+                    elif CONFIG.SHOW_HP == 1:
+                        for player in ALL_PLAYERS:
+                            player.draw_ui()
 
-            with TIMERS["UX"]:
-                if CONFIG.SHOW_HP == 2:
-                    sprite: Object
-                    for sprite in ALL_UI_DRAWABLE_OBJECTS:
-                        sprite.draw_ui()
-                elif CONFIG.SHOW_HP == 1:
-                    for player in ALL_PLAYERS:
-                        player.draw_ui()
+                fps = self.FramePerSec.get_fps()
 
-            fps = self.FramePerSec.get_fps()
+                display_text(f"{fps:.2f}.", (10, 10))
 
-            display_text(f"{fps:.2f}.", (10, 10))
+                if MENU_STACK:
+                    MENU_STACK[-1].draw(
+                        (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10),
+                    )
 
-            if MENU_STACK:
-                MENU_STACK[-1].draw(
-                    (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10),
-                )
+                with TIMERS["flip"]:
+                    pg.display.flip()
 
-            with TIMERS["flip"]:
-                pg.display.flip()
+                dt = self.FramePerSec.tick(CONFIG.FPS)
 
-            dt = self.FramePerSec.tick(CONFIG.FPS)
+                with TIMERS["updates"]:
+                    self.updates(dt)
 
-            with TIMERS["updates"]:
-                self.updates(dt)
-
-            with TIMERS["collisions"]:
-                self.collisions()
+                with TIMERS["collisions"]:
+                    self.collisions()
 
             self.stats()
 

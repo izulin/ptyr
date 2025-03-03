@@ -32,27 +32,35 @@ class Engine(pg.sprite.Sprite):
         WIDTH = 1.0
         self.active = min(1.0, self.active)
         self.active = max(0.0, self.active)
+
         PARTICLE_SPEED = math.sqrt(0.1 * self.strength * self.active)
+        if self.active:
+            increment = math.sqrt(10 / (self.strength * self.active))
         while self.active and self.cooldown < 0.0:
-            self.cooldown += math.sqrt(10 / (self.strength * self.active))
+            self.cooldown += increment
+            posxy = internal_coord_to_xy(
+                self.pos.xy
+                + Vector2(random.uniform(-WIDTH, WIDTH), 0).rotate(self.pos.z),
+                self.owner.pos.z,
+            )
+            speedxy = internal_coord_to_xy(
+                Vector2(0.0, PARTICLE_SPEED).rotate(
+                    self.pos.z + random.uniform(-ANGLE_SPREAD, ANGLE_SPREAD),
+                ),
+                self.owner.pos.z,
+            )
+
             Particle(
                 init_pos=self.owner.pos
                 + Vector3(
-                    *internal_coord_to_xy(
-                        self.pos.xy
-                        + Vector2(random.uniform(-WIDTH, WIDTH), 0).rotate(self.pos.z),
-                        self.owner.pos.z,
-                    ),
+                    posxy.x,
+                    posxy.y,
                     0.0,
                 ),
                 init_speed=self.owner.speed
                 + Vector3(
-                    *internal_coord_to_xy(
-                        Vector2(0.0, PARTICLE_SPEED).rotate(
-                            self.pos.z + random.uniform(-ANGLE_SPREAD, ANGLE_SPREAD),
-                        ),
-                        self.owner.pos.z,
-                    ),
+                    speedxy.x,
+                    speedxy.y,
                     0.0,
                 ),
                 ttl=random.uniform(100, 200),

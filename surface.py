@@ -14,9 +14,9 @@ class CachedSurface:
 
     def __init__(self, image: pg.Surface, no_rotation=False):
         if no_rotation:
-            self._image_cache = [image for _ in range(360)]
+            self._image_cache = [image]
             mask = pg.mask.from_surface(image)
-            self._mask_cache = [mask for _ in self._image_cache]
+            self._mask_cache = [mask]
         else:
             self._image_cache = [pg.transform.rotate(image, i) for i in range(360)]
             self._mask_cache = [pg.mask.from_surface(im) for im in self._image_cache]
@@ -67,10 +67,16 @@ class CachedSurface:
         )
 
     def get_image(self, ang: int = 0) -> pg.Surface:
-        return self._image_cache[int(ang) % 360]
+        if self._no_rotation:
+            return self._image_cache[0]
+        else:
+            return self._image_cache[int(ang)]
 
     def get_mask(self, ang: int = 0) -> pg.Mask:
-        return self._mask_cache[int(ang) % 360]
+        if self._no_rotation:
+            return self._mask_cache[0]
+        else:
+            return self._mask_cache[int(ang)]
 
     def get_rect(self, ang: int = 0, **kwargs):
         return self.get_image(ang).get_rect(**kwargs)

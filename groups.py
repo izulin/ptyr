@@ -27,22 +27,42 @@ class GroupWithCD(pg.sprite.Group):
 
 
 class GroupWithPriority(pg.sprite.Group):
+    def __init__(self, *args, key: str, **kwargs):
+        self.key = key
+        super().__init__(*args, **kwargs)
+
     def sprites(self):
-        return sorted(super().sprites(), key=lambda x: getattr(x, "priority", 0))
+        return sorted(super().sprites(), key=lambda x: getattr(x, self.key, 0))
+
+
+class LayeredUpdates(GroupWithPriority, pg.sprite.RenderUpdates):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, key="_layer")
 
 
 ALL_ENEMIES: pg.sprite.Group = pg.sprite.Group()
 ALL_PLAYERS: pg.sprite.Group = pg.sprite.Group()
-ALL_OBJECTS: pg.sprite.Group = pg.sprite.Group()
 ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
-
-ALL_DRAWABLE_OBJECTS: dict(tuple(int, int), pg.sprite.LayeredUpdates) = {
-    (shift.x, shift.y): pg.sprite.LayeredUpdates() for shift in ALL_SHIFTS
+ALL_DRAWABLE_OBJECTS: dict(tuple(int, int), LayeredUpdates) = {
+    (shift.x, shift.y): LayeredUpdates() for shift in ALL_SHIFTS
 }
-
 ALL_POWERUPS: GroupWithCD = GroupWithCD()
 ALL_UI_DRAWABLE_OBJECTS: pg.sprite.Group = pg.sprite.Group()
-ALL_WITH_UPDATE: GroupWithPriority = GroupWithPriority()
+ALL_WITH_UPDATE: GroupWithPriority = GroupWithPriority(key="priority")
+
+
+def kill_all():
+    for group in [
+        ALL_ENEMIES,
+        ALL_PLAYERS,
+        ALL_COLLIDING_OBJECTS,
+        *ALL_DRAWABLE_OBJECTS.values(),
+        ALL_POWERUPS,
+        ALL_UI_DRAWABLE_OBJECTS,
+        ALL_WITH_UPDATE,
+    ]:
+        for sprite in group:
+            sprite.kill()
 
 
 def try_and_spawn_object(

@@ -30,14 +30,13 @@ from objects import (
     UsesPhysics,
 )
 from postprocessing import with_outline
-from weapons import LaserWeapon, SmallMissileWeapon, Weapon
+from weapons import SingleShotWeapon, SmallMissileWeapon, Weapon
 
 if TYPE_CHECKING:
     from pygame._sdl2.controller import Controller
 
 
 class Player(
-    StaticDrawable,
     HasShield,
     HasHitpoints,
     HasMass,
@@ -45,6 +44,7 @@ class Player(
     HasEngines,
     Collides,
     UsesPhysics,
+    StaticDrawable,
     Object,
 ):
     DRAG = 1 / 1000
@@ -109,8 +109,8 @@ class Player(
             self.default_secondary_weapon()
 
     def default_weapon(self):
-        # SingleShotWeapon(owner=self.owner)
-        LaserWeapon(owner=self.owner)
+        SingleShotWeapon(owner=self.owner)
+        # LaserWeapon(owner=self.owner)
 
     def default_secondary_weapon(self):
         SmallMissileWeapon(owner=self.owner)
@@ -197,7 +197,7 @@ class Player(
 
 
 def spawn_player(player_id):
-    assert get_player(player_id) is None
+    # assert get_player(player_id) is None
     assert player_id in [1, 2]
     controls = {1: PLAYER_1_CONTROLS, 2: PLAYER_2_CONTROLS}[player_id]
     image = {1: PlayerImages[2], 2: PlayerImages[1]}[player_id]
