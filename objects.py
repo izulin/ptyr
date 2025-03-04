@@ -343,7 +343,8 @@ class HasEngines(Moves):
         thrust = super().get_accels()
         for engine in self.all_engines:
             impulse = Vector2(
-                0, -pg.math.clamp(engine.active, 0.0, 1.0) * engine.strength / 1000,
+                0,
+                -pg.math.clamp(engine.active, 0.0, 1.0) * engine.strength / 1000,
             ).rotate(
                 engine.pos.z,
             )

@@ -2,16 +2,13 @@ from __future__ import annotations
 
 import contextlib
 
-import pygame as pg
-from pygame import Vector2, Vector3
+from pygame import Vector3
 
 from assets import MineAnimation, SmallBulletImage, SmallMissileImage
-from consts import CYAN, WHITE, RED, GREEN
+from consts import CYAN
 from controller import MouseTargetingController
-from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF
 from engines import Engine
 from explosions import LargeExplosion, SmallExplosion, explosion_effect
-from math_utils import internal_coord_to_xy
 from objects import (
     AnimatedDrawable,
     Collides,
