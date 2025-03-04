@@ -3,4 +3,4 @@ name = "ptyr"
 
 
 [tool.ruff.lint]
-select = ["A", "C4", "E", "F", "I", "B", "Q", "SIM", "UP", "TC", "COM", "FURB", "PERF"]
+select = ["A", "C4", "E", "F", "I", "B", "Q", "SIM", "UP", "TC", "COM", "FURB", "PERF", "FA102"]

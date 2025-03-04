@@ -22,16 +22,16 @@ class Engine(pg.sprite.Sprite):
         self.cooldown = 0.0
         self.strength = strength
         self.owner = owner
+        self.priority = getattr(self.owner, "priority", 0) + 1
         self.active = 0
-        self.owner.all_engines.add(self)
+        self.add(self.owner.all_engines)
 
     def update(self, dt: float):
         if self.cooldown >= 0.0:
             self.cooldown -= dt
         ANGLE_SPREAD = 10
         WIDTH = 1.0
-        self.active = min(1.0, self.active)
-        self.active = max(0.0, self.active)
+        self.active = pg.math.clamp(self.active, 0.0, 1.0)
 
         PARTICLE_SPEED = math.sqrt(0.1 * self.strength * self.active)
         if self.active:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pygame._sdl2 import controller
 
 from logger import logger

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import random
 from typing import TYPE_CHECKING
 
@@ -30,7 +31,7 @@ from objects import (
     StaticDrawable,
 )
 from postprocessing import with_outline
-from weapons import SingleShotWeapon, SmallMissileWeapon, Weapon
+from weapons import SingleShotWeapon, SmallMissileWeapon
 
 if TYPE_CHECKING:
     from pygame._sdl2.controller import Controller
@@ -55,8 +56,8 @@ class Player(
     SHIELD = 30.0
 
     controls: dict[str, int]
-    weapon: Weapon | None
-    secondary_weapon: Weapon | None
+    weapon: pg.sprite.GroupSingle
+    secondary_weapon: pg.sprite.GroupSingle
     player_id: int
 
     def __init__(
@@ -72,8 +73,8 @@ class Player(
         self.color = color
         self.controls = controls
         self.gamepad = gamepad
-        self.weapon = None
-        self.secondary_weapon = None
+        self.weapon = pg.sprite.GroupSingle()
+        self.secondary_weapon = pg.sprite.GroupSingle()
         self.use_defaults()
         self.player_id = player_id
         self.back_engine = Engine(
@@ -103,9 +104,9 @@ class Player(
         )
 
     def use_defaults(self):
-        if self.weapon is None:
+        if not self.weapon:
             self.default_weapon()
-        if self.secondary_weapon is None:
+        if not self.secondary_weapon:
             self.default_secondary_weapon()
 
     def default_weapon(self):
@@ -114,7 +115,6 @@ class Player(
 
     def default_secondary_weapon(self):
         SmallMissileWeapon(owner=self.owner)
-        pass
 
     def with_postprocessing(self):
         return with_outline(self, self.color)
@@ -122,20 +122,18 @@ class Player(
     def update(self, dt: float):
         self.use_defaults()
         pressed_keys = pg.key.get_pressed()
-        if (
-            pressed_keys[self.controls["shoot"]]
-            or self.gamepad.get_button(
-                pg.CONTROLLER_BUTTON_B,
-            )
-        ) and self.weapon is not None:
-            self.weapon.fire()
-        if (
-            pressed_keys[self.controls["secondary"]]
-            or self.gamepad.get_button(
-                pg.CONTROLLER_BUTTON_A,
-            )
-        ) and self.secondary_weapon is not None:
-            self.secondary_weapon.fire()
+        if pressed_keys[self.controls["shoot"]] or self.gamepad.get_button(
+            pg.CONTROLLER_BUTTON_B,
+        ):
+            with contextlib.suppress(AttributeError):
+                print(self.weapon.sprite)
+                self.weapon.sprite.fire()
+        if pressed_keys[self.controls["secondary"]] or self.gamepad.get_button(
+            pg.CONTROLLER_BUTTON_A,
+        ):
+            with contextlib.suppress(AttributeError):
+                print(self.secondary_weapon.sprite)
+                self.secondary_weapon.sprite.fire()
 
         left_right_axis = self.gamepad.get_axis(0) / 2**15
         forward_backward_axis = self.gamepad.get_axis(1) / 2**15

@@ -102,9 +102,11 @@ class Attached:
     def update_pos(self, dt: float):
         self.pos = self.get_pos()
 
+
 class Stationary:
     def update_pos(self, dt: float):
         pass
+
 
 class MovesAbstract:
     DRAG: float
@@ -146,9 +148,11 @@ class Moves(MovesAbstract):
 
         return range_kutta_2(f, self.pos, self.speed, dt)
 
+
 class MovesSimplified(MovesAbstract):
     def updated_pos(self, dt: float) -> tuple[Vector3, Vector3]:
-        return self.pos+self.speed*dt, self.speed
+        return self.pos + self.speed * dt, self.speed
+
 
 class DrawableObject:
     image: pg.Surface
@@ -171,9 +175,11 @@ class DrawableObject:
         y_end_a = rect.bottom // CONFIG.SCREEN_HEIGHT
         for x in range(x_start_a, x_end_a + 1):
             for y in range(y_start_a, y_end_a + 1):
-                ALL_DRAWABLE_OBJECTS[
-                    (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
-                ].add(self)
+                self.add(
+                    ALL_DRAWABLE_OBJECTS[
+                        (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                    ],
+                )
 
     def get_surface(self) -> CachedSurface:
         raise NotImplementedError
@@ -232,16 +238,20 @@ class DrawableObject:
             for y in range(y_start_b, y_end_b + 1):
                 if x_start_a <= x <= x_end_a and y_start_a <= y <= y_end_a:
                     continue
-                ALL_DRAWABLE_OBJECTS[
-                    (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
-                ].remove(self)
+                self.remove(
+                    ALL_DRAWABLE_OBJECTS[
+                        (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                    ],
+                )
         for x in range(x_start_a, x_end_a + 1):
             for y in range(y_start_a, y_end_a + 1):
                 if x_start_b <= x <= x_end_b and y_start_b <= y <= y_end_b:
                     continue
-                ALL_DRAWABLE_OBJECTS[
-                    (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
-                ].add(self)
+                self.add(
+                    ALL_DRAWABLE_OBJECTS[
+                        (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                    ],
+                )
 
 
 class StaticDrawable(DrawableObject):
@@ -332,7 +342,9 @@ class HasEngines(Moves):
     def get_accels(self) -> Vector3:
         thrust = super().get_accels()
         for engine in self.all_engines:
-            impulse = Vector2(0, -engine.active * engine.strength / 1000).rotate(
+            impulse = Vector2(
+                0, -pg.math.clamp(engine.active, 0.0, 1.0) * engine.strength / 1000,
+            ).rotate(
                 engine.pos.z,
             )
             impulse_ = Vector3(impulse.x, impulse.y, 0)

@@ -2,20 +2,14 @@ from __future__ import annotations
 
 import sys
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import pygame as pg
 
-from logger import logger
-from timers import TIMERS, Timer
+from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF  # isort: skip
 
-with Timer("pg.init"):
-    import pg_init  # noqa: F401
+import contextlib
 
-from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF  # noqa: I001
-
-from typing import TYPE_CHECKING
-
-from game_state import init_game_state
 from assets import BackgroundImage
 from collision_logic import (
     _colliding_colliding_logic,
@@ -23,6 +17,7 @@ from collision_logic import (
 )
 from config import CONFIG
 from consts import ALL_SHIFTS
+from game_state import init_game_state
 from groups import (
     ALL_COLLIDING_OBJECTS,
     ALL_DRAWABLE_OBJECTS,
@@ -31,8 +26,10 @@ from groups import (
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_WITH_UPDATE,
 )
+from logger import logger
 from menu import MENU_STACK, init_menu
 from text import display_text
+from timers import TIMERS
 
 if TYPE_CHECKING:
     from objects import Object
@@ -115,57 +112,70 @@ class Game:
     def main(self):
         while not self.done:
             with TIMERS["TOTAL"]:
-                self.event_loop()
-
-                with TIMERS["clears"]:
-                    for g in ALL_DRAWABLE_OBJECTS.values():
-                        g.clear(DISPLAYSURF, BackgroundImage)
-                with TIMERS["blits"]:
-                    for change in ALL_CHANGES_DISPLAYSURF:
-                        DISPLAYSURF.blit(BackgroundImage, change, change)
-
-                ALL_CHANGES_DISPLAYSURF.clear()
-
-                with TIMERS["draw"]:
-                    for shift in ALL_SHIFTS:
-                        with TIMERS["draw::move_ip"]:
-                            for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
-                                sprite.rect.move_ip(shift)
-                        ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)].draw(DISPLAYSURF)
-                        with TIMERS["draw::move_ip"]:
-                            for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
-                                sprite.rect.move_ip(-shift)
-
-                with TIMERS["UX"]:
-                    if CONFIG.SHOW_HP == 2:
-                        sprite: Object
-                        for sprite in ALL_UI_DRAWABLE_OBJECTS:
-                            sprite.draw_ui()
-                    elif CONFIG.SHOW_HP == 1:
-                        for player in ALL_PLAYERS:
-                            player.draw_ui()
-
-                fps = self.FramePerSec.get_fps()
-
-                display_text(f"{fps:.2f}.", (10, 10))
-
-                if MENU_STACK:
-                    MENU_STACK[-1].draw(
-                        (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10),
-                    )
-
-                with TIMERS["flip"]:
-                    pg.display.flip()
-
-                dt = self.FramePerSec.tick(CONFIG.FPS)
-
-                with TIMERS["updates"]:
-                    self.updates(dt)
-
-                with TIMERS["collisions"]:
-                    self.collisions()
+                self.loop_step()
 
             self.stats()
+
+    def loop_step(self):
+        self.event_loop()
+
+        with TIMERS["clears"]:
+            for g in ALL_DRAWABLE_OBJECTS.values():
+                g.clear(DISPLAYSURF, BackgroundImage)
+        with TIMERS["blits"]:
+            for change in ALL_CHANGES_DISPLAYSURF:
+                DISPLAYSURF.blit(BackgroundImage, change, change)
+
+        ALL_CHANGES_DISPLAYSURF.clear()
+
+        with TIMERS["draw"]:
+            for shift in ALL_SHIFTS:
+                with TIMERS["draw::move_ip"]:
+                    for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
+                        sprite.rect.move_ip(shift)
+                ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)].draw(DISPLAYSURF)
+                with TIMERS["draw::move_ip"]:
+                    for sprite in ALL_DRAWABLE_OBJECTS[(shift.x, shift.y)]:
+                        sprite.rect.move_ip(-shift)
+
+        with TIMERS["UX"]:
+            if CONFIG.SHOW_HP == 2:
+                sprite: Object
+                for sprite in ALL_UI_DRAWABLE_OBJECTS:
+                    sprite.draw_ui()
+            elif CONFIG.SHOW_HP == 1:
+                for player in ALL_PLAYERS:
+                    player.draw_ui()
+
+        with TIMERS["DEBUGS"]:
+            for sprite in ALL_WITH_UPDATE:
+                with contextlib.suppress(AttributeError):
+                    sprite.draw_debug()
+
+        fps = self.FramePerSec.get_fps()
+
+        display_text(f"{fps:.2f}.", (10, 10))
+
+        if MENU_STACK:
+            MENU_STACK[-1].draw(
+                (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10),
+            )
+
+        with TIMERS["screen_blit"]:
+            display = pg.display.get_surface()
+            display_size = display.get_size()
+            pg.transform.scale(DISPLAYSURF, display_size, display)
+
+        with TIMERS["flip"]:
+            pg.display.flip()
+
+        dt = self.FramePerSec.tick(CONFIG.FPS)
+
+        with TIMERS["updates"]:
+            self.updates(dt)
+
+        with TIMERS["collisions"]:
+            self.collisions()
 
 
 Game().main()

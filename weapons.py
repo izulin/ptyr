@@ -112,18 +112,20 @@ class Weapon(Status):
 
 class Primary:
     def __init__(self, *args, owner, **kwargs):
-        if owner.weapon is not None and owner.weapon != self:
-            owner.weapon.kill()
-        owner.weapon = self
         super().__init__(*args, owner=owner, **kwargs)
+        if owner.weapon.sprite != self:
+            with contextlib.suppress(AttributeError):
+                owner.weapon.sprite.kill()
+        self.add(owner.weapon)
 
 
 class Secondary:
     def __init__(self, *args, owner, **kwargs):
-        if owner.secondary_weapon is not None and owner.secondary_weapon != self:
-            owner.secondary_weapon.kill()
-        owner.secondary_weapon = self
         super().__init__(*args, owner=owner, **kwargs)
+        if owner.secondary_weapon.sprite != self:
+            with contextlib.suppress(AttributeError):
+                owner.secondary_weapon.sprite.kill()
+        self.add(owner.secondary_weapon)
 
 
 class LaserShard(StaticDrawable, Attached, Object):
