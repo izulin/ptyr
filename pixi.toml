@@ -3,7 +3,7 @@ authors = ["izulin <izulin@gmail.com>"]
 channels = ["conda-forge", "pip"]
 description = "Add a short description here"
 name = "ptyr"
-platforms = ["osx-64"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 version = "0.1.0"
 
 [dependencies]
