@@ -8,6 +8,7 @@ from pygame import Vector2
 
 from display import DISPLAYSURF
 
+
 if TYPE_CHECKING:
     from objects import Object
 
@@ -41,23 +42,30 @@ class StabilizerController(Controller):
 
 class MouseTargetingController(Controller):
     def update(self, dt: float):
-        target = Vector2(get_mouse_pos())
-        own_pos = self.owner.pos_xy
-        target_ang = 270 - (target - own_pos).as_polar()[1]
-        speed_ang = 270 - self.owner.speed_xy.as_polar()[1]
+        #target = Vector2(get_mouse_pos())
+        from players import get_player
 
-        dest = target_ang + pg.math.clamp(target_ang - speed_ang, -30, 30)
-        error = ((dest - self.owner.pos.z + 180) % 360 - 180) / 180 / 2
+        target = get_player(3-self.owner.owner.player_id)
+        if target is None:
+            return
+
+        target_vector = target.pos_xy - self.owner.pos_xy
+        target_vector = target_vector.normalize()
+        speed_vector = (self.owner.speed_xy-target.speed_xy).normalize()
+        ang = 270 - (target_vector + 2*(target_vector - speed_vector)).as_polar()[1]
+
+        error = ((ang - self.owner.pos.z + 180) % 360 - 180) / 180 / 2
         prev_error = getattr(self, "prev_error", error)
         self.integral_error = (
-            getattr(self, "integral_error", 0) * (0.5 ** (dt / 1000))
+            getattr(self, "integral_error", 0) * (0.1 ** (dt / 1000))
             + (dt / 1000) * error
         )
         self.prev_error = error
         d_error = (error - prev_error) / (dt / 1000)
 
-        signal = error + d_error + self.integral_error
+
+        signal = error + d_error + 0.1 * error/abs(error)#self.integral_error
 
         self.owner.back_engine.active = (1 - abs(error)) ** 10
-        self.owner.back_left_engine.active = 10 * signal
-        self.owner.back_right_engine.active = -10 * signal
+        self.owner.back_left_engine.active = 100 * signal
+        self.owner.back_right_engine.active = -100 * signal

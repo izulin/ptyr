@@ -6,7 +6,7 @@ import pygame as pg
 from pygame import Vector2, Vector3
 
 from assets import MineAnimation, SmallBulletImage, SmallMissileImage
-from consts import CYAN, WHITE
+from consts import CYAN, WHITE, RED, GREEN
 from controller import MouseTargetingController
 from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF
 from engines import Engine
@@ -81,11 +81,11 @@ class SmallMissile(
             engine.active *= int(self.alive_time < self.acc_time)
         super().update(dt)
 
-    def draw_debug(self):
-        endpoint = self.pos_xy + internal_coord_to_xy(Vector2(0, 1000), self.pos.z)
-        ALL_CHANGES_DISPLAYSURF.append(
-            pg.draw.line(DISPLAYSURF, WHITE, self.pos_xy, endpoint, width=1),
-        )
+    # def draw_debug(self):
+    #     endpoint = self.pos_xy + internal_coord_to_xy(Vector2(0, 1000), self.pos.z)
+    #     ALL_CHANGES_DISPLAYSURF.append(
+    #         pg.draw.line(DISPLAYSURF, WHITE, self.pos_xy, endpoint, width=1),
+    #     )
 
     def with_postprocessing(self):
         return with_outline(self, CYAN)
