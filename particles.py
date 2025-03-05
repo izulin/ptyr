@@ -7,6 +7,7 @@ import pygame as pg
 from consts import BLACK, RED, WHITE, YELLOW
 from objects import Collides, DrawableObject, HasMass, HasTimer, MovesSimplified, Object
 from surface import CachedSurface
+from teams import check_teams
 
 particles_cache: dict[tuple[int, ...], CachedSurface] = {}
 color_mixer_cache: dict = {}
@@ -42,7 +43,7 @@ class CollidingParticle(Collides, HasMass, Particle):
     MASS = 0.1
 
     def on_collision(self, other: Object):
-        if not isinstance(other, CollidingParticle):
+        if not isinstance(other, CollidingParticle) and check_teams(self, other):
             with contextlib.suppress(AttributeError):
                 other.apply_damage(0.1)
             self.mark_dead()

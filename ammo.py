@@ -5,8 +5,7 @@ import contextlib
 from pygame import Vector3
 
 from assets import MineAnimation, SmallBulletImage, SmallMissileImage
-from consts import CYAN
-from controller import MouseTargetingController
+from controller import PIDHomingController
 from engines import Engine
 from explosions import LargeExplosion, SmallExplosion, explosion_effect
 from objects import (
@@ -20,7 +19,7 @@ from objects import (
     Object,
     StaticDrawable,
 )
-from postprocessing import with_outline
+from teams import check_teams
 
 
 class Bullet(Moves, HasMass, Collides, Object):
@@ -29,7 +28,7 @@ class Bullet(Moves, HasMass, Collides, Object):
     DMG: float
 
     def on_collision(self, other: Object):
-        if other != self.owner:
+        if check_teams(self, other):
             with contextlib.suppress(AttributeError):
                 other.apply_damage(self.DMG)
             self.mark_dead()
@@ -62,15 +61,15 @@ class SmallMissile(
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
     IMAGE = SmallMissileImage
-    acc_time = 30_000
-    TTL = 30_000
+    acc_time = 5_000
+    TTL = 5_000
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.back_engine = Engine(self, Vector3(0, -5, 180), 1)
         self.back_left_engine = Engine(self, Vector3(0, -5, 135), 0.1)
         self.back_right_engine = Engine(self, Vector3(0, -5, 225), 0.1)
-        self.controller = MouseTargetingController(self)
+        self.controller = PIDHomingController(self)
 
     def update(self, dt: float):
         self.controller.update(dt)
@@ -78,17 +77,8 @@ class SmallMissile(
             engine.active *= int(self.alive_time < self.acc_time)
         super().update(dt)
 
-    # def draw_debug(self):
-    #     endpoint = self.pos_xy + internal_coord_to_xy(Vector2(0, 1000), self.pos.z)
-    #     ALL_CHANGES_DISPLAYSURF.append(
-    #         pg.draw.line(DISPLAYSURF, WHITE, self.pos_xy, endpoint, width=1),
-    #     )
-
-    def with_postprocessing(self):
-        return with_outline(self, CYAN)
-
     def on_collision(self, other: Object):
-        if other != self.owner:
+        if check_teams(self, other):
             with contextlib.suppress(AttributeError):
                 other.apply_damage(self.DMG)
             self.mark_dead()
@@ -112,12 +102,13 @@ class Mine(AnimatedDrawable, Collides, Moves, HasHitpoints, HasMass, Object):
     MASS = 10.0
 
     def on_collision(self, other: Object):
-        if isinstance(other, HasHitpoints) and other.HP >= 30 and other != self.owner:
+        if (
+            isinstance(other, HasHitpoints)
+            and other.HP >= 30
+            and check_teams(self, other)
+        ):
             other.apply_damage(self.DMG)
             self.mark_dead()
-
-    def with_postprocessing(self):
-        return with_outline(self, self.owner.color)
 
     def on_death(self):
         LargeExplosion(init_pos=self.pos, init_speed=self.speed, owner=self.owner)

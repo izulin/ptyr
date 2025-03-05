@@ -28,13 +28,13 @@ def range_kutta_2(f, x, y, dt):
 
 
 def normalize_pos2(pos: Vector2):
-    return Vector2(pos.x % CONFIG.SCREEN_WIDTH, pos.y % CONFIG.SCREEN_HEIGHT)
+    return Vector2(pos.x % CONFIG.WORLD_WIDTH, pos.y % CONFIG.WORLD_HEIGHT)
 
 
 def normalize_pos3(pos: Vector3):
     return Vector3(
-        pos.x % CONFIG.SCREEN_WIDTH,
-        pos.y % CONFIG.SCREEN_HEIGHT,
+        pos.x % CONFIG.WORLD_WIDTH,
+        pos.y % CONFIG.WORLD_HEIGHT,
         pos.z % 360,
     )
 

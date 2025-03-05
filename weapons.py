@@ -18,6 +18,7 @@ from groups import ALL_COLLIDING_OBJECTS, try_and_spawn_object
 from math_utils import internal_coord_to_xy
 from objects import Attached, Object, StaticDrawable
 from status import Status
+from teams import check_teams
 
 
 class Weapon(Status):
@@ -136,7 +137,7 @@ class LaserShard(StaticDrawable, Attached, Object):
             self,
             on_collision=None,
         ):
-            if obj.owner != self.owner:
+            if check_teams(self, obj):
                 with contextlib.suppress(AttributeError):
                     obj.apply_damage(dt / 10)
         self.kill()

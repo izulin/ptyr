@@ -26,8 +26,9 @@ class PowerUp(StaticDrawable, Stationary, HasTimer, Object):
 
     def __init__(self, *args, **kwargs):
         self._layer = -1
-        super().__init__(ALL_POWERUPS, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.used = False
+        self.add(ALL_POWERUPS)
 
     def with_postprocessing(self):
         return with_outline(self, YELLOW)

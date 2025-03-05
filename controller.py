@@ -1,58 +1,65 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 import pygame as pg
-import pygame.math
+from pygame import Vector2
 
-from display import DISPLAYSURF
+from consts import ALL_SHIFTS
+from groups import ALL_PLAYERS
+from math_utils import internal_coord_to_xy
 
 if TYPE_CHECKING:
     from objects import Object
 
 
 class Controller:
-    owner: Object
+    controlled: Object
 
-    def __init__(self, owner):
-        self.owner = owner
+    def __init__(self, controlled):
+        self.controlled = controlled
 
     def update(self, dt: float):
         raise NotImplementedError
 
 
-def get_mouse_pos():
-    screen_pos = pg.mouse.get_pos()
-    screen_size = pg.display.get_surface().get_size()
-    world_size = DISPLAYSURF.get_size()
-    return (
-        screen_pos[0] / screen_size[0] * world_size[0],
-        screen_pos[1] / screen_size[1] * world_size[1],
-    )
-
-
 class StabilizerController(Controller):
     def update(self, dt: float):
-        self.owner.back_engine.active = 1
-        self.owner.back_left_engine.active = int(self.owner.speed.z <= 0)
-        self.owner.back_right_engine.active = int(self.owner.speed.z >= 0)
+        self.controlled.back_engine.active = 1
+        self.controlled.back_left_engine.active = int(self.controlled.speed.z <= 0)
+        self.controlled.back_right_engine.active = int(self.controlled.speed.z >= 0)
 
 
-class MouseTargetingController(Controller):
+class PIDHomingController(Controller):
     def update(self, dt: float):
-        # target = Vector2(get_mouse_pos())
-        from players import get_player
-
-        target = get_player(3 - self.owner.owner.player_id)
-        if target is None:
+        for player in ALL_PLAYERS:
+            if player != self.controlled.owner:
+                target = player
+                break
+        else:
+            self.controlled.back_engine.active = 0
+            self.controlled.back_left_engine.active = 0
+            self.controlled.back_right_engine.active = 0
             return
 
-        target_vector = target.pos_xy - self.owner.pos_xy
+        best = math.inf, None
+        for shift in ALL_SHIFTS:
+            score = pg.Vector2.distance_to(
+                self.controlled.pos_xy
+                + self.controlled.speed_xy * 1000
+                + internal_coord_to_xy(Vector2(0, 100), self.controlled.pos.z),
+                target.pos_xy + shift,
+            )
+            best = min(best, (score, shift))
+        _, best_shift = best
+
+        target_vector = target.pos_xy + best_shift - self.controlled.pos_xy
         target_vector = target_vector.normalize()
-        speed_vector = (self.owner.speed_xy - target.speed_xy).normalize()
+        speed_vector = (self.controlled.speed_xy - target.speed_xy).normalize()
         ang = 270 - (target_vector + 2 * (target_vector - speed_vector)).as_polar()[1]
 
-        error = ((ang - self.owner.pos.z + 180) % 360 - 180) / 180 / 2
+        error = ((ang - self.controlled.pos.z + 180) % 360 - 180) / 180 / 2
         prev_error = getattr(self, "prev_error", error)
         self.integral_error = (
             getattr(self, "integral_error", 0) * (0.1 ** (dt / 1000))
@@ -60,9 +67,10 @@ class MouseTargetingController(Controller):
         )
         self.prev_error = error
         d_error = (error - prev_error) / (dt / 1000)
+        integral = pg.math.clamp(10 * self.integral_error, -0.1, 0.1)
 
-        signal = error + d_error + 0.1 * error / abs(error)  # self.integral_error
+        signal = error + d_error + integral
 
-        self.owner.back_engine.active = (1 - abs(error)) ** 10
-        self.owner.back_left_engine.active = 100 * signal
-        self.owner.back_right_engine.active = -100 * signal
+        self.controlled.back_engine.active = (1 - abs(error)) ** 10
+        self.controlled.back_left_engine.active = 100 * signal
+        self.controlled.back_right_engine.active = -100 * signal

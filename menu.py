@@ -4,8 +4,8 @@ import pygame as pg
 
 from assets import RightArrowImage
 from config import CONFIG
-from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF
-from game_state import init_game_state
+from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF, set_mode
+from game_logic import init_game_state
 from groups import kill_all
 from text import display_text
 
@@ -41,25 +41,12 @@ class ConfigMenuElement(MenuElement):
         display_text(self.option, pos, size=3)
         display_text(
             str(getattr(CONFIG, self.option)),
-            (posx + CONFIG.SCREEN_WIDTH / 2, posy),
+            (posx + CONFIG.WORLD_WIDTH / 2, posy),
             size=3,
         )
 
-
-class NumOfPlayersMenuElement(ConfigMenuElement):
-    option = "NUM_OF_PLAYERS"
-
     def take_action(self):
-        CONFIG.NUM_OF_PLAYERS += 1
-        if CONFIG.NUM_OF_PLAYERS > 4:
-            CONFIG.NUM_OF_PLAYERS = 1
-
-
-class ShowHPMenuElement(ConfigMenuElement):
-    option = "SHOW_HP"
-
-    def take_action(self):
-        CONFIG.SHOW_HP = (CONFIG.SHOW_HP + 1) % 3
+        CONFIG.bump_option(self.option)
 
 
 class RestartElement(TextMenuElement):
@@ -69,13 +56,22 @@ class RestartElement(TextMenuElement):
         MENU_STACK.clear()
         kill_all()
         init_game_state()
+        pg.display.quit()
+        set_mode()
 
 
 class OptionsElement(TextMenuElement):
     text = "OPTIONS"
 
     def take_action(self):
-        MENU_STACK.append(Menu(NumOfPlayersMenuElement(), ShowHPMenuElement()))
+        MENU_STACK.append(
+            Menu(
+                ConfigMenuElement(option="MODE"),
+                ConfigMenuElement(option="SHOW_HP"),
+                ConfigMenuElement(option="NUM_OF_PLAYERS"),
+                ConfigMenuElement(option="RESOLUTION"),
+            ),
+        )
 
 
 class QuitElement(TextMenuElement):
@@ -94,14 +90,14 @@ class Menu:
 
     def draw(self, pos: tuple[int, int]):
         posx, posy = pos
-        step_y = CONFIG.SCREEN_HEIGHT / 5
+        step_y = CONFIG.WORLD_HEIGHT / 5
         for i, item in enumerate(self.items):
             item.draw((posx, posy + i * step_y))
 
         ALL_CHANGES_DISPLAYSURF.append(
             DISPLAYSURF.blit(
                 RightArrowImage,
-                (posx - CONFIG.SCREEN_WIDTH / 10, posy + self.attention * step_y),
+                (posx - CONFIG.WORLD_WIDTH / 10, posy + self.attention * step_y),
             ),
         )
 

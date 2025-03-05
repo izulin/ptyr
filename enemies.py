@@ -11,7 +11,6 @@ from assets import (
     GeometricEnemyAnimation,
 )
 from config import CONFIG
-from consts import RED
 from explosions import SmallExplosion
 from groups import ALL_ENEMIES, try_and_spawn_object
 from objects import (
@@ -25,7 +24,6 @@ from objects import (
     Object,
     StaticDrawable,
 )
-from postprocessing import with_outline
 from powerups import get_random_powerup
 
 
@@ -50,10 +48,6 @@ class GeometricEnemy(
 
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_ENEMIES, *args, **kwargs)
-        self.color = RED
-
-    def with_postprocessing(self):
-        return with_outline(self, self.color)
 
 
 class Asteroid(Moves, HasHitpoints, HasMass, DrawsUI, Collides, Object):
@@ -62,10 +56,6 @@ class Asteroid(Moves, HasHitpoints, HasMass, DrawsUI, Collides, Object):
 
     def __init__(self, *args, **kwargs):
         super().__init__(ALL_ENEMIES, *args, **kwargs)
-        self.color = RED
-
-    def with_postprocessing(self):
-        return with_outline(self, self.color)
 
 
 class LargeAsteroid(StaticDrawable, Asteroid):
@@ -131,8 +121,8 @@ def spawn_geometric_enemy():
     succ = try_and_spawn_object(
         lambda: GeometricEnemy(
             init_pos=[
-                random.randint(0, CONFIG.SCREEN_WIDTH),
-                random.randint(0, CONFIG.SCREEN_HEIGHT),
+                random.randint(0, CONFIG.WORLD_WIDTH),
+                random.randint(0, CONFIG.WORLD_HEIGHT),
                 random.randint(0, 360),
             ],
             init_speed=[
@@ -152,8 +142,8 @@ def spawn_asteroid():
     succ = try_and_spawn_object(
         lambda: LargeAsteroid(
             init_pos=[
-                random.randint(0, CONFIG.SCREEN_WIDTH),
-                random.randint(0, CONFIG.SCREEN_HEIGHT),
+                random.randint(0, CONFIG.WORLD_WIDTH),
+                random.randint(0, CONFIG.WORLD_HEIGHT),
                 random.randint(0, 360),
             ],
             init_speed=[

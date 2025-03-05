@@ -34,6 +34,7 @@ def explosion_effect(
         )
         dspeed = Vector3(*Vector2(init_speed, 0.0).rotate(random.uniform(0, 360)), 0.0)
         return CollidingParticle(
+            owner=owner,
             init_pos=owner.pos + dpos,
             init_speed=owner.speed + dspeed,
             ttl=random.uniform(500, 1000),
@@ -49,6 +50,9 @@ class Explosion(AnimatedDrawable, HasTimer, Collides, Moves, HasMass, Object):
     def __init__(self, *args, owner, **kwargs):
         super().__init__(*args, owner=owner, mass=owner.mass, **kwargs)
         assert self.ttl == self._image.animation_time
+
+    def with_postprocessing(self):
+        return self.sprite
 
 
 class LargeExplosion(Explosion):

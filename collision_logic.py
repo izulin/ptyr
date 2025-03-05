@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import math
 import random
 from typing import TYPE_CHECKING
@@ -123,11 +124,10 @@ def _colliding_colliding_logic(obj_a: Collides, obj_b: Collides):
     for _ in range(10):
         collision_point = get_collision_point(obj_a, obj_b)
         energy = collide_objects(obj_a, obj_b, collision_point)
-        try:
+        with contextlib.suppress(AttributeError):
             obj_a.apply_damage(100 * energy)
+        with contextlib.suppress(AttributeError):
             obj_b.apply_damage(100 * energy)
-        except AttributeError:
-            pass
 
 
 def _player_powerup_logic(player: Player, powerup: PowerUp):

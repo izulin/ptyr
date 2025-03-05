@@ -27,6 +27,8 @@ from math_utils import (
     normalize_pos3,
     range_kutta_2,
 )
+from postprocessing import with_outline
+from teams import get_team_color
 
 if TYPE_CHECKING:
     from surface import CachedAnimation, CachedSurface
@@ -50,13 +52,13 @@ class Object(pg.sprite.Sprite):
         self.pos = normalize_pos3(Vector3(init_pos))
         self.alive_state = True
         self.alive_time = 0.0
+        if owner is None:
+            owner = self
+        self.owner = owner
         self.update_image_rect()
         self.all_statuses = pg.sprite.Group()
         self.attachments = pg.sprite.Group()
         self.add(ALL_WITH_UPDATE, *args)
-        if owner is None:
-            owner = self
-        self.owner = owner
 
     def kill(self):
         for status in self.all_statuses:
@@ -168,16 +170,17 @@ class DrawableObject:
         else:
             self._image = image
         super().__init__(*args, **kwargs)
+
         rect = self.rect
-        x_start_a = rect.left // CONFIG.SCREEN_WIDTH
-        x_end_a = rect.right // CONFIG.SCREEN_WIDTH
-        y_start_a = rect.top // CONFIG.SCREEN_HEIGHT
-        y_end_a = rect.bottom // CONFIG.SCREEN_HEIGHT
+        x_start_a = rect.left // CONFIG.WORLD_WIDTH
+        x_end_a = rect.right // CONFIG.WORLD_WIDTH
+        y_start_a = rect.top // CONFIG.WORLD_HEIGHT
+        y_end_a = rect.bottom // CONFIG.WORLD_HEIGHT
         for x in range(x_start_a, x_end_a + 1):
             for y in range(y_start_a, y_end_a + 1):
                 self.add(
                     ALL_DRAWABLE_OBJECTS[
-                        (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                        (-x * CONFIG.WORLD_WIDTH, -y * CONFIG.WORLD_HEIGHT)
                     ],
                 )
 
@@ -196,6 +199,10 @@ class DrawableObject:
 
         with contextlib.suppress(AttributeError):
             self.image = self.with_postprocessing()
+
+    def with_postprocessing(self):
+        print(self, "with_postprocessing outline")
+        return with_outline(self, get_team_color(self))
 
     def update(self, dt: float):
         super().update(dt)
@@ -219,14 +226,14 @@ class DrawableObject:
             if isinstance(group, GroupWithCD):
                 group.cd.move(self, new_rect, old_rect)
 
-        x_start_a = new_rect.left // CONFIG.SCREEN_WIDTH
-        x_end_a = new_rect.right // CONFIG.SCREEN_WIDTH
-        y_start_a = new_rect.top // CONFIG.SCREEN_HEIGHT
-        y_end_a = new_rect.bottom // CONFIG.SCREEN_HEIGHT
-        x_start_b = old_rect.left // CONFIG.SCREEN_WIDTH
-        x_end_b = old_rect.right // CONFIG.SCREEN_WIDTH
-        y_start_b = old_rect.top // CONFIG.SCREEN_HEIGHT
-        y_end_b = old_rect.bottom // CONFIG.SCREEN_HEIGHT
+        x_start_a = new_rect.left // CONFIG.WORLD_WIDTH
+        x_end_a = new_rect.right // CONFIG.WORLD_WIDTH
+        y_start_a = new_rect.top // CONFIG.WORLD_HEIGHT
+        y_end_a = new_rect.bottom // CONFIG.WORLD_HEIGHT
+        x_start_b = old_rect.left // CONFIG.WORLD_WIDTH
+        x_end_b = old_rect.right // CONFIG.WORLD_WIDTH
+        y_start_b = old_rect.top // CONFIG.WORLD_HEIGHT
+        y_end_b = old_rect.bottom // CONFIG.WORLD_HEIGHT
         if (
             x_start_a == x_start_b
             and x_end_a == x_end_b
@@ -240,7 +247,7 @@ class DrawableObject:
                     continue
                 self.remove(
                     ALL_DRAWABLE_OBJECTS[
-                        (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                        (-x * CONFIG.WORLD_WIDTH, -y * CONFIG.WORLD_HEIGHT)
                     ],
                 )
         for x in range(x_start_a, x_end_a + 1):
@@ -249,7 +256,7 @@ class DrawableObject:
                     continue
                 self.add(
                     ALL_DRAWABLE_OBJECTS[
-                        (-x * CONFIG.SCREEN_WIDTH, -y * CONFIG.SCREEN_HEIGHT)
+                        (-x * CONFIG.WORLD_WIDTH, -y * CONFIG.WORLD_HEIGHT)
                     ],
                 )
 
@@ -317,7 +324,8 @@ class HasMass:
 
 class Collides:
     def __init__(self, *args, **kwargs):
-        super().__init__(ALL_COLLIDING_OBJECTS, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+        self.add(ALL_COLLIDING_OBJECTS)
 
     def on_collision(self, other: Object):
         pass

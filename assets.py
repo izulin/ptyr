@@ -131,7 +131,7 @@ with Timer("Assets"):
 
     BackgroundImage = pg.transform.scale(
         pg.image.load("assets/background.jpg").convert_alpha(),
-        (CONFIG.SCREEN_WIDTH, CONFIG.SCREEN_HEIGHT),
+        (CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT),
     )
 
     SmallBulletImage = CachedSurface(
@@ -232,27 +232,31 @@ with Timer("Assets"):
 
     RightArrowImage = pg.transform.scale(
         load_from_file(176, 196, 16, 21, "assets/tyrian/newsh1.shp.000000.png"),
-        (CONFIG.SCREEN_WIDTH / 20, CONFIG.SCREEN_HEIGHT / 20),
+        (CONFIG.WORLD_WIDTH / 20, CONFIG.WORLD_HEIGHT / 20),
     )
 
     GeometricEnemyAnimation = CachedAnimation(
         [
-            load_from_file(
-                3 + (27 - 3) * i,
-                58,
-                19,
-                21,
-                "assets/tyrian/newshg.shp.000000.png",
+            pad(
+                load_from_file(
+                    3 + (27 - 3) * i,
+                    58,
+                    19,
+                    21,
+                    "assets/tyrian/newshg.shp.000000.png",
+                ),
             )
             for i in range(9)
         ]
         + [
-            load_from_file(
-                3 + (27 - 3) * i,
-                85,
-                19,
-                21,
-                "assets/tyrian/newshg.shp.000000.png",
+            pad(
+                load_from_file(
+                    3 + (27 - 3) * i,
+                    85,
+                    19,
+                    21,
+                    "assets/tyrian/newshg.shp.000000.png",
+                ),
             )
             for i in range(3)
         ],

@@ -17,7 +17,7 @@ from collision_logic import (
 )
 from config import CONFIG
 from consts import ALL_SHIFTS
-from game_state import init_game_state
+from game_logic import init_game_state
 from groups import (
     ALL_COLLIDING_OBJECTS,
     ALL_DRAWABLE_OBJECTS,
@@ -25,6 +25,7 @@ from groups import (
     ALL_POWERUPS,
     ALL_UI_DRAWABLE_OBJECTS,
     ALL_WITH_UPDATE,
+    LayeredUpdates,
 )
 from logger import logger
 from menu import MENU_STACK, init_menu
@@ -120,6 +121,7 @@ class Game:
         self.event_loop()
 
         with TIMERS["clears"]:
+            g: LayeredUpdates
             for g in ALL_DRAWABLE_OBJECTS.values():
                 g.clear(DISPLAYSURF, BackgroundImage)
         with TIMERS["blits"]:
@@ -139,11 +141,11 @@ class Game:
                         sprite.rect.move_ip(-shift)
 
         with TIMERS["UX"]:
-            if CONFIG.SHOW_HP == 2:
+            if CONFIG.SHOW_HP == "all":
                 sprite: Object
                 for sprite in ALL_UI_DRAWABLE_OBJECTS:
                     sprite.draw_ui()
-            elif CONFIG.SHOW_HP == 1:
+            elif CONFIG.SHOW_HP == "players":
                 for player in ALL_PLAYERS:
                     player.draw_ui()
 
@@ -158,7 +160,7 @@ class Game:
 
         if MENU_STACK:
             MENU_STACK[-1].draw(
-                (CONFIG.SCREEN_WIDTH / 3, CONFIG.SCREEN_HEIGHT / 10),
+                (CONFIG.WORLD_WIDTH / 4, CONFIG.WORLD_HEIGHT / 10),
             )
 
         with TIMERS["screen_blit"]:
