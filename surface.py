@@ -5,6 +5,20 @@ from functools import cached_property
 import pygame as pg
 from pygame import Vector2
 
+from timers import timeit
+
+
+def mask_centroid(mask: pg.Mask) -> Vector2:
+    x_size, y_size = mask.get_size()
+    xacc, yacc, cnt = 0, 0, 0
+    for x in range(x_size):
+        for y in range(y_size):
+            if mask.get_at((x, y)):
+                xacc += x
+                yacc += y
+                cnt += 1
+    return Vector2(xacc / cnt, yacc / cnt)
+
 
 class CachedSurface:
     _image_cache: list[pg.Surface]
@@ -17,54 +31,28 @@ class CachedSurface:
             self._image_cache = [image]
             mask = pg.mask.from_surface(image)
             self._mask_cache = [mask]
+            self._centroids = [mask_centroid(mask)]
         else:
             self._image_cache = [pg.transform.rotate(image, i) for i in range(360)]
             self._mask_cache = [pg.mask.from_surface(im) for im in self._image_cache]
+            self._centroids = [None for mask in self._mask_cache]
         self._no_rotation = no_rotation
 
     @cached_property
     def inertia_moment_coef(self) -> float:
-        def avg(_list):
-            return sum(_list) / len(_list)
-
-        mask = self._mask_cache[0]
+        mask = self.get_mask(0)
         x_size, y_size = mask.get_size()
-        return (
-            avg(
-                [
-                    x**2
-                    for x in range(x_size)
-                    for y in range(y_size)
-                    if mask.get_at((x, y))
-                ],
-            )
-            + avg(
-                [
-                    y**2
-                    for x in range(x_size)
-                    for y in range(y_size)
-                    if mask.get_at((x, y))
-                ],
-            )
-            - avg(
-                [
-                    x
-                    for x in range(x_size)
-                    for y in range(y_size)
-                    if mask.get_at((x, y))
-                ],
-            )
-            ** 2
-            - avg(
-                [
-                    y
-                    for x in range(x_size)
-                    for y in range(y_size)
-                    if mask.get_at((x, y))
-                ],
-            )
-            ** 2
-        )
+        x2acc, xacc, y2acc, yacc, cnt = 0, 0, 0, 0, 0
+        for x in range(x_size):
+            for y in range(y_size):
+                if mask.get_at((x, y)):
+                    x2acc += x**2
+                    y2acc += y**2
+                    xacc += x
+                    yacc += y
+                    cnt += 1
+
+        return x2acc / cnt - (xacc / cnt) ** 2 + y2acc / cnt - (yacc / cnt) ** 2
 
     def get_image(self, ang: int = 0) -> pg.Surface:
         if self._no_rotation:
@@ -81,16 +69,24 @@ class CachedSurface:
     def get_rect(self, ang: int = 0, **kwargs):
         return self.get_image(ang).get_rect(**kwargs)
 
+    @timeit("CENTROID")
     def get_centroid(self, ang: int = 0) -> Vector2:
-        return Vector2(self.get_mask(ang).centroid())
+        if self._no_rotation:
+            return self._centroids[0]
+        else:
+            ret = self._centroids[ang]
+            if ret is None:
+                ret = mask_centroid(self.get_mask(ang))
+                self._centroids[ang] = ret
+            return ret
 
-    def scale(self, size) -> pg.Surface:
+    def scale(self, size) -> CachedSurface:
         return CachedSurface(
             pg.transform.scale(self.get_image(), size),
             no_rotation=self._no_rotation,
         )
 
-    def scale_by(self, factor: float) -> pg.Surface:
+    def scale_by(self, factor: float) -> CachedSurface:
         return CachedSurface(
             pg.transform.scale_by(self.get_image(), factor),
             no_rotation=self._no_rotation,
@@ -117,7 +113,7 @@ class CachedAnimation:
     def __len__(self):
         return len(self.images)
 
-    def scale_by(self, factor: float, slowdown: float = 1.0):
+    def scale_by(self, factor: float, slowdown: float = 1.0) -> CachedAnimation:
         return CachedAnimation(
             [pg.transform.scale_by(s.get_image(), factor) for s in self.images],
             int(self.animation_time * slowdown),

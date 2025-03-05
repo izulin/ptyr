@@ -119,13 +119,11 @@ class Player(
             pg.CONTROLLER_BUTTON_B,
         ):
             with contextlib.suppress(AttributeError):
-                print(self.weapon.sprite)
                 self.weapon.sprite.fire()
         if pressed_keys[self.controls["secondary"]] or self.gamepad.get_button(
             pg.CONTROLLER_BUTTON_A,
         ):
             with contextlib.suppress(AttributeError):
-                print(self.secondary_weapon.sprite)
                 self.secondary_weapon.sprite.fire()
 
         left_right_axis = self.gamepad.get_axis(0) / 2**15

@@ -192,7 +192,7 @@ class DrawableObject:
 
         self.rect = surf.get_rect(
             self.pos.z,
-            topleft=self.pos_xy - surf.get_centroid(self.pos.z),
+            topleft=self.pos_xy - surf.get_centroid(int(self.pos.z)),
         )
         self.mask = surf.get_mask(self.pos.z)
         self.image = surf.get_image(self.pos.z)
@@ -201,7 +201,6 @@ class DrawableObject:
             self.image = self.with_postprocessing()
 
     def with_postprocessing(self):
-        print(self, "with_postprocessing outline")
         return with_outline(self, get_team_color(self))
 
     def update(self, dt: float):
