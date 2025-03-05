@@ -8,7 +8,6 @@ import pygame as pg
 
 from display import ALL_CHANGES_DISPLAYSURF, DISPLAYSURF  # isort: skip
 
-import contextlib
 
 from assets import BackgroundImage
 from collision_logic import (
@@ -71,7 +70,7 @@ class Game:
         self.cnt += 1
         for t in TIMERS.values():
             t.click()
-        if TIMERS["TOTAL"].val >= 1:
+        if TIMERS["TOTAL"].val >= 10:
             for k, v in sorted(TIMERS.items(), key=lambda x: x[1].val, reverse=True):
                 logger.info(f"{k}:{v}")
             logger.info(
@@ -90,22 +89,19 @@ class Game:
                 sprite.update(dt)
                 self.object_count[sprite.__class__.__qualname__] += 1
         for sprite in ALL_WITH_UPDATE:
-            try:
-                if not sprite.alive_state:
-                    sprite.kill()
-                    sprite.on_death()
-            except AttributeError:  # noqa: PERF203
-                pass
+            if hasattr(sprite, "alive_state") and not sprite.alive_state:
+                sprite.kill()
+                sprite.on_death()
 
     @staticmethod
     def collisions():
         for sprite in ALL_COLLIDING_OBJECTS:
-            ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+            ALL_COLLIDING_OBJECTS.collide_with_callback(
                 sprite,
                 on_collision=_colliding_colliding_logic,
             )
         for player in ALL_PLAYERS:
-            ALL_POWERUPS.cd.collide_with_callback(
+            ALL_POWERUPS.collide_with_callback(
                 player,
                 on_collision=_player_powerup_logic,
             )
@@ -151,7 +147,7 @@ class Game:
 
         with TIMERS["DEBUGS"]:
             for sprite in ALL_WITH_UPDATE:
-                with contextlib.suppress(AttributeError):
+                if hasattr(sprite, "draw_debug"):
                     sprite.draw_debug()
 
         fps = self.FramePerSec.get_fps()

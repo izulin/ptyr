@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import contextlib
 import math
 
 from pygame import Vector2, Vector3
 
-from ammo import Mine, SmallBullet, SmallMissile
+from ammunition import Mine, SmallBullet, SmallMissile
 from assets import (
     DoubleShotWeaponImage,
     LaserShardImage,
@@ -114,18 +113,16 @@ class Weapon(Status):
 class Primary:
     def __init__(self, *args, owner, **kwargs):
         super().__init__(*args, owner=owner, **kwargs)
-        if owner.weapon.sprite != self:
-            with contextlib.suppress(AttributeError):
-                owner.weapon.sprite.kill()
+        if owner.weapon and owner.weapon.sprite != self:
+            owner.weapon.sprite.kill()
         self.add(owner.weapon)
 
 
 class Secondary:
     def __init__(self, *args, owner, **kwargs):
         super().__init__(*args, owner=owner, **kwargs)
-        if owner.secondary_weapon.sprite != self:
-            with contextlib.suppress(AttributeError):
-                owner.secondary_weapon.sprite.kill()
+        if owner.secondary_weapon and owner.secondary_weapon.sprite != self:
+            owner.secondary_weapon.sprite.kill()
         self.add(owner.secondary_weapon)
 
 
@@ -133,13 +130,12 @@ class LaserShard(StaticDrawable, Attached, Object):
     IMAGE = LaserShardImage.scale_by(0.75)
 
     def update(self, dt: float):
-        for obj in ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+        for obj in ALL_COLLIDING_OBJECTS.spatial.collide_with_callback(
             self,
             on_collision=None,
         ):
-            if check_teams(self, obj):
-                with contextlib.suppress(AttributeError):
-                    obj.apply_damage(dt / 10)
+            if check_teams(self, obj) and hasattr(obj, "apply_damage"):
+                obj.apply_damage(dt / 10)
         self.kill()
 
 
@@ -160,7 +156,7 @@ class LaserWeapon(Primary, Weapon):
                 owner=self.owner,
                 base_object=self.owner,
             )
-            if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+            if col := ALL_COLLIDING_OBJECTS.spatial.collide_with_callback(
                 shard,
                 on_collision=None,
             ):
@@ -178,7 +174,7 @@ class LaserWeapon(Primary, Weapon):
                 owner=self.owner,
                 base_object=self.owner,
             )
-            if col := ALL_COLLIDING_OBJECTS.cd.collide_with_callback(
+            if col := ALL_COLLIDING_OBJECTS.spatial.collide_with_callback(
                 shard,
                 on_collision=None,
             ):

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import contextlib
-
 from pygame import Vector3
 
 from assets import MineAnimation, SmallBulletImage, SmallMissileImage
@@ -29,7 +27,7 @@ class Bullet(Moves, HasMass, Collides, Object):
 
     def on_collision(self, other: Object):
         if check_teams(self, other):
-            with contextlib.suppress(AttributeError):
+            if hasattr(other, "apply_damage"):
                 other.apply_damage(self.DMG)
             self.mark_dead()
         super().on_collision(other)
@@ -44,6 +42,9 @@ class SmallBullet(StaticDrawable, HasTimer, Bullet):
     DMG = 10.0
     IMAGE = SmallBulletImage
 
+    def postprocessing(self):
+        pass
+
 
 class SmallMissile(
     StaticDrawable,
@@ -56,8 +57,6 @@ class SmallMissile(
 ):
     MASS = 2.0
     DMG = 30.0
-    # DRAG = 0.0
-    # ANGULAR_DRAG = 0.0
     DRAG = 1 / 1000
     ANGULAR_DRAG = 2 / 1000
     IMAGE = SmallMissileImage
@@ -79,7 +78,7 @@ class SmallMissile(
 
     def on_collision(self, other: Object):
         if check_teams(self, other):
-            with contextlib.suppress(AttributeError):
+            if hasattr(other, "apply_damage"):
                 other.apply_damage(self.DMG)
             self.mark_dead()
         super().on_collision(other)

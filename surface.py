@@ -5,8 +5,6 @@ from functools import cached_property
 import pygame as pg
 from pygame import Vector2
 
-from timers import timeit
-
 
 def mask_centroid(mask: pg.Mask) -> Vector2:
     x_size, y_size = mask.get_size()
@@ -69,7 +67,6 @@ class CachedSurface:
     def get_rect(self, ang: int = 0, **kwargs):
         return self.get_image(ang).get_rect(**kwargs)
 
-    @timeit("CENTROID")
     def get_centroid(self, ang: int = 0) -> Vector2:
         if self._no_rotation:
             return self._centroids[0]

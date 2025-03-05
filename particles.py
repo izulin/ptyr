@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import contextlib
-
 import pygame as pg
 
 from consts import BLACK, RED, WHITE, YELLOW
@@ -44,6 +42,6 @@ class CollidingParticle(Collides, HasMass, Particle):
 
     def on_collision(self, other: Object):
         if not isinstance(other, CollidingParticle) and check_teams(self, other):
-            with contextlib.suppress(AttributeError):
+            if hasattr(other, "apply_damage"):
                 other.apply_damage(0.1)
             self.mark_dead()

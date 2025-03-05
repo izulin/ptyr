@@ -51,8 +51,8 @@ class Explosion(AnimatedDrawable, HasTimer, Collides, Moves, HasMass, Object):
         super().__init__(*args, owner=owner, mass=owner.mass, **kwargs)
         assert self.ttl == self._image.animation_time
 
-    def with_postprocessing(self):
-        return self.sprite
+    def postprocessing(self):
+        pass
 
 
 class LargeExplosion(Explosion):

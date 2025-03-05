@@ -196,12 +196,10 @@ class DrawableObject:
         )
         self.mask = surf.get_mask(self.pos.z)
         self.image = surf.get_image(self.pos.z)
+        self.postprocessing()
 
-        with contextlib.suppress(AttributeError):
-            self.image = self.with_postprocessing()
-
-    def with_postprocessing(self):
-        return with_outline(self, get_team_color(self))
+    def postprocessing(self):
+        self.image = with_outline(self, get_team_color(self))
 
     def update(self, dt: float):
         super().update(dt)
@@ -223,7 +221,7 @@ class DrawableObject:
 
         for group in self.groups():
             if isinstance(group, GroupWithCD):
-                group.cd.move(self, new_rect, old_rect)
+                group.move(self, new_rect, old_rect)
 
         x_start_a = new_rect.left // CONFIG.WORLD_WIDTH
         x_end_a = new_rect.right // CONFIG.WORLD_WIDTH

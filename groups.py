@@ -3,27 +3,71 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 import pygame as pg
+from pygame import Vector3
 
-from collision_detector import CollisionDetector
 from consts import ALL_SHIFTS
+from spatial import Spatial
 
 if TYPE_CHECKING:
-    from objects import Collides
+    from objects import Collides, DrawableObject
 from logger import logger
 
 
 class GroupWithCD(pg.sprite.Group):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cd = CollisionDetector()
+        self.spatial = Spatial(builder=set, subx=100, suby=100)
 
     def add_internal(self, sprite, layer=None):
         super().add_internal(sprite, layer)
-        self.cd.add(sprite)
+        self.spatial.add(sprite)
 
     def remove_internal(self, sprite):
         super().remove_internal(sprite)
-        self.cd.remove(sprite)
+        self.spatial.remove(sprite)
+
+    def move(self, sprite: DrawableObject, rect_a: pg.Rect, rect_b: pg.Rect):
+        self.spatial.move(sprite, rect_a, rect_b)
+
+    def _collide_with_callback(
+        self,
+        sprite: DrawableObject,
+        *,
+        on_collision=None,
+    ) -> list[DrawableObject]:
+        ret = []
+        seen = {sprite}
+        for bucket in self.spatial.all_buckets(sprite.rect):
+            for other in bucket:
+                if other in seen:
+                    continue
+                seen.add(other)
+                if pg.sprite.collide_rect(sprite, other) and pg.sprite.collide_mask(
+                    sprite,
+                    other,
+                ):
+                    ret.append(other)
+                    if on_collision is None:
+                        return ret
+                    on_collision(sprite, other)
+        return ret
+
+    def collide_with_callback(
+        self,
+        sprite: DrawableObject,
+        *,
+        on_collision=None,
+    ) -> list[DrawableObject]:
+        ret = []
+        for shift in ALL_SHIFTS:
+            sprite.pos += Vector3(shift.x, shift.y, 0)
+            sprite.rect.move_ip(shift)
+            ret.extend(self._collide_with_callback(sprite, on_collision=on_collision))
+            sprite.pos -= Vector3(shift.x, shift.y, 0)
+            sprite.rect.move_ip(-shift)
+            if ret and on_collision is None:
+                return ret
+        return ret
 
 
 class GroupWithPriority(pg.sprite.Group):
@@ -43,7 +87,7 @@ class LayeredUpdates(GroupWithPriority, pg.sprite.RenderUpdates):
 ALL_ENEMIES: pg.sprite.Group = pg.sprite.Group()
 ALL_PLAYERS: pg.sprite.Group = pg.sprite.Group()
 ALL_COLLIDING_OBJECTS: GroupWithCD = GroupWithCD()
-ALL_DRAWABLE_OBJECTS: dict(tuple(int, int), LayeredUpdates) = {
+ALL_DRAWABLE_OBJECTS: dict[tuple(int, int), LayeredUpdates] = {
     (shift.x, shift.y): LayeredUpdates() for shift in ALL_SHIFTS
 }
 ALL_POWERUPS: GroupWithCD = GroupWithCD()
@@ -73,7 +117,7 @@ def try_and_spawn_object(
     succ = []
     while total_tries > 0 and len(succ) < num_copies:
         obj: Collides = func()
-        if ALL_COLLIDING_OBJECTS.cd.collide_with_callback(obj, on_collision=None):
+        if ALL_COLLIDING_OBJECTS.collide_with_callback(obj, on_collision=None):
             obj.kill()
         else:
             succ.append(obj)

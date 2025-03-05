@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import random
 from typing import TYPE_CHECKING
 
@@ -115,16 +114,20 @@ class Player(
     def update(self, dt: float):
         self.use_defaults()
         pressed_keys = pg.key.get_pressed()
-        if pressed_keys[self.controls["shoot"]] or self.gamepad.get_button(
-            pg.CONTROLLER_BUTTON_B,
-        ):
-            with contextlib.suppress(AttributeError):
-                self.weapon.sprite.fire()
-        if pressed_keys[self.controls["secondary"]] or self.gamepad.get_button(
-            pg.CONTROLLER_BUTTON_A,
-        ):
-            with contextlib.suppress(AttributeError):
-                self.secondary_weapon.sprite.fire()
+        if (
+            pressed_keys[self.controls["shoot"]]
+            or self.gamepad.get_button(
+                pg.CONTROLLER_BUTTON_B,
+            )
+        ) and self.weapon:
+            self.weapon.sprite.fire()
+        if (
+            pressed_keys[self.controls["secondary"]]
+            or self.gamepad.get_button(
+                pg.CONTROLLER_BUTTON_A,
+            )
+        ) and self.secondary_weapon:
+            self.secondary_weapon.sprite.fire()
 
         left_right_axis = self.gamepad.get_axis(0) / 2**15
         forward_backward_axis = self.gamepad.get_axis(1) / 2**15

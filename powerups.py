@@ -30,7 +30,7 @@ class PowerUp(StaticDrawable, Stationary, HasTimer, Object):
         self.used = False
         self.add(ALL_POWERUPS)
 
-    def with_postprocessing(self):
+    def postprocessing(self):
         return with_outline(self, YELLOW)
 
     def on_collision(self, other: Object):
